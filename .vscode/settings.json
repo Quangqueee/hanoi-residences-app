@@ -1,7 +1,24 @@
 {
+  "indentRainbow.indicatorStyle": "classic",
+  "indentRainbow.lightIndicatorStyleLineWidth": 1,
+  "indentRainbow.colors": [
+    "rgba(35, 52, 92, 0.3)",
+    "rgba(38, 79, 112, 0.3)",
+    "rgba(41, 107, 131, 0.3)",
+    "rgba(44, 135, 151, 0.3)",
+    "rgba(47, 163, 171, 0.3)"
+  ],
+  "editor.fontFamily": "'Fira Code', 'Cascadia Code', Consolas, 'Courier New', monospace",
+  "editor.fontSize": 20,
+  "editor.lineHeight": 1.7,
+  "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll": "explicit",
-    "source.organizeImports": "explicit",
-    "source.sortMembers": "explicit"
-  }
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.wordWrap": "on",
+  "editor.cursorBlinking": "smooth",
+  "editor.cursorSmoothCaretAnimation": "on",
+  "files.trimTrailingWhitespace": true,
+  "workbench.iconTheme": "material-icon-theme",
+  "commentTranslate.targetLanguage": "vi"
 }

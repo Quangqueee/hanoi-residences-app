@@ -1,0 +1,40 @@
+# MỤC TIÊU DỰ ÁN
+Phát triển ứng dụng di động (iOS & Android) "Hanoi Residences" bằng React Native (Expo).
+Tuyệt đối giữ nguyên cấu trúc Backend hiện tại (Firebase Firestore, Auth, Storage). Dữ liệu, luồng xác thực và trạng thái người dùng phải đồng bộ 100% với Web.
+*Lưu ý: Không bao gồm Admin Dashboard tổng, nhưng phải tích hợp các công cụ vận hành và đáp ứng 100% tiêu chuẩn xét duyệt của Apple App Store & Google Play Store.*
+
+# 1. NGỮ CẢNH DỮ LIỆU & FILE THAM CHIẾU (CORE CONTEXT)
+Bắt buộc tham chiếu các kiến trúc cốt lõi sau từ dự án Web để đảm bảo tính đồng bộ:
+- **Kiểu dữ liệu:** `types.ts` (đặc biệt là `ApartmentForm`, `apartmentsCollection`, `usersCollection`, `UserData`).
+- **Xác thực dữ liệu:** `actions.ts` (`apartmentActionSchema`, `apartmentBaseSchema`, `generateSummarySchema`).
+- **Ràng buộc UI/Form:** `apartment-form.tsx` (`ACCEPTED_IMAGE_TYPES`, `formSchema`).
+- **Xử lý lỗi trung tâm:** Kế thừa logic từ `use-toast.ts` và `errors.ts`.
+- **Phân quyền (RBAC):** `rbac.ts` (`Permission`, `ROLE_PERMISSIONS`, `UserRole`).
+
+# 2. RÀNG BUỘC KIẾN TRÚC & DỮ LIỆU (TECHNICAL CONSTRAINTS)
+1. **Đồng bộ luồng AI SEO (Strict Data Flow):** Mọi dữ liệu do AI tạo ra BẮT BUỘC phải tuân thủ đúng cấu trúc lưu trữ `aiContent` trên Firestore hiện tại (không làm lệch schema dữ liệu với bản Web).
+2. **Chất lượng mã nguồn:** Tuân thủ TypeScript Strict Mode. Mọi thao tác I/O với Firebase phải được xử lý ngoại lệ an toàn và phản hồi trực quan qua UI.
+3. **Cấu hình môi trường:** Sử dụng quy ước biến môi trường phù hợp với nền tảng Expo (`EXPO_PUBLIC_`).
+
+# 3. YÊU CẦU NGHIỆP VỤ & TÍNH NĂNG CỐT LÕI
+- **Hiển thị phân quyền (RBAC):**
+  + `User` & `Landlord`: Thấy tiêu đề/mô tả tối ưu AI SEO.
+  + `Admin` & `CTV`: Thấy mô tả gốc, thông tin chiết khấu/hoa hồng, và tích hợp nút **Tải hình ảnh nhanh** (tải hàng loạt ảnh về thiết bị, yêu cầu cấu hình quyền hệ thống chính xác).
+- **Danh sách & Khám phá:** Xây dựng cơ chế hiển thị danh sách căn hộ tối ưu hiệu năng (tự do lựa chọn component render phù hợp để tránh tràn bộ nhớ khi danh sách lớn), hỗ trợ bộ lọc và sắp xếp.
+- **Tương tác & Quick Share:** Tích hợp API chia sẻ bản địa của thiết bị trỏ về domain `hanoiresidence.site`.
+- **Hệ thống Đặt lịch (CRM theo Role):**
+  + `User`: Đặt lịch xem phòng cá nhân.
+  + `CTV`: Đặt lịch dẫn khách (nhập thông tin khách thực tế).
+  + `Admin`: Đặt lịch cá nhân + Quyền điều phối/gán lịch cho CTV.
+- **Hệ thống thông báo (Notifications):** Tích hợp thông báo thời gian thực phân luồng chuẩn xác theo từng `UserRole` (User, Landlord, CTV, Admin).
+
+# 4. TIÊU CHUẨN COMPLIANCE (APP STORE & GOOGLE PLAY)
+Ứng dụng phải vượt qua các tiêu chuẩn kiểm duyệt khắt khe để được phát hành:
+- Khai báo đầy đủ quyền truy cập phần cứng và cấu hình Background Modes cho thông báo trong file cấu hình dự án.
+- Tích hợp màn hình hiển thị "Chính sách bảo mật" (Privacy Policy).
+- Cung cấp tính năng "Xóa tài khoản và dữ liệu cá nhân" trong Cài đặt (Bắt buộc xác thực lại - re-authenticate trước khi xóa khỏi Auth và Firestore).
+- Đảm bảo UX di động: Bọc `SafeAreaView`, xử lý bàn phím ảo (`KeyboardAvoidingView` + `ScrollView`) cho các form, kích thước `TextInput` tối thiểu 16px để tránh tự động zoom trên iOS.
+
+# 5. QUY TRÌNH LÀM VIỆC & TƯ DUY CỦA AGENT
+- **Tuyệt đối không đoán mò:** Khi cần viết code liên quan đến cấu trúc dữ liệu, interface, schema hoặc logic từ bản Web, bạn BẮT BUỘC phải dừng lại và yêu cầu tôi cung cấp mã nguồn file đó (ví dụ: yêu cầu `types.ts`, `actions.ts`,...).
+- **Chủ động tư duy giải pháp:** Dựa trên các yêu cầu nghiệp vụ và ràng buộc trên, bạn hãy tự do phân tích, thiết kế mô hình component, luồng điều hướng (Navigation) và cách xử lý state tối ưu nhất cho React Native (Expo).
