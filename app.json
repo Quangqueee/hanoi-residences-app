@@ -8,7 +8,12 @@
     "scheme": "hanoiresidencesapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "NSPhotoLibraryAddUsageDescription": "Cho phép Hanoi Residences lưu ảnh căn hộ vào thư viện ảnh của bạn.",
+        "NSPhotoLibraryUsageDescription": "Cho phép Hanoi Residences lưu ảnh căn hộ vào thư viện ảnh của bạn.",
+        "UIBackgroundModes": ["remote-notification"]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +22,15 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE"
+      ]
     },
     "web": {
       "output": "static",
@@ -31,6 +44,23 @@
           "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Cho phép Hanoi Residences lưu ảnh căn hộ vào thư viện của bạn.",
+          "savePhotosPermission": "Cho phép Hanoi Residences lưu ảnh căn hộ vào thư viện của bạn.",
+          "granularPermissions": ["photo"]
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#CDA533",
+          "defaultChannel": "hanoi-residences-default",
+          "sounds": []
         }
       ]
     ],

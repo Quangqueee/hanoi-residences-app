@@ -3,9 +3,11 @@ import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
+import { useNotifications } from '@/hooks/use-notifications';
 
 export default function TabsLayout() {
   const { user, loading } = useAuth();
+  const { unreadCount } = useNotifications(user?.uid);
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
 
@@ -52,6 +54,7 @@ export default function TabsLayout() {
         options={{
           title: 'Thông báo',
           tabBarLabel: 'Alerts',
+          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
         }}
       />
       <Tabs.Screen

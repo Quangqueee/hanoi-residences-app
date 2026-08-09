@@ -5,12 +5,14 @@ import { ActivityIndicator, useColorScheme, View } from 'react-native';
 
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { Colors } from '@/constants/theme';
+import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 SplashScreen.preventAutoHideAsync();
 
 function RootNavigator() {
   const colorScheme = useColorScheme();
   const { loading } = useAuth();
+  usePushNotifications();
   const scheme = colorScheme === 'unspecified' ? 'light' : colorScheme;
   const colors = Colors[scheme ?? 'light'];
 
