@@ -45,8 +45,7 @@ function RootNavigator() {
         <Stack.Screen
           name="apartment/[id]"
           options={{
-            headerShown: true,
-            title: 'Chi tiết căn hộ',
+            headerShown: false,
             presentation: 'card',
           }}
         />

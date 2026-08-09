@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: Spacing.four,
-    paddingBottom: Spacing.six,
+    paddingBottom: 100,
     gap: Spacing.two,
   },
   item: {

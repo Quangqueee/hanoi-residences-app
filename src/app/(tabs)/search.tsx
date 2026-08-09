@@ -1,6 +1,4 @@
-import { useRouter } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -8,14 +6,14 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApartmentCard } from '@/components/apartment-card';
-import { useAuth } from '@/contexts/auth-context';
+import { ApartmentFiltersBar } from '@/components/apartment-filters-bar';
 import { useApartments } from '@/hooks/use-apartments';
-import { useNotifications } from '@/hooks/use-notifications';
 import type { ApartmentFilters } from '@/lib/apartments-service';
 import type { Apartment } from '@/lib/types';
 
@@ -30,11 +28,9 @@ const UI = {
 
 const TAB_BAR_CLEARANCE = 100;
 
-export default function HomeScreen() {
-  const router = useRouter();
-  const { user, userData } = useAuth();
-  const { unreadCount } = useNotifications(user?.uid);
-  const [filters] = useState<ApartmentFilters>({
+export default function SearchScreen() {
+  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<ApartmentFilters>({
     sortBy: 'newest',
   });
 
@@ -50,14 +46,22 @@ export default function HomeScreen() {
     reload,
   } = useApartments(filters);
 
-  const displayName =
-    userData?.displayName?.trim() ||
-    userData?.email?.split('@')[0] ||
-    'Hanoi Residences';
-
-  const goToSearch = () => {
-    router.navigate('/search');
-  };
+  const filteredApartments = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return apartments;
+    return apartments.filter((apt) => {
+      const title = (apt.title ?? '').toLowerCase();
+      const code = (apt.sourceCode ?? '').toLowerCase();
+      const district = (apt.district ?? '').toLowerCase();
+      const seo = (apt.aiContent?.seoTitle ?? '').toLowerCase();
+      return (
+        title.includes(q) ||
+        code.includes(q) ||
+        district.includes(q) ||
+        seo.includes(q)
+      );
+    });
+  }, [apartments, search]);
 
   const renderItem = useCallback(
     ({ item }: { item: Apartment }) => <ApartmentCard apartment={item} />,
@@ -68,71 +72,33 @@ export default function HomeScreen() {
 
   const listHeader = (
     <View style={styles.header}>
-      <View style={styles.topRow}>
-        <View style={styles.topLeft}>
-          <Text style={styles.exploreLabel}>Explore</Text>
-          <View style={styles.locationRow}>
-            <Text style={styles.locationPin}>⌖</Text>
-            <Text style={styles.locationText}>Hanoi, VN</Text>
-            <Text style={styles.locationChevron}>▾</Text>
-          </View>
-        </View>
+      <Text style={styles.title}>Tìm kiếm</Text>
 
-        <Pressable
-          onPress={() => router.push('/notifications')}
-          accessibilityRole="button"
-          accessibilityLabel="Thông báo"
-          hitSlop={8}
-          style={({ pressed }) => [
-            styles.bellBtn,
-            pressed && styles.bellBtnPressed,
-          ]}>
-          <SymbolView
-            name={{
-              ios: unreadCount > 0 ? 'bell.badge.fill' : 'bell.fill',
-              android: 'notifications',
-              web: 'notifications',
-            }}
-            size={22}
-            tintColor={UI.ink}
-            weight="medium"
-          />
-          {unreadCount > 0 ? (
-            <View style={styles.bellBadge}>
-              <Text style={styles.bellBadgeText}>
-                {unreadCount > 99 ? '99+' : String(unreadCount)}
-              </Text>
-            </View>
-          ) : null}
-        </Pressable>
+      <View style={styles.searchBar}>
+        <Text style={styles.searchIcon}>⌕</Text>
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Tìm căn hộ, mã căn, quận…"
+          placeholderTextColor="#A0A4AE"
+          style={styles.searchInput}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+          autoCorrect={false}
+          autoCapitalize="none"
+          autoFocus={false}
+        />
       </View>
 
-      <Text style={styles.heroTitle} numberOfLines={1}>
-        {displayName}
-      </Text>
+      <View style={styles.filtersShell}>
+        <ApartmentFiltersBar value={filters} onChange={setFilters} />
+      </View>
 
-      <Pressable
-        onPress={goToSearch}
-        accessibilityRole="button"
-        accessibilityLabel="Mở tìm kiếm"
-        style={({ pressed }) => [
-          styles.searchBar,
-          pressed && styles.searchBarPressed,
-        ]}>
-        <Text style={styles.searchIcon}>⌕</Text>
-        <Text style={styles.searchPlaceholder}>
-          Tìm căn hộ, mã căn, quận…
+      {!loading ? (
+        <Text style={styles.resultCount}>
+          {filteredApartments.length}
+          {hasMore && !search.trim() ? '+' : ''} kết quả
         </Text>
-      </Pressable>
-
-      {!loading && apartments.length > 0 ? (
-        <View style={styles.sectionHead}>
-          <Text style={styles.sectionTitle}>Popular</Text>
-          <Text style={styles.resultCount}>
-            {apartments.length}
-            {hasMore ? '+' : ''} căn
-          </Text>
-        </View>
       ) : null}
     </View>
   );
@@ -145,12 +111,12 @@ export default function HomeScreen() {
             {listHeader}
             <View style={styles.loadingBlock}>
               <ActivityIndicator size="large" color={UI.primary} />
-              <Text style={styles.loadingText}>Đang tải căn hộ…</Text>
+              <Text style={styles.loadingText}>Đang tải kết quả…</Text>
             </View>
           </View>
         ) : (
           <FlatList
-            data={apartments}
+            data={filteredApartments}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
             ListHeaderComponent={listHeader}
@@ -181,12 +147,17 @@ export default function HomeScreen() {
                   <Text style={styles.emptyTitle}>
                     {error
                       ? 'Không tải được danh sách'
-                      : 'Chưa có căn phù hợp'}
+                      : search.trim() ||
+                          filters.district ||
+                          filters.priceRange ||
+                          filters.roomType
+                        ? 'Không có kết quả phù hợp'
+                        : 'Chưa có căn hộ'}
                   </Text>
                   <Text style={styles.emptyBody}>
                     {error
                       ? error
-                      : 'Mở tab Tìm kiếm để lọc theo quận, giá hoặc loại phòng.'}
+                      : 'Thử đổi từ khóa, quận, khoảng giá hoặc loại phòng.'}
                   </Text>
                   {error ? (
                     <Pressable
@@ -206,7 +177,7 @@ export default function HomeScreen() {
                 <View style={styles.footer}>
                   <ActivityIndicator color={UI.primary} />
                 </View>
-              ) : !hasMore && apartments.length > 0 ? (
+              ) : !hasMore && filteredApartments.length > 0 ? (
                 <Text style={styles.footerText}>Bạn đã xem hết danh sách</Text>
               ) : null
             }
@@ -231,75 +202,12 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     marginBottom: 8,
   },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  topLeft: {
-    flex: 1,
-    gap: 6,
-  },
-  exploreLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: UI.muted,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  locationPin: {
-    color: UI.primary,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  locationText: {
-    color: UI.ink,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  locationChevron: {
-    color: UI.muted,
-    fontSize: 12,
-    marginLeft: 2,
-  },
-  bellBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#F3F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bellBtnPressed: {
-    opacity: 0.75,
-  },
-  bellBadge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    paddingHorizontal: 4,
-    backgroundColor: UI.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bellBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  heroTitle: {
-    fontSize: 32,
-    lineHeight: 38,
+  title: {
+    fontSize: 28,
+    lineHeight: 34,
     fontWeight: '800',
     color: UI.ink,
-    letterSpacing: -0.8,
+    letterSpacing: -0.6,
   },
   searchBar: {
     flexDirection: 'row',
@@ -310,36 +218,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     gap: 10,
   },
-  searchBarPressed: {
-    opacity: 0.88,
-  },
   searchIcon: {
     fontSize: 20,
     color: '#9AA0A6',
     marginTop: -1,
   },
-  searchPlaceholder: {
+  searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#A0A4AE',
-    fontWeight: '500',
-  },
-  sectionHead: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-    marginTop: 8,
-    paddingHorizontal: 2,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    lineHeight: 22,
     color: UI.ink,
+    paddingVertical: 12,
+  },
+  filtersShell: {
+    marginTop: 2,
   },
   resultCount: {
     fontSize: 13,
     fontWeight: '600',
-    color: UI.primary,
+    color: UI.muted,
+    paddingHorizontal: 2,
   },
   listContent: {
     paddingHorizontal: 20,

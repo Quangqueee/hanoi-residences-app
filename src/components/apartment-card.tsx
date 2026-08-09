@@ -1,9 +1,16 @@
 import { useRouter } from 'expo-router';
-import { memo } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { memo, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { ImageCarousel } from '@/components/image-carousel';
-import { QuickDownloadButton } from '@/components/quick-download-button';
 import { useAuth } from '@/contexts/auth-context';
 import {
   formatCommission,
@@ -14,10 +21,12 @@ import {
   getRoomTypeLabel,
   resolveListingBadge,
 } from '@/lib/apartment-display';
+import { setApartmentFavorite } from '@/lib/favorites-service';
 import type { Apartment } from '@/lib/types';
 
 type Props = {
   apartment: Apartment;
+  onFavoriteToggle?: (apartmentId: string, isFavorited: boolean) => void;
 };
 
 const Brand = {
@@ -29,11 +38,13 @@ const Brand = {
   border: '#EBE6DA',
   commission: '#5CB85C',
   shadow: '#1A1408',
+  heart: '#EF4444',
+  heartIdle: '#9CA3AF',
 } as const;
 
-function ApartmentCardComponent({ apartment }: Props) {
+function ApartmentCardComponent({ apartment, onFavoriteToggle }: Props) {
   const router = useRouter();
-  const { role, isAdmin, isCollaborator } = useAuth();
+  const { user, userData, role, isAdmin, isCollaborator } = useAuth();
 
   // Web card: collaborator OR admin share CTV ops UI
   const collaboratorView =
@@ -45,8 +56,51 @@ function ApartmentCardComponent({ apartment }: Props) {
   const timeToDisplay = getListingTimestamp(apartment);
   const images = apartment.imageUrls ?? [];
 
+  const initialFavoriteState =
+    typeof apartment.isFavorited === 'boolean'
+      ? apartment.isFavorited
+      : userData?.favorites?.includes(apartment.id) || false;
+
+  const [isFavorite, setIsFavorite] = useState(initialFavoriteState);
+  const [isFavoriteUpdating, setIsFavoriteUpdating] = useState(false);
+
+  useEffect(() => {
+    const nextFavoriteState =
+      typeof apartment.isFavorited === 'boolean'
+        ? apartment.isFavorited
+        : userData?.favorites?.includes(apartment.id) || false;
+    setIsFavorite(nextFavoriteState);
+  }, [apartment.id, apartment.isFavorited, userData?.favorites]);
+
   const openDetail = () => {
     router.push(`/apartment/${apartment.id}`);
+  };
+
+  const toggleFavorite = async () => {
+    if (isFavoriteUpdating) return;
+    if (!user) {
+      Alert.alert('Đăng nhập', 'Vui lòng đăng nhập để lưu căn hộ yêu thích.');
+      return;
+    }
+
+    const nextIsFavorite = !isFavorite;
+    setIsFavoriteUpdating(true);
+    setIsFavorite(nextIsFavorite);
+    onFavoriteToggle?.(apartment.id, nextIsFavorite);
+
+    try {
+      await setApartmentFavorite(user.uid, apartment.id, nextIsFavorite);
+    } catch (err) {
+      console.error('toggleFavorite error:', err);
+      setIsFavorite(!nextIsFavorite);
+      onFavoriteToggle?.(apartment.id, !nextIsFavorite);
+      Alert.alert(
+        'Không thể cập nhật',
+        'Không lưu được trạng thái yêu thích. Vui lòng thử lại.',
+      );
+    } finally {
+      setIsFavoriteUpdating(false);
+    }
   };
 
   return (
@@ -95,6 +149,31 @@ function ApartmentCardComponent({ apartment }: Props) {
             <Text style={styles.idBadgeText}>ID: {apartment.sourceCode}</Text>
           </View>
         ) : null}
+
+        <Pressable
+          onPress={toggleFavorite}
+          disabled={isFavoriteUpdating}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={
+            isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'
+          }
+          style={({ pressed }) => [
+            styles.heartBtn,
+            (pressed || isFavoriteUpdating) && styles.heartBtnPressed,
+          ]}>
+          {isFavoriteUpdating ? (
+            <ActivityIndicator size="small" color={Brand.heart} />
+          ) : (
+            <Text
+              style={[
+                styles.heartIcon,
+                { color: isFavorite ? Brand.heart : Brand.heartIdle },
+              ]}>
+              {isFavorite ? '♥' : '♡'}
+            </Text>
+          )}
+        </Pressable>
       </View>
 
       <Pressable
@@ -128,12 +207,6 @@ function ApartmentCardComponent({ apartment }: Props) {
           <Text style={styles.priceUnit}>/tháng</Text>
         </View>
       </Pressable>
-
-      {collaboratorView ? (
-        <View style={styles.opsRow}>
-          <QuickDownloadButton apartment={apartment} compact />
-        </View>
-      ) : null}
     </View>
   );
 }
@@ -235,6 +308,37 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
+  heartBtn: {
+    position: 'absolute',
+    right: 12,
+    bottom: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.16,
+        shadowRadius: 8,
+      },
+      android: { elevation: 4 },
+      default: {},
+    }),
+  },
+  heartBtnPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.96 }],
+  },
+  heartIcon: {
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '700',
+  },
   body: {
     paddingHorizontal: 16,
     paddingTop: 14,
@@ -294,13 +398,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: Brand.muted,
-  },
-  opsRow: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Brand.border,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: Brand.soft,
-    flexDirection: 'row',
   },
 });

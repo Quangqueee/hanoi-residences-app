@@ -9,11 +9,7 @@ import {
 } from 'react-native';
 
 import type { ApartmentFilters } from '@/lib/apartments-service';
-import {
-  HANOI_DISTRICTS,
-  PRICE_RANGES,
-  ROOM_TYPES,
-} from '@/lib/constants';
+import { HANOI_DISTRICTS, ROOM_TYPES } from '@/lib/constants';
 import { buildPriceRangeValue, parsePriceRange } from '@/lib/format';
 import type { RoomType } from '@/lib/types';
 
@@ -39,14 +35,6 @@ const Brand = {
   danger: '#B91C1C',
 } as const;
 
-const PRESET_PRICE_VALUES = new Set(
-  PRICE_RANGES.map((range) => range.value as string),
-);
-
-function isCustomPriceRange(priceRange?: string): boolean {
-  return !!priceRange && !PRESET_PRICE_VALUES.has(priceRange);
-}
-
 function FilterChip({ label, selected, onPress }: ChipProps) {
   return (
     <Pressable
@@ -64,17 +52,18 @@ function FilterChip({ label, selected, onPress }: ChipProps) {
 }
 
 export function ApartmentFiltersBar({ value, onChange }: Props) {
-  const customActive = isCustomPriceRange(value.priceRange);
-  const [customOpen, setCustomOpen] = useState(customActive);
   const [minText, setMinText] = useState('');
   const [maxText, setMaxText] = useState('');
   const [applyError, setApplyError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!value.priceRange || !isCustomPriceRange(value.priceRange)) return;
+    if (!value.priceRange) {
+      setMinText('');
+      setMaxText('');
+      return;
+    }
     const parsed = parsePriceRange(value.priceRange);
-    setCustomOpen(true);
-    setMinText(String(parsed.min));
+    setMinText(parsed.min > 0 ? String(parsed.min) : '');
     setMaxText(parsed.max === null ? '' : String(parsed.max));
   }, [value.priceRange]);
 
@@ -85,36 +74,11 @@ export function ApartmentFiltersBar({ value, onChange }: Props) {
     });
   };
 
-  const setPriceRange = (priceRange: string) => {
-    setCustomOpen(false);
-    setApplyError(null);
-    setMinText('');
-    setMaxText('');
-    onChange({
-      ...value,
-      priceRange: value.priceRange === priceRange ? undefined : priceRange,
-    });
-  };
-
   const setRoomType = (roomType: RoomType) => {
     onChange({
       ...value,
       roomType: value.roomType === roomType ? undefined : roomType,
     });
-  };
-
-  const toggleCustom = () => {
-    setApplyError(null);
-    if (customOpen) {
-      setCustomOpen(false);
-      if (customActive) {
-        onChange({ ...value, priceRange: undefined });
-      }
-      setMinText('');
-      setMaxText('');
-      return;
-    }
-    setCustomOpen(true);
   };
 
   const applyCustomPrice = () => {
@@ -128,6 +92,13 @@ export function ApartmentFiltersBar({ value, onChange }: Props) {
       ...value,
       priceRange: built,
     });
+  };
+
+  const clearPrice = () => {
+    setMinText('');
+    setMaxText('');
+    setApplyError(null);
+    onChange({ ...value, priceRange: undefined });
   };
 
   const hasActive = useMemo(
@@ -148,31 +119,18 @@ export function ApartmentFiltersBar({ value, onChange }: Props) {
         ))}
       </FilterRow>
 
-      <FilterRow label="Giá">
-        {PRICE_RANGES.map((range) => (
-          <FilterChip
-            key={range.value}
-            label={range.label}
-            selected={!customOpen && value.priceRange === range.value}
-            onPress={() => setPriceRange(range.value)}
-          />
-        ))}
-        <FilterChip
-          label="Nhập giá tùy chỉnh"
-          selected={customOpen}
-          onPress={toggleCustom}
-        />
-      </FilterRow>
-
-      {customOpen ? (
+      <View style={styles.priceSection}>
+        <Text style={styles.rowLabel}>Giá (triệu VND / tháng)</Text>
         <View style={styles.customPriceBox}>
-          <Text style={styles.customHint}>Đơn vị: triệu VND / tháng</Text>
           <View style={styles.customRow}>
             <View style={styles.inputCol}>
-              <Text style={styles.inputLabel}>Giá từ</Text>
+              <Text style={styles.inputLabel}>Từ</Text>
               <TextInput
                 value={minText}
-                onChangeText={setMinText}
+                onChangeText={(text) => {
+                  setMinText(text);
+                  setApplyError(null);
+                }}
                 placeholder="VD: 8"
                 placeholderTextColor="#A8A29A"
                 keyboardType="decimal-pad"
@@ -186,7 +144,10 @@ export function ApartmentFiltersBar({ value, onChange }: Props) {
               <Text style={styles.inputLabel}>Đến</Text>
               <TextInput
                 value={maxText}
-                onChangeText={setMaxText}
+                onChangeText={(text) => {
+                  setMaxText(text);
+                  setApplyError(null);
+                }}
                 placeholder="VD: 15"
                 placeholderTextColor="#A8A29A"
                 keyboardType="decimal-pad"
@@ -207,13 +168,18 @@ export function ApartmentFiltersBar({ value, onChange }: Props) {
           </View>
           {applyError ? (
             <Text style={styles.errorText}>{applyError}</Text>
-          ) : customActive ? (
-            <Text style={styles.appliedText}>
-              Đang lọc: {value.priceRange?.replace('-', ' → ') || ''} triệu
-            </Text>
+          ) : value.priceRange ? (
+            <View style={styles.appliedRow}>
+              <Text style={styles.appliedText}>
+                Đang lọc: {value.priceRange.replace('-', ' → ')} triệu
+              </Text>
+              <Pressable onPress={clearPrice} hitSlop={6}>
+                <Text style={styles.clearPriceText}>Xóa giá</Text>
+              </Pressable>
+            </View>
           ) : null}
         </View>
-      ) : null}
+      </View>
 
       <FilterRow label="Loại phòng">
         {ROOM_TYPES.map((type) => (
@@ -229,7 +195,6 @@ export function ApartmentFiltersBar({ value, onChange }: Props) {
       {hasActive ? (
         <Pressable
           onPress={() => {
-            setCustomOpen(false);
             setMinText('');
             setMaxText('');
             setApplyError(null);
@@ -268,12 +233,14 @@ function FilterRow({
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: 10,
+    gap: 12,
     paddingBottom: 8,
   },
   row: {
     gap: 6,
-    paddingHorizontal: 16,
+  },
+  priceSection: {
+    gap: 6,
   },
   rowLabel: {
     fontSize: 12,
@@ -310,18 +277,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   customPriceBox: {
-    marginHorizontal: 16,
     padding: 12,
     borderRadius: 12,
     backgroundColor: Brand.soft,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: Brand.border,
     gap: 10,
-  },
-  customHint: {
-    fontSize: 12,
-    color: Brand.muted,
-    fontWeight: '500',
   },
   customRow: {
     flexDirection: 'row',
@@ -344,7 +305,7 @@ const styles = StyleSheet.create({
     borderColor: Brand.border,
     backgroundColor: Brand.surface,
     paddingHorizontal: 10,
-    fontSize: 14,
+    fontSize: 16,
     color: Brand.ink,
     fontWeight: '600',
   },
@@ -375,15 +336,26 @@ const styles = StyleSheet.create({
     color: Brand.danger,
     fontWeight: '600',
   },
+  appliedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   appliedText: {
+    flex: 1,
     fontSize: 12,
     color: Brand.ink,
     fontWeight: '600',
   },
+  clearPriceText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Brand.danger,
+  },
   clearBtn: {
     alignSelf: 'flex-start',
     paddingTop: 4,
-    paddingHorizontal: 16,
   },
   clearText: {
     fontSize: 13,
