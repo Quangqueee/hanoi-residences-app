@@ -24,9 +24,11 @@ import {
 } from '@/lib/types';
 
 export type ApartmentFilters = {
-  district?: string;
+  /** Single district or multi-select (Web `district=a,b` → Firestore `in`) */
+  district?: string | string[];
   priceRange?: string;
-  roomType?: RoomType;
+  /** Single room type or multi-select */
+  roomType?: RoomType | RoomType[];
   sortBy?: 'newest' | 'price-asc' | 'price-desc';
 };
 
@@ -91,6 +93,20 @@ export function toApartment(docSnap: DocumentSnapshot<DocumentData>): Apartment 
   } as Apartment;
 }
 
+function normalizeStringList(
+  value: string | string[] | undefined,
+): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.map((v) => v.trim()).filter(Boolean);
+  }
+  if (value === 'all') return [];
+  return value
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
 function buildConstraints(
   filters: ApartmentFilters,
   pageSize: number,
@@ -101,12 +117,26 @@ function buildConstraints(
     where('submissionStatus', '==', 'published'),
   ];
 
-  if (filters.district && filters.district !== 'all') {
-    constraints.push(where('district', '==', filters.district));
+  const districtArray = normalizeStringList(filters.district);
+  const roomTypeArray = normalizeStringList(
+    filters.roomType as string | string[] | undefined,
+  );
+
+  // Mirror Web data.ts: Firestore `in` supports ≤ 30 values
+  if (districtArray.length > 0) {
+    constraints.push(
+      districtArray.length === 1
+        ? where('district', '==', districtArray[0])
+        : where('district', 'in', districtArray.slice(0, 30)),
+    );
   }
 
-  if (filters.roomType) {
-    constraints.push(where('roomType', '==', filters.roomType));
+  if (roomTypeArray.length > 0) {
+    constraints.push(
+      roomTypeArray.length === 1
+        ? where('roomType', '==', roomTypeArray[0])
+        : where('roomType', 'in', roomTypeArray.slice(0, 30)),
+    );
   }
 
   const sortBy = filters.sortBy ?? 'newest';

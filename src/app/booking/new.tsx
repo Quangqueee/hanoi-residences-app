@@ -233,7 +233,10 @@ export default function NewBookingScreen() {
       Alert.alert('Thành công', 'Đã gửi yêu cầu đặt lịch.', [
         {
           text: 'OK',
-          onPress: () => router.back(),
+          onPress: () => {
+            if (router.canGoBack()) router.back();
+            else router.replace('/(tabs)/bookings');
+          },
         },
       ]);
     } catch (error) {

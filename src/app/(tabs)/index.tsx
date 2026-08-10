@@ -1,42 +1,78 @@
 import { useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
-  StyleSheet,
+  ScrollView,
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApartmentCard } from '@/components/apartment-card';
+import { ListPaginationFooter } from '@/components/list-pagination-footer';
+import {
+  ApartmentCardSkeleton,
+  ApartmentListSkeleton,
+} from '@/components/ui/shimmer-block';
+import { Hoteliq } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import { useApartments } from '@/hooks/use-apartments';
 import { useNotifications } from '@/hooks/use-notifications';
 import type { ApartmentFilters } from '@/lib/apartments-service';
-import type { Apartment } from '@/lib/types';
+import type { Apartment, RoomType } from '@/lib/types';
 
-const UI = {
-  primary: '#1E75FF',
-  ink: '#1A1A1A',
-  muted: '#7A7A7A',
-  canvas: '#FFFFFF',
-  border: '#E8EAF0',
-  searchBg: '#F3F4F6',
-} as const;
+const TAB_BAR_CLEARANCE = 108;
+const NEAR_COUNT = 6;
 
-const TAB_BAR_CLEARANCE = 100;
+type CategoryKey = 'all' | RoomType;
+
+const CATEGORIES: {
+  key: CategoryKey;
+  label: string;
+  ios: string;
+  android: string;
+}[] = [
+  {
+    key: 'all',
+    label: 'Hotel',
+    ios: 'building.2.fill',
+    android: 'apartment',
+  },
+  {
+    key: 'studio',
+    label: 'Homestay',
+    ios: 'house.fill',
+    android: 'cottage',
+  },
+  {
+    key: '1n1k',
+    label: 'Apart',
+    ios: 'building.fill',
+    android: 'domain',
+  },
+  {
+    key: '2n1k',
+    label: '2PN',
+    ios: 'square.split.2x1.fill',
+    android: 'view_quilt',
+  },
+];
 
 export default function HomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, userData } = useAuth();
   const { unreadCount } = useNotifications(user?.uid);
-  const [filters] = useState<ApartmentFilters>({
-    sortBy: 'newest',
-  });
+  const [category, setCategory] = useState<CategoryKey>('all');
+
+  const filters = useMemo<ApartmentFilters>(() => {
+    const next: ApartmentFilters = { sortBy: 'newest' };
+    if (category !== 'all') next.roomType = category;
+    return next;
+  }, [category]);
 
   const {
     apartments,
@@ -50,365 +86,259 @@ export default function HomeScreen() {
     reload,
   } = useApartments(filters);
 
-  const displayName =
-    userData?.displayName?.trim() ||
-    userData?.email?.split('@')[0] ||
-    'Hanoi Residences';
+  const preferredDistrict =
+    userData?.preferredDistrict?.trim() || 'Hà Nội, Việt Nam';
+
+  const nearList = useMemo(
+    () => apartments.slice(0, NEAR_COUNT),
+    [apartments],
+  );
+
+  const popularList = useMemo(
+    () => apartments.slice(NEAR_COUNT),
+    [apartments],
+  );
 
   const goToSearch = () => {
     router.navigate('/search');
   };
 
   const renderItem = useCallback(
-    ({ item }: { item: Apartment }) => <ApartmentCard apartment={item} />,
+    ({ item }: { item: Apartment }) => (
+      <ApartmentCard apartment={item} variant="compact" />
+    ),
     [],
   );
 
   const keyExtractor = useCallback((item: Apartment) => item.id, []);
 
   const listHeader = (
-    <View style={styles.header}>
-      <View style={styles.topRow}>
-        <View style={styles.topLeft}>
-          <Text style={styles.exploreLabel}>Explore</Text>
-          <View style={styles.locationRow}>
-            <Text style={styles.locationPin}>⌖</Text>
-            <Text style={styles.locationText}>Hanoi, VN</Text>
-            <Text style={styles.locationChevron}>▾</Text>
+    <View className="mb-2 gap-6 pt-1">
+      {/* Location + notifications */}
+      <View className="flex-row items-start justify-between gap-3">
+        <Pressable
+          onPress={goToSearch}
+          accessibilityRole="button"
+          accessibilityLabel="Chọn khu vực"
+          className="min-w-0 flex-1 gap-1">
+          <Text className="text-[12px] font-medium leading-4 text-hoteliq-gray">
+            Current location
+          </Text>
+          <View className="flex-row items-center gap-1.5">
+            <SymbolView
+              name={{
+                ios: 'mappin.and.ellipse',
+                android: 'location_on',
+                web: 'location_on',
+              }}
+              size={16}
+              tintColor={Hoteliq.primary}
+              weight="semibold"
+            />
+            <Text
+              className="flex-1 text-[16px] font-semibold leading-5 text-hoteliq-ink"
+              numberOfLines={1}>
+              {preferredDistrict}
+            </Text>
           </View>
-        </View>
+        </Pressable>
 
         <Pressable
           onPress={() => router.push('/notifications')}
           accessibilityRole="button"
           accessibilityLabel="Thông báo"
           hitSlop={8}
-          style={({ pressed }) => [
-            styles.bellBtn,
-            pressed && styles.bellBtnPressed,
-          ]}>
+          className="h-11 w-11 items-center justify-center rounded-[12px] border border-hoteliq-line bg-white"
+          style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}>
           <SymbolView
             name={{
-              ios: unreadCount > 0 ? 'bell.badge.fill' : 'bell.fill',
-              android: 'notifications',
-              web: 'notifications',
+              ios: unreadCount > 0 ? 'bell.badge.fill' : 'bell',
+              android: 'notifications_none',
+              web: 'notifications_none',
             }}
-            size={22}
-            tintColor={UI.ink}
+            size={20}
+            tintColor={Hoteliq.ink}
             weight="medium"
           />
           {unreadCount > 0 ? (
-            <View style={styles.bellBadge}>
-              <Text style={styles.bellBadgeText}>
-                {unreadCount > 99 ? '99+' : String(unreadCount)}
-              </Text>
-            </View>
+            <View className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-hoteliq-heart" />
           ) : null}
         </Pressable>
       </View>
 
-      <Text style={styles.heroTitle} numberOfLines={1}>
-        {displayName}
-      </Text>
+      {/* Category pills */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 10, paddingRight: 8 }}>
+        {CATEGORIES.map((item) => {
+          const active = category === item.key;
+          return (
+            <Pressable
+              key={item.key}
+              onPress={() => setCategory(item.key)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              className={`h-[44px] flex-row items-center gap-2 rounded-[12px] px-3.5 ${
+                active ? 'bg-hoteliq-primary' : 'bg-hoteliq-chip'
+              }`}
+              style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+              <View
+                className={`h-7 w-7 items-center justify-center rounded-[8px] ${
+                  active ? 'bg-white/20' : 'bg-white'
+                }`}>
+                <SymbolView
+                  name={{
+                    ios: item.ios as 'building.2.fill',
+                    android: item.android as 'apartment',
+                    web: item.android as 'apartment',
+                  }}
+                  size={14}
+                  tintColor={active ? '#FFFFFF' : Hoteliq.muted}
+                  weight="medium"
+                />
+              </View>
+              <Text
+                className={`text-[13px] font-semibold ${
+                  active ? 'text-white' : 'text-hoteliq-gray'
+                }`}>
+                {item.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
 
-      <Pressable
-        onPress={goToSearch}
-        accessibilityRole="button"
-        accessibilityLabel="Mở tìm kiếm"
-        style={({ pressed }) => [
-          styles.searchBar,
-          pressed && styles.searchBarPressed,
-        ]}>
-        <Text style={styles.searchIcon}>⌕</Text>
-        <Text style={styles.searchPlaceholder}>
-          Tìm căn hộ, mã căn, quận…
-        </Text>
-      </Pressable>
-
-      {!loading && apartments.length > 0 ? (
-        <View style={styles.sectionHead}>
-          <Text style={styles.sectionTitle}>Popular</Text>
-          <Text style={styles.resultCount}>
-            {apartments.length}
-            {hasMore ? '+' : ''} căn
+      {/* Near Location rail */}
+      <View className="gap-3.5">
+        <View className="flex-row items-center justify-between">
+          <Text className="text-[18px] font-semibold tracking-tight text-hoteliq-ink">
+            Near Location
           </Text>
+          <Pressable onPress={goToSearch} hitSlop={8}>
+            <Text className="text-[13px] font-semibold text-hoteliq-primary">
+              See all
+            </Text>
+          </Pressable>
+        </View>
+
+        {loading && apartments.length === 0 ? (
+          <ApartmentListSkeleton count={3} variant="rail" />
+        ) : nearList.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            decelerationRate="fast"
+            contentContainerStyle={{ paddingRight: 8, gap: 14 }}>
+            {nearList.map((item) => (
+              <ApartmentCard
+                key={`near-${item.id}`}
+                apartment={item}
+                variant="rail"
+              />
+            ))}
+          </ScrollView>
+        ) : null}
+      </View>
+
+      {/* Popular section title */}
+      {!loading && apartments.length > 0 ? (
+        <View className="mt-1 flex-row items-center justify-between">
+          <Text className="text-[18px] font-semibold tracking-tight text-hoteliq-ink">
+            Popular Hotel
+          </Text>
+          <Pressable onPress={goToSearch} hitSlop={8}>
+            <Text className="text-[13px] font-semibold text-hoteliq-primary">
+              See all
+            </Text>
+          </Pressable>
         </View>
       ) : null}
     </View>
   );
 
+  const listData =
+    loading && apartments.length === 0
+      ? []
+      : popularList.length > 0
+        ? popularList
+        : apartments;
+
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <View style={styles.container}>
-        {loading && apartments.length === 0 ? (
-          <View style={styles.centered}>
-            {listHeader}
-            <View style={styles.loadingBlock}>
-              <ActivityIndicator size="large" color={UI.primary} />
-              <Text style={styles.loadingText}>Đang tải căn hộ…</Text>
-            </View>
-          </View>
-        ) : (
-          <FlatList
-            data={apartments}
-            keyExtractor={keyExtractor}
-            renderItem={renderItem}
-            ListHeaderComponent={listHeader}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            initialNumToRender={6}
-            maxToRenderPerBatch={8}
-            windowSize={7}
-            removeClippedSubviews
-            keyboardShouldPersistTaps="handled"
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={() => {
-                  void refresh();
-                }}
-                tintColor={UI.primary}
-                colors={[UI.primary]}
-              />
-            }
-            onEndReached={() => {
-              void loadMore();
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+      <FlatList
+        data={listData}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        ListHeaderComponent={listHeader}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingBottom: TAB_BAR_CLEARANCE,
+          flexGrow: 1,
+        }}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={8}
+        maxToRenderPerBatch={10}
+        windowSize={7}
+        removeClippedSubviews
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              void refresh();
             }}
-            onEndReachedThreshold={0.4}
-            ListEmptyComponent={
-              <View style={styles.empty}>
-                <View style={styles.emptyCard}>
-                  <Text style={styles.emptyTitle}>
-                    {error
-                      ? 'Không tải được danh sách'
-                      : 'Chưa có căn phù hợp'}
-                  </Text>
-                  <Text style={styles.emptyBody}>
-                    {error
-                      ? error
-                      : 'Mở tab Tìm kiếm để lọc theo quận, giá hoặc loại phòng.'}
-                  </Text>
-                  {error ? (
-                    <Pressable
-                      onPress={() => void reload()}
-                      style={({ pressed }) => [
-                        styles.retryBtn,
-                        pressed && styles.retryBtnPressed,
-                      ]}>
-                      <Text style={styles.retryBtnText}>Thử lại</Text>
-                    </Pressable>
-                  ) : null}
-                </View>
-              </View>
-            }
-            ListFooterComponent={
-              loadingMore ? (
-                <View style={styles.footer}>
-                  <ActivityIndicator color={UI.primary} />
-                </View>
-              ) : !hasMore && apartments.length > 0 ? (
-                <Text style={styles.footerText}>Bạn đã xem hết danh sách</Text>
-              ) : null
-            }
+            tintColor={Hoteliq.primary}
+            colors={[Hoteliq.primary]}
           />
-        )}
-      </View>
-    </SafeAreaView>
+        }
+        onEndReached={() => {
+          void loadMore();
+        }}
+        onEndReachedThreshold={0.4}
+        ListEmptyComponent={
+          loading ? (
+            <View className="mt-2 gap-3">
+              <ApartmentCardSkeleton variant="compact" />
+              <ApartmentCardSkeleton />
+              <ApartmentCardSkeleton />
+            </View>
+          ) : (
+            <View className="items-center gap-3 rounded-[16px] bg-hoteliq-chip px-7 py-10">
+              <Text className="text-center text-[17px] font-semibold text-hoteliq-ink">
+                {error ? 'Không tải được danh sách' : 'Chưa có căn phù hợp'}
+              </Text>
+              <Text className="text-center text-sm leading-6 text-hoteliq-gray">
+                {error
+                  ? error
+                  : 'Mở tab Tìm kiếm để lọc theo quận, giá hoặc loại phòng.'}
+              </Text>
+              {error ? (
+                <Pressable
+                  onPress={() => void reload()}
+                  className="mt-1 min-h-11 items-center justify-center rounded-[12px] bg-hoteliq-primary px-6"
+                  style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+                  <Text className="text-sm font-bold text-white">Thử lại</Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  onPress={goToSearch}
+                  className="mt-1 min-h-11 items-center justify-center rounded-[12px] bg-hoteliq-primary px-6"
+                  style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+                  <Text className="text-sm font-bold text-white">Tìm kiếm</Text>
+                </Pressable>
+              )}
+            </View>
+          )
+        }
+        ListFooterComponent={
+          <ListPaginationFooter
+            loadingMore={loadingMore}
+            hasMore={hasMore}
+            itemCount={apartments.length}
+          />
+        }
+      />
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: UI.canvas,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: UI.canvas,
-  },
-  header: {
-    gap: 14,
-    paddingTop: 4,
-    marginBottom: 8,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  topLeft: {
-    flex: 1,
-    gap: 6,
-  },
-  exploreLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: UI.muted,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  locationPin: {
-    color: UI.primary,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  locationText: {
-    color: UI.ink,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  locationChevron: {
-    color: UI.muted,
-    fontSize: 12,
-    marginLeft: 2,
-  },
-  bellBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#F3F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bellBtnPressed: {
-    opacity: 0.75,
-  },
-  bellBadge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    paddingHorizontal: 4,
-    backgroundColor: UI.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bellBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  heroTitle: {
-    fontSize: 32,
-    lineHeight: 38,
-    fontWeight: '800',
-    color: UI.ink,
-    letterSpacing: -0.8,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: UI.searchBg,
-    borderRadius: 999,
-    minHeight: 52,
-    paddingHorizontal: 18,
-    gap: 10,
-  },
-  searchBarPressed: {
-    opacity: 0.88,
-  },
-  searchIcon: {
-    fontSize: 20,
-    color: '#9AA0A6',
-    marginTop: -1,
-  },
-  searchPlaceholder: {
-    flex: 1,
-    fontSize: 16,
-    color: '#A0A4AE',
-    fontWeight: '500',
-  },
-  sectionHead: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-    marginTop: 8,
-    paddingHorizontal: 2,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: UI.ink,
-  },
-  resultCount: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: UI.primary,
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: TAB_BAR_CLEARANCE,
-  },
-  centered: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  loadingBlock: {
-    marginTop: 40,
-    alignItems: 'center',
-    gap: 12,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: UI.muted,
-    fontWeight: '500',
-  },
-  empty: {
-    paddingVertical: 28,
-  },
-  emptyCard: {
-    backgroundColor: '#FAFBFC',
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: UI.border,
-  },
-  emptyTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: UI.ink,
-    textAlign: 'center',
-  },
-  emptyBody: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: UI.muted,
-    textAlign: 'center',
-  },
-  retryBtn: {
-    marginTop: 8,
-    minHeight: 44,
-    paddingHorizontal: 20,
-    borderRadius: 22,
-    backgroundColor: UI.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  retryBtnPressed: {
-    opacity: 0.88,
-  },
-  retryBtnText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  footer: {
-    paddingVertical: 24,
-    alignItems: 'center',
-  },
-  footerText: {
-    textAlign: 'center',
-    paddingVertical: 16,
-    fontSize: 13,
-    color: UI.muted,
-    fontWeight: '500',
-  },
-});

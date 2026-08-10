@@ -1,28 +1,38 @@
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  useFonts,
+} from '@expo-google-fonts/inter';
 import { DarkTheme, DefaultTheme, ThemeProvider, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { ActivityIndicator, useColorScheme, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import '@/global.css';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
-import { Colors } from '@/constants/theme';
+import { Colors, Hoteliq } from '@/constants/theme';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 SplashScreen.preventAutoHideAsync();
 
-function RootNavigator() {
+function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
   const colorScheme = useColorScheme();
   const { loading } = useAuth();
   usePushNotifications();
   const scheme = colorScheme === 'unspecified' ? 'light' : colorScheme;
   const colors = Colors[scheme ?? 'light'];
+  const ready = fontsReady && !loading;
 
   useEffect(() => {
-    if (!loading) {
+    if (ready) {
       void SplashScreen.hideAsync();
     }
-  }, [loading]);
+  }, [ready]);
 
-  if (loading) {
+  if (!ready) {
     return (
       <View
         style={{
@@ -31,7 +41,7 @@ function RootNavigator() {
           justifyContent: 'center',
           backgroundColor: colors.background,
         }}>
-        <ActivityIndicator size="large" color={colors.text} />
+        <ActivityIndicator size="large" color={Hoteliq.primary} />
       </View>
     );
   }
@@ -50,6 +60,14 @@ function RootNavigator() {
           }}
         />
         <Stack.Screen
+          name="search-results"
+          options={{
+            headerShown: false,
+            presentation: 'card',
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
           name="booking/new"
           options={{
             headerShown: true,
@@ -63,9 +81,18 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
   return (
-    <AuthProvider>
-      <RootNavigator />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <RootNavigator fontsReady={fontsLoaded || !!fontError} />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

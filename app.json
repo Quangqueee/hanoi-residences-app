@@ -12,7 +12,9 @@
       "infoPlist": {
         "NSPhotoLibraryAddUsageDescription": "Cho phép Hanoi Residences lưu ảnh căn hộ vào thư viện ảnh của bạn.",
         "NSPhotoLibraryUsageDescription": "Cho phép Hanoi Residences lưu ảnh căn hộ vào thư viện ảnh của bạn.",
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -34,6 +36,7 @@
     },
     "web": {
       "output": "static",
+      "bundler": "metro",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -51,7 +54,9 @@
         {
           "photosPermission": "Cho phép Hanoi Residences lưu ảnh căn hộ vào thư viện của bạn.",
           "savePhotosPermission": "Cho phép Hanoi Residences lưu ảnh căn hộ vào thư viện của bạn.",
-          "granularPermissions": ["photo"]
+          "granularPermissions": [
+            "photo"
+          ]
         }
       ],
       [
@@ -62,7 +67,8 @@
           "defaultChannel": "hanoi-residences-default",
           "sounds": []
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -7,12 +7,15 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/contexts/auth-context';
 import {
@@ -29,48 +32,77 @@ type Props = {
   onClose: () => void;
 };
 
-const UI = {
-  primary: '#1E75FF',
-  ink: '#1A1A1A',
-  muted: '#7A7A7A',
-  border: '#E5E7EB',
-  soft: '#F3F5F9',
-  danger: '#DC2626',
-  inputBg: '#FFFFFF',
-} as const;
-
-function isValidDate(value: string): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+function pad(n: number) {
+  return String(n).padStart(2, '0');
 }
 
-function isValidTime(value: string): boolean {
-  if (!value) return true;
-  return /^\d{2}:\d{2}$/.test(value);
+function toYmd(d: Date) {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function toHm(d: Date) {
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function FormField({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType,
+  multiline,
+  editable = true,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (t: string) => void;
+  placeholder?: string;
+  keyboardType?: 'default' | 'phone-pad' | 'decimal-pad';
+  multiline?: boolean;
+  editable?: boolean;
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <View className="gap-1.5">
+      <Text className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280]">
+        {label}
+      </Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor="#9CA3AF"
+        keyboardType={keyboardType}
+        multiline={multiline}
+        editable={editable}
+        textAlignVertical={multiline ? 'top' : 'center'}
+        className={`rounded-2xl border-[1.5px] bg-white px-4 text-base font-semibold text-[#111827] ${
+          multiline ? 'min-h-[96px] py-3' : 'min-h-[52px] py-3'
+        } ${focused ? 'border-brand' : 'border-[#E5E7EB]'} ${
+          !editable ? 'opacity-60' : ''
+        }`}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+      />
+    </View>
+  );
 }
 
 export function BookingModal({ visible, apartment, onClose }: Props) {
-  const {
-    user,
-    userData,
-    role,
-    isAdmin,
-    isCollaborator,
-    roleLabel,
-  } = useAuth();
+  const insets = useSafeAreaInsets();
+  const { user, userData, role, isAdmin, isCollaborator } = useAuth();
+
+  const isGuest = !user;
+  const isLeadForm = isCollaborator || isAdmin;
 
   const [submitting, setSubmitting] = useState(false);
-  const [bookingDate, setBookingDate] = useState('');
-  const [bookingTime, setBookingTime] = useState('');
   const [notes, setNotes] = useState('');
   const [budget, setBudget] = useState('');
-
   const [name, setName] = useState(userData?.displayName || '');
   const [phone, setPhone] = useState(userData?.phoneNumber || '');
-
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [consultationPrice, setConsultationPrice] = useState('');
-
   const [adminMode, setAdminMode] = useState<AdminBookingMode>('personal');
   const [ctvList, setCtvList] = useState<CollaboratorOption[]>([]);
   const [ctvSearch, setCtvSearch] = useState('');
@@ -79,13 +111,18 @@ export function BookingModal({ visible, apartment, onClose }: Props) {
   );
   const [loadingCtv, setLoadingCtv] = useState(false);
 
-  const isLeadForm = isCollaborator || isAdmin;
+  const [bookingDate, setBookingDate] = useState(toYmd(new Date()));
+  const [bookingTime, setBookingTime] = useState('');
+  const [pickerMode, setPickerMode] = useState<'date' | 'time' | null>(null);
+  const [pickerValue, setPickerValue] = useState(new Date());
 
-  const title = isAdmin
-    ? 'Thêm lịch cho căn này'
-    : isCollaborator
-      ? 'Đặt lịch dẫn khách'
-      : 'Đặt lịch xem phòng';
+  const title = isGuest
+    ? 'Đặt lịch tư vấn'
+    : isAdmin
+      ? 'Thêm lịch cho căn này'
+      : isCollaborator
+        ? 'Đặt lịch dẫn khách'
+        : 'Đặt lịch xem phòng';
 
   useEffect(() => {
     if (!visible) return;
@@ -124,7 +161,7 @@ export function BookingModal({ visible, apartment, onClose }: Props) {
   }, [ctvList, ctvSearch]);
 
   const resetForm = () => {
-    setBookingDate('');
+    setBookingDate(toYmd(new Date()));
     setBookingTime('');
     setNotes('');
     setBudget('');
@@ -134,6 +171,7 @@ export function BookingModal({ visible, apartment, onClose }: Props) {
     setAdminMode('personal');
     setCtvSearch('');
     setSelectedCtv(null);
+    setPickerMode(null);
   };
 
   const handleClose = () => {
@@ -142,42 +180,43 @@ export function BookingModal({ visible, apartment, onClose }: Props) {
     onClose();
   };
 
+  const onPickerChange = (event: DateTimePickerEvent, selected?: Date) => {
+    if (Platform.OS === 'android') setPickerMode(null);
+    if (event.type === 'dismissed' || !selected) return;
+    setPickerValue(selected);
+    if (pickerMode === 'date') setBookingDate(toYmd(selected));
+    if (pickerMode === 'time') setBookingTime(toHm(selected));
+  };
+
   const onSubmit = async () => {
-    if (!role || role === 'landlord') {
+    if (role === 'landlord') {
       Alert.alert(
         'Không hỗ trợ',
-        'Tài khoản hiện tại không thể tạo lịch hẹn từ app.',
-      );
-      return;
-    }
-    if (!isValidDate(bookingDate)) {
-      Alert.alert('Ngày không hợp lệ', 'Nhập ngày theo định dạng YYYY-MM-DD.');
-      return;
-    }
-    if (!isValidTime(bookingTime)) {
-      Alert.alert(
-        'Giờ không hợp lệ',
-        'Nhập giờ theo định dạng HH:mm hoặc để trống.',
+        'Tài khoản chủ nhà không thể tạo lịch hẹn từ app.',
       );
       return;
     }
 
-    if (isCollaborator || isAdmin) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(bookingDate)) {
+      Alert.alert('Ngày không hợp lệ', 'Vui lòng chọn ngày xem phòng.');
+      return;
+    }
+
+    if (isLeadForm) {
       if (!clientName.trim() || !clientPhone.trim()) {
         Alert.alert('Thiếu thông tin khách', 'Vui lòng nhập tên và SĐT khách.');
         return;
       }
-      if (!consultationPrice.trim() && (isCollaborator || adminMode === 'assign_ctv')) {
+      if (
+        !consultationPrice.trim() &&
+        (isCollaborator || adminMode === 'assign_ctv')
+      ) {
         Alert.alert('Thiếu giá tư vấn', 'Vui lòng nhập giá tư vấn báo khách.');
         return;
       }
-    }
-
-    if (!isCollaborator && !isAdmin) {
-      if (!name.trim() || !phone.trim()) {
-        Alert.alert('Thiếu thông tin', 'Vui lòng nhập họ tên và số điện thoại.');
-        return;
-      }
+    } else if (!name.trim() || !phone.trim()) {
+      Alert.alert('Thiếu thông tin', 'Vui lòng nhập họ tên và số điện thoại.');
+      return;
     }
 
     if (isAdmin && adminMode === 'assign_ctv' && !selectedCtv) {
@@ -188,7 +227,8 @@ export function BookingModal({ visible, apartment, onClose }: Props) {
     setSubmitting(true);
     try {
       await createBooking({
-        role,
+        role: isGuest ? null : role,
+        isGuest,
         apartmentId: apartment.id,
         apartmentCode: apartment.sourceCode,
         apartmentTitle: apartment.title,
@@ -244,419 +284,252 @@ export function BookingModal({ visible, apartment, onClose }: Props) {
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={handleClose}>
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView
-          style={styles.flex}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={styles.header}>
-            <View style={styles.headerTextWrap}>
-              <Text style={styles.headerTitle}>{title}</Text>
-              <Text style={styles.headerSub}>
-                {roleLabel ?? '—'}
-                {apartment.sourceCode ? ` · Mã ${apartment.sourceCode}` : ''}
-              </Text>
-            </View>
-            <Pressable
-              onPress={handleClose}
-              hitSlop={10}
-              style={({ pressed }) => [
-                styles.closeBtn,
-                pressed && { opacity: 0.7 },
-              ]}>
-              <Text style={styles.closeBtnText}>Đóng</Text>
-            </Pressable>
+      <View
+        className="flex-1 bg-background"
+        style={{ paddingTop: Math.max(insets.top, 8) }}>
+        <View className="flex-row items-center justify-between border-b border-black/[0.06] px-5 pb-3">
+          <View className="min-w-0 flex-1 pr-3">
+            <Text className="text-xl font-extrabold text-[#111827]">
+              {title}
+            </Text>
+            <Text className="mt-0.5 text-[13px] font-medium text-brand" numberOfLines={1}>
+              {apartment.sourceCode
+                ? `Mã căn ${apartment.sourceCode}`
+                : apartment.title}
+            </Text>
           </View>
+          <Pressable onPress={handleClose} hitSlop={12} disabled={submitting}>
+            <Text className="text-base font-bold text-[#6B7280]">Đóng</Text>
+          </Pressable>
+        </View>
 
+        <KeyboardAvoidingView
+          className="flex-1"
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}>
-            {isAdmin ? (
-              <View style={styles.segment}>
-                <Pressable
-                  onPress={() => setAdminMode('personal')}
-                  style={[
-                    styles.segmentBtn,
-                    adminMode === 'personal' && styles.segmentBtnActive,
-                  ]}>
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      adminMode === 'personal' && styles.segmentTextActive,
-                    ]}>
-                    Khách cá nhân
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => setAdminMode('assign_ctv')}
-                  style={[
-                    styles.segmentBtn,
-                    adminMode === 'assign_ctv' && styles.segmentBtnActive,
-                  ]}>
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      adminMode === 'assign_ctv' && styles.segmentTextActive,
-                    ]}>
-                    Khách CTV
-                  </Text>
-                </Pressable>
+            className="flex-1"
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingTop: 16,
+              paddingBottom: 28 + insets.bottom,
+              gap: 16,
+            }}
+            keyboardShouldPersistTaps="handled">
+            {isGuest ? (
+              <View className="rounded-2xl border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3">
+                <Text className="text-sm leading-5 text-[#92400E]">
+                  Bạn đang đặt lịch với tư cách khách vãng lai. Thông tin sẽ được
+                  gửi tới ban quản trị để liên hệ tư vấn.
+                </Text>
               </View>
             ) : null}
 
-            {isAdmin && adminMode === 'assign_ctv' ? (
-              <View style={styles.block}>
-                <Text style={styles.label}>Chọn CTV *</Text>
-                <TextInput
-                  placeholder="Tìm tên hoặc SĐT CTV"
-                  placeholderTextColor={UI.muted}
-                  value={ctvSearch}
-                  onChangeText={setCtvSearch}
-                  style={styles.input}
-                />
-                {loadingCtv ? (
-                  <ActivityIndicator color={UI.primary} />
-                ) : (
-                  <View style={styles.ctvList}>
-                    {filteredCtv.slice(0, 8).map((ctv) => {
-                      const selected = selectedCtv?.uid === ctv.uid;
-                      return (
-                        <Pressable
-                          key={ctv.uid}
-                          onPress={() => setSelectedCtv(ctv)}
-                          style={[
-                            styles.ctvItem,
-                            selected && styles.ctvItemSelected,
-                          ]}>
-                          <Text style={styles.ctvName}>{ctv.displayName}</Text>
-                          <Text style={styles.ctvPhone}>
-                            {ctv.phoneNumber || 'Chưa có SĐT'}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                    {filteredCtv.length === 0 ? (
-                      <Text style={styles.hint}>Không tìm thấy CTV.</Text>
-                    ) : null}
-                  </View>
-                )}
+            {isAdmin ? (
+              <View className="flex-row gap-2">
+                {(
+                  [
+                    { key: 'personal', label: 'Khách riêng' },
+                    { key: 'assign_ctv', label: 'Gán CTV' },
+                  ] as const
+                ).map((opt) => {
+                  const selected = adminMode === opt.key;
+                  return (
+                    <Pressable
+                      key={opt.key}
+                      onPress={() => setAdminMode(opt.key)}
+                      className={`min-h-11 flex-1 items-center justify-center rounded-full px-3 ${
+                        selected ? 'bg-brand' : 'bg-[#F3F4F6]'
+                      }`}>
+                      <Text
+                        className={`text-[13px] font-bold ${
+                          selected ? 'text-white' : 'text-[#374151]'
+                        }`}>
+                        {opt.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
             ) : null}
 
             {isLeadForm ? (
               <>
-                <View style={styles.row}>
-                  <View style={styles.half}>
-                    <Text style={styles.label}>
-                      Tên khách <Text style={styles.req}>*</Text>
-                    </Text>
-                    <TextInput
-                      value={clientName}
-                      onChangeText={setClientName}
-                      placeholder="Họ tên khách"
-                      placeholderTextColor={UI.muted}
-                      style={styles.input}
-                    />
-                  </View>
-                  <View style={styles.half}>
-                    <Text style={styles.label}>
-                      SĐT khách <Text style={styles.req}>*</Text>
-                    </Text>
-                    <TextInput
-                      value={clientPhone}
-                      onChangeText={setClientPhone}
-                      placeholder="Số điện thoại"
-                      placeholderTextColor={UI.muted}
-                      keyboardType="phone-pad"
-                      style={styles.input}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.block}>
-                  <Text style={styles.label}>
-                    Giá tư vấn{' '}
-                    {isCollaborator || adminMode === 'assign_ctv' ? (
-                      <Text style={styles.req}>*</Text>
-                    ) : null}
-                  </Text>
-                  <TextInput
-                    value={consultationPrice}
-                    onChangeText={setConsultationPrice}
-                    placeholder="Giá báo khách..."
-                    placeholderTextColor={UI.muted}
-                    style={styles.input}
-                  />
-                </View>
-
-                <View style={styles.block}>
-                  <Text style={styles.label}>Ngân sách</Text>
-                  <TextInput
-                    value={budget}
-                    onChangeText={setBudget}
-                    placeholder="VD: 5-7tr"
-                    placeholderTextColor={UI.muted}
-                    style={styles.input}
-                  />
-                </View>
+                <FormField
+                  label="Tên khách hàng"
+                  value={clientName}
+                  onChangeText={setClientName}
+                  placeholder="Nhập tên khách thực tế"
+                />
+                <FormField
+                  label="Số điện thoại khách"
+                  value={clientPhone}
+                  onChangeText={setClientPhone}
+                  placeholder="09…"
+                  keyboardType="phone-pad"
+                />
+                <FormField
+                  label="Giá tư vấn báo khách"
+                  value={consultationPrice}
+                  onChangeText={setConsultationPrice}
+                  placeholder="VD: 12"
+                  keyboardType="decimal-pad"
+                />
               </>
             ) : (
               <>
-                <View style={styles.block}>
-                  <Text style={styles.label}>
-                    Họ và tên <Text style={styles.req}>*</Text>
-                  </Text>
-                  <TextInput
-                    value={name}
-                    onChangeText={setName}
-                    placeholder="Họ tên"
-                    placeholderTextColor={UI.muted}
-                    style={styles.input}
-                  />
-                </View>
-                <View style={styles.block}>
-                  <Text style={styles.label}>
-                    Số điện thoại <Text style={styles.req}>*</Text>
-                  </Text>
-                  <TextInput
-                    value={phone}
-                    onChangeText={setPhone}
-                    placeholder="SĐT"
-                    placeholderTextColor={UI.muted}
-                    keyboardType="phone-pad"
-                    style={styles.input}
-                  />
-                </View>
-                <View style={styles.block}>
-                  <Text style={styles.label}>Ngân sách</Text>
-                  <TextInput
-                    value={budget}
-                    onChangeText={setBudget}
-                    placeholder="VD: 5-7 triệu"
-                    placeholderTextColor={UI.muted}
-                    style={styles.input}
-                  />
-                </View>
+                <FormField
+                  label="Họ và tên"
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Nguyễn Văn A"
+                />
+                <FormField
+                  label="Số điện thoại"
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder="09…"
+                  keyboardType="phone-pad"
+                />
               </>
             )}
 
-            <View style={styles.row}>
-              <View style={styles.half}>
-                <Text style={styles.label}>
-                  {isCollaborator || isAdmin ? 'Ngày dẫn' : 'Ngày xem'}{' '}
-                  <Text style={styles.req}>*</Text>
+            <FormField
+              label="Ngân sách (tuỳ chọn)"
+              value={budget}
+              onChangeText={setBudget}
+              placeholder="VD: 10–15 triệu"
+            />
+
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => {
+                  setPickerValue(new Date(`${bookingDate}T${bookingTime || '09:00'}:00`));
+                  setPickerMode('date');
+                }}
+                className="min-h-[56px] flex-1 justify-center rounded-2xl border-[1.5px] border-[#E5E7EB] bg-white px-4">
+                <Text className="text-[11px] font-bold uppercase text-[#9CA3AF]">
+                  Ngày xem
+                </Text>
+                <Text className="text-base font-bold text-[#111827]">
+                  {bookingDate}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setPickerValue(new Date(`${bookingDate}T${bookingTime || '09:00'}:00`));
+                  setPickerMode('time');
+                }}
+                className="min-h-[56px] flex-1 justify-center rounded-2xl border-[1.5px] border-[#E5E7EB] bg-white px-4">
+                <Text className="text-[11px] font-bold uppercase text-[#9CA3AF]">
+                  Giờ xem
+                </Text>
+                <Text className="text-base font-bold text-[#111827]">
+                  {bookingTime || 'Cả ngày'}
+                </Text>
+              </Pressable>
+            </View>
+
+            {isAdmin && adminMode === 'assign_ctv' ? (
+              <View className="gap-2">
+                <Text className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280]">
+                  Chọn CTV
                 </Text>
                 <TextInput
-                  value={bookingDate}
-                  onChangeText={setBookingDate}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={UI.muted}
-                  style={styles.input}
-                  autoCapitalize="none"
+                  value={ctvSearch}
+                  onChangeText={setCtvSearch}
+                  placeholder="Tìm CTV theo tên / SĐT"
+                  placeholderTextColor="#9CA3AF"
+                  className="min-h-[48px] rounded-2xl border-[1.5px] border-[#E5E7EB] bg-white px-4 text-base text-[#111827]"
                 />
+                {loadingCtv ? (
+                  <ActivityIndicator color="#CDA533" />
+                ) : (
+                  <View className="max-h-40 overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white">
+                    <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
+                      {filteredCtv.map((ctv) => {
+                        const selected = selectedCtv?.uid === ctv.uid;
+                        return (
+                          <Pressable
+                            key={ctv.uid}
+                            onPress={() => setSelectedCtv(ctv)}
+                            className={`border-b border-[#F3F4F6] px-4 py-3 ${
+                              selected ? 'bg-[#FBF8F1]' : 'bg-white'
+                            }`}>
+                            <Text className="text-sm font-bold text-[#111827]">
+                              {ctv.displayName}
+                            </Text>
+                            <Text className="text-xs text-[#6B7280]">
+                              {ctv.phoneNumber || 'Chưa có SĐT'}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                      {filteredCtv.length === 0 ? (
+                        <Text className="px-4 py-3 text-sm text-[#6B7280]">
+                          Không tìm thấy CTV
+                        </Text>
+                      ) : null}
+                    </ScrollView>
+                  </View>
+                )}
               </View>
-              <View style={styles.half}>
-                <Text style={styles.label}>Giờ (tuỳ chọn)</Text>
-                <TextInput
-                  value={bookingTime}
-                  onChangeText={setBookingTime}
-                  placeholder="HH:mm"
-                  placeholderTextColor={UI.muted}
-                  style={styles.input}
-                  autoCapitalize="none"
-                />
-              </View>
-            </View>
+            ) : null}
 
-            <View style={styles.block}>
-              <Text style={styles.label}>Lưu ý thêm</Text>
-              <TextInput
-                value={notes}
-                onChangeText={setNotes}
-                placeholder={
-                  isCollaborator || isAdmin
-                    ? 'Tài chính, xe điện, pet...'
-                    : 'Yêu cầu đặc biệt (pet, chỗ để ô tô...)'
-                }
-                placeholderTextColor={UI.muted}
-                style={[styles.input, styles.textArea]}
-                multiline
-                textAlignVertical="top"
-              />
-            </View>
-          </ScrollView>
+            <FormField
+              label="Ghi chú"
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+              placeholder="Yêu cầu thêm / lưu ý dẫn khách…"
+            />
 
-          <View style={styles.footer}>
             <Pressable
               onPress={() => void onSubmit()}
               disabled={submitting}
-              style={({ pressed }) => [
-                styles.submitBtn,
-                (pressed || submitting) && { opacity: 0.85 },
-              ]}>
-              {submitting ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.submitText}>Xác nhận tạo lịch</Text>
-              )}
+              className="mt-2 overflow-hidden rounded-[28px]"
+              style={({ pressed }) => ({
+                opacity: submitting ? 0.75 : pressed ? 0.92 : 1,
+              })}>
+              <LinearGradient
+                colors={['#D4B24A', '#CDA533', '#B88E22']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  minHeight: 56,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                {submitting ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <Text className="text-base font-bold text-white">
+                    Xác nhận đặt lịch
+                  </Text>
+                )}
+              </LinearGradient>
             </Pressable>
-          </View>
+          </ScrollView>
         </KeyboardAvoidingView>
-      </SafeAreaView>
+
+        {pickerMode ? (
+          <DateTimePicker
+            value={pickerValue}
+            mode={pickerMode}
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={onPickerChange}
+            minimumDate={pickerMode === 'date' ? new Date() : undefined}
+          />
+        ) : null}
+
+        {Platform.OS === 'ios' && pickerMode ? (
+          <Pressable
+            onPress={() => setPickerMode(null)}
+            className="items-center border-t border-[#E5E7EB] bg-white py-3"
+            style={{ paddingBottom: insets.bottom || 12 }}>
+            <Text className="text-base font-bold text-brand">Xong</Text>
+          </Pressable>
+        ) : null}
+      </View>
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  flex: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: UI.border,
-    gap: 12,
-  },
-  headerTextWrap: { flex: 1, gap: 4 },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: UI.ink,
-  },
-  headerSub: {
-    fontSize: 13,
-    color: UI.muted,
-    fontWeight: '500',
-  },
-  closeBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    backgroundColor: UI.soft,
-  },
-  closeBtnText: {
-    color: UI.ink,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 24,
-    gap: 14,
-  },
-  segment: {
-    flexDirection: 'row',
-    backgroundColor: UI.soft,
-    borderRadius: 14,
-    padding: 4,
-    gap: 4,
-  },
-  segmentBtn: {
-    flex: 1,
-    minHeight: 40,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segmentBtnActive: {
-    backgroundColor: '#FFFFFF',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 3,
-      },
-      android: { elevation: 1 },
-      default: {},
-    }),
-  },
-  segmentText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: UI.muted,
-  },
-  segmentTextActive: {
-    color: UI.ink,
-  },
-  block: { gap: 6 },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  half: { flex: 1, gap: 6 },
-  label: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: UI.ink,
-  },
-  req: { color: UI.danger },
-  input: {
-    minHeight: 48,
-    borderWidth: 1,
-    borderColor: UI.border,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: UI.ink,
-    backgroundColor: UI.inputBg,
-  },
-  textArea: {
-    minHeight: 96,
-    paddingTop: 12,
-  },
-  ctvList: { gap: 8, marginTop: 4 },
-  ctvItem: {
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: UI.soft,
-    gap: 2,
-  },
-  ctvItemSelected: {
-    backgroundColor: '#E8F1FF',
-    borderWidth: 1,
-    borderColor: UI.primary,
-  },
-  ctvName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: UI.ink,
-  },
-  ctvPhone: {
-    fontSize: 12,
-    color: UI.muted,
-  },
-  hint: {
-    fontSize: 13,
-    color: UI.muted,
-  },
-  footer: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 8,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: UI.border,
-  },
-  submitBtn: {
-    minHeight: 52,
-    borderRadius: 16,
-    backgroundColor: UI.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  submitText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});

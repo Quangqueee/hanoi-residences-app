@@ -1,0 +1,517 @@
+{
+  ".claude/settings.json": {
+    "mtime": 1786288850.6241105,
+    "ast_hash": "",
+    "semantic_hash": ""
+  },
+  ".vscode/extensions.json": {
+    "mtime": 1786288806.916163,
+    "ast_hash": "",
+    "semantic_hash": ""
+  },
+  ".vscode/settings.json": {
+    "mtime": 1786289165.1878538,
+    "ast_hash": "",
+    "semantic_hash": ""
+  },
+  "app.json": {
+    "mtime": 1786304975.7588491,
+    "ast_hash": "df1ce6ec9b4d04c23ae11f0da11eb217",
+    "semantic_hash": ""
+  },
+  "assets/expo.icon/icon.json": {
+    "mtime": 1786288806.917271,
+    "ast_hash": "",
+    "semantic_hash": ""
+  },
+  "babel.config.js": {
+    "mtime": 1786299890.7964282,
+    "ast_hash": "25bca21059e8f8a7735fe0cef0e45ef9",
+    "semantic_hash": "25bca21059e8f8a7735fe0cef0e45ef9"
+  },
+  "metro.config.js": {
+    "mtime": 1786299892.7177782,
+    "ast_hash": "090e4d9a92d3486cb2d534a70cc15aa6",
+    "semantic_hash": "090e4d9a92d3486cb2d534a70cc15aa6"
+  },
+  "nativewind-env.d.ts": {
+    "mtime": 1786299892.8731701,
+    "ast_hash": "b02bcf4fde15f746f6e5248537d0b156",
+    "semantic_hash": "b02bcf4fde15f746f6e5248537d0b156"
+  },
+  "package.json": {
+    "mtime": 1786304965.6354053,
+    "ast_hash": "226d7fe31dffeebcb3cf0e3158d0bdd5",
+    "semantic_hash": ""
+  },
+  "scripts/reset-project.js": {
+    "mtime": 1786288806.9130309,
+    "ast_hash": "ca9d75cf60f51e7a2d67fd08ddfb8275",
+    "semantic_hash": "ca9d75cf60f51e7a2d67fd08ddfb8275"
+  },
+  "src/app/(auth)/_layout.tsx": {
+    "mtime": 1786289714.7792215,
+    "ast_hash": "9d75683efd0e9ab9ce2970f1aa171eae",
+    "semantic_hash": "9d75683efd0e9ab9ce2970f1aa171eae"
+  },
+  "src/app/(auth)/login.tsx": {
+    "mtime": 1786289766.016915,
+    "ast_hash": "d8a9b63337d5e8627d9f27bbdaeb61b6",
+    "semantic_hash": "d8a9b63337d5e8627d9f27bbdaeb61b6"
+  },
+  "src/app/(auth)/signup.tsx": {
+    "mtime": 1786289725.2902524,
+    "ast_hash": "290d5e1cc6ed8fb8daa435acdb313596",
+    "semantic_hash": "290d5e1cc6ed8fb8daa435acdb313596"
+  },
+  "src/app/(tabs)/_layout.tsx": {
+    "mtime": 1786296527.6253736,
+    "ast_hash": "72531d98eff8e81691580dd744b34558",
+    "semantic_hash": "72531d98eff8e81691580dd744b34558"
+  },
+  "src/app/(tabs)/bookings.tsx": {
+    "mtime": 1786305059.8690646,
+    "ast_hash": "cdf6a85005a363a9bbf5d71e1a323216",
+    "semantic_hash": ""
+  },
+  "src/app/(tabs)/explore.tsx": {
+    "mtime": 1786299697.648723,
+    "ast_hash": "fdba4beb863359e85e4432d1582b7d49",
+    "semantic_hash": "fdba4beb863359e85e4432d1582b7d49"
+  },
+  "src/app/(tabs)/favorites.tsx": {
+    "mtime": 1786299629.6891057,
+    "ast_hash": "fda7f09cd8e2f0ed37c8f018fb743ff1",
+    "semantic_hash": "fda7f09cd8e2f0ed37c8f018fb743ff1"
+  },
+  "src/app/(tabs)/index.tsx": {
+    "mtime": 1786303144.430678,
+    "ast_hash": "9d6866ee4b8276d79dcf76a5b5602919",
+    "semantic_hash": ""
+  },
+  "src/app/(tabs)/notifications.tsx": {
+    "mtime": 1786299645.4236474,
+    "ast_hash": "e9477edebf3ce40b14430760a0415d74",
+    "semantic_hash": "e9477edebf3ce40b14430760a0415d74"
+  },
+  "src/app/(tabs)/profile.tsx": {
+    "mtime": 1786299657.638598,
+    "ast_hash": "e9afad9a5a375d997f3c8e71d9d02c37",
+    "semantic_hash": "e9afad9a5a375d997f3c8e71d9d02c37"
+  },
+  "src/app/(tabs)/search.tsx": {
+    "mtime": 1786304296.3375075,
+    "ast_hash": "3a6699d809889b2191b4a0ee5362afa7",
+    "semantic_hash": ""
+  },
+  "src/app/_layout.tsx": {
+    "mtime": 1786303746.0673232,
+    "ast_hash": "14762d959619069692b5670d1eafbdae",
+    "semantic_hash": ""
+  },
+  "src/app/apartment/[id].tsx": {
+    "mtime": 1786300910.2354002,
+    "ast_hash": "1172ec53ced678344489fb6e5ac2a352",
+    "semantic_hash": "1172ec53ced678344489fb6e5ac2a352"
+  },
+  "src/app/booking/new.tsx": {
+    "mtime": 1786291988.9036286,
+    "ast_hash": "1a9cc224a111d8cd08594b231ee01976",
+    "semantic_hash": "1a9cc224a111d8cd08594b231ee01976"
+  },
+  "src/app/index.tsx": {
+    "mtime": 1786289704.2304955,
+    "ast_hash": "efb9235e325a5c255fca7bb4bd9f4b4f",
+    "semantic_hash": "efb9235e325a5c255fca7bb4bd9f4b4f"
+  },
+  "src/components/animated-icon.tsx": {
+    "mtime": 1786288806.950435,
+    "ast_hash": "46cea5b4aaa994fa61f8a3d1574b2ff8",
+    "semantic_hash": "46cea5b4aaa994fa61f8a3d1574b2ff8"
+  },
+  "src/components/animated-icon.web.tsx": {
+    "mtime": 1786288806.950435,
+    "ast_hash": "2defa175163e104a6e2232436fa77e30",
+    "semantic_hash": "2defa175163e104a6e2232436fa77e30"
+  },
+  "src/components/apartment-card.tsx": {
+    "mtime": 1786303099.7819822,
+    "ast_hash": "05e35f144f496392e3543abadfb7657c",
+    "semantic_hash": ""
+  },
+  "src/components/apartment-filters-bar.tsx": {
+    "mtime": 1786304283.7283647,
+    "ast_hash": "5b61fd93220ba2249b0702061651db9a",
+    "semantic_hash": ""
+  },
+  "src/components/apartment-markdown-description.tsx": {
+    "mtime": 1786297755.1772397,
+    "ast_hash": "aa8d82c5f7ff1c864fd0a88458062596",
+    "semantic_hash": "aa8d82c5f7ff1c864fd0a88458062596"
+  },
+  "src/components/app-tabs.tsx": {
+    "mtime": 1786288806.9514356,
+    "ast_hash": "7f9ddbb00991d090e67f4eeff23f89e8",
+    "semantic_hash": "7f9ddbb00991d090e67f4eeff23f89e8"
+  },
+  "src/components/app-tabs.web.tsx": {
+    "mtime": 1786288806.9525297,
+    "ast_hash": "d197b6fde1ead811d986e454f2e27064",
+    "semantic_hash": "d197b6fde1ead811d986e454f2e27064"
+  },
+  "src/components/booking-modal.tsx": {
+    "mtime": 1786305088.328882,
+    "ast_hash": "d248bdb6e10b93bab448f840df133418",
+    "semantic_hash": ""
+  },
+  "src/components/external-link.tsx": {
+    "mtime": 1786288806.954563,
+    "ast_hash": "a71bdc8e0bd55812a1e97662ade442d1",
+    "semantic_hash": "a71bdc8e0bd55812a1e97662ade442d1"
+  },
+  "src/components/hint-row.tsx": {
+    "mtime": 1786288806.954563,
+    "ast_hash": "1ac80baf6b0a5c3d8c1ea371d5a0dbc5",
+    "semantic_hash": "1ac80baf6b0a5c3d8c1ea371d5a0dbc5"
+  },
+  "src/components/image-carousel.tsx": {
+    "mtime": 1786294740.267239,
+    "ast_hash": "fccb8908baa1a3b1bfa7c5fd01be35f6",
+    "semantic_hash": "fccb8908baa1a3b1bfa7c5fd01be35f6"
+  },
+  "src/components/quick-download-button.tsx": {
+    "mtime": 1786293250.5437717,
+    "ast_hash": "3663f64661abd89e41b0889eaf77e605",
+    "semantic_hash": "3663f64661abd89e41b0889eaf77e605"
+  },
+  "src/components/themed-text.tsx": {
+    "mtime": 1786288806.955669,
+    "ast_hash": "41869b896e1e9f3472f5c2183af58918",
+    "semantic_hash": "41869b896e1e9f3472f5c2183af58918"
+  },
+  "src/components/themed-view.tsx": {
+    "mtime": 1786288806.9566724,
+    "ast_hash": "f935dbbcf5a5067a417ea7b329727653",
+    "semantic_hash": "f935dbbcf5a5067a417ea7b329727653"
+  },
+  "src/components/ui/collapsible.tsx": {
+    "mtime": 1786288806.9535441,
+    "ast_hash": "24105f00e6631a1cb1daeaef9d4aa808",
+    "semantic_hash": "24105f00e6631a1cb1daeaef9d4aa808"
+  },
+  "src/components/web-badge.tsx": {
+    "mtime": 1786288806.9566724,
+    "ast_hash": "6d02b3c146c2ed6a3d3b7b8764e17602",
+    "semantic_hash": "6d02b3c146c2ed6a3d3b7b8764e17602"
+  },
+  "src/constants/theme.ts": {
+    "mtime": 1786288806.9471388,
+    "ast_hash": "9507bd7aa3ee042af2ad8a99ebbaa8b6",
+    "semantic_hash": "9507bd7aa3ee042af2ad8a99ebbaa8b6"
+  },
+  "src/contexts/auth-context.tsx": {
+    "mtime": 1786289689.3444507,
+    "ast_hash": "f798d4d0bc12935736c34914bdc0a204",
+    "semantic_hash": "f798d4d0bc12935736c34914bdc0a204"
+  },
+  "src/firebase/app.native.ts": {
+    "mtime": 1786291656.4528983,
+    "ast_hash": "74bee59a1c6dc38f5581ce11a2edba3c",
+    "semantic_hash": "74bee59a1c6dc38f5581ce11a2edba3c"
+  },
+  "src/firebase/app.ts": {
+    "mtime": 1786291669.0711057,
+    "ast_hash": "412a79ad9b9ffdb7881855a9f8b921f2",
+    "semantic_hash": "412a79ad9b9ffdb7881855a9f8b921f2"
+  },
+  "src/firebase/config.ts": {
+    "mtime": 1786289151.3355267,
+    "ast_hash": "d525df5d44c324292aa0a2e41325ad45",
+    "semantic_hash": "d525df5d44c324292aa0a2e41325ad45"
+  },
+  "src/hooks/use-apartments.ts": {
+    "mtime": 1786290834.9545758,
+    "ast_hash": "9bce63f65a538f7ea12c691c77fe77d0",
+    "semantic_hash": "9bce63f65a538f7ea12c691c77fe77d0"
+  },
+  "src/hooks/use-color-scheme.ts": {
+    "mtime": 1786288806.9471388,
+    "ast_hash": "6f3444fcb9c7013a839a7832be518831",
+    "semantic_hash": "6f3444fcb9c7013a839a7832be518831"
+  },
+  "src/hooks/use-color-scheme.web.ts": {
+    "mtime": 1786288806.948281,
+    "ast_hash": "071fbb9a1a05ffb8af4b7d3b1ffa72d6",
+    "semantic_hash": "071fbb9a1a05ffb8af4b7d3b1ffa72d6"
+  },
+  "src/hooks/use-notifications.ts": {
+    "mtime": 1786292534.5320225,
+    "ast_hash": "c6c70587402cd2ba6c47e769e405c898",
+    "semantic_hash": "c6c70587402cd2ba6c47e769e405c898"
+  },
+  "src/hooks/use-push-notifications.ts": {
+    "mtime": 1786292580.4090848,
+    "ast_hash": "3228548db13ff401903040868d20fc13",
+    "semantic_hash": "3228548db13ff401903040868d20fc13"
+  },
+  "src/hooks/use-theme.ts": {
+    "mtime": 1786288806.948281,
+    "ast_hash": "e058af4f5801bcaa97dad62f12085a27",
+    "semantic_hash": "e058af4f5801bcaa97dad62f12085a27"
+  },
+  "src/lib/apartment-display.ts": {
+    "mtime": 1786294038.9592872,
+    "ast_hash": "804d158ba32b95ad1f736543ee2aa98f",
+    "semantic_hash": "804d158ba32b95ad1f736543ee2aa98f"
+  },
+  "src/lib/apartments-service.ts": {
+    "mtime": 1786304259.8235161,
+    "ast_hash": "0fa359539f57d6ba14a56298134de75d",
+    "semantic_hash": ""
+  },
+  "src/lib/auth-service.ts": {
+    "mtime": 1786289688.0968673,
+    "ast_hash": "a02601b07c51feb48cb2191ddc0fb772",
+    "semantic_hash": "a02601b07c51feb48cb2191ddc0fb772"
+  },
+  "src/lib/bookings-service.ts": {
+    "mtime": 1786305021.6603353,
+    "ast_hash": "8055a5eae6ec34a92eec10359e43e6e7",
+    "semantic_hash": ""
+  },
+  "src/lib/constants.ts": {
+    "mtime": 1786290801.9923632,
+    "ast_hash": "4770accc7d372cdc5b99d18c28b58e6e",
+    "semantic_hash": "4770accc7d372cdc5b99d18c28b58e6e"
+  },
+  "src/lib/download-images.native.ts": {
+    "mtime": 1786291651.291464,
+    "ast_hash": "743704ce4c69be9d857ae911e8abbbf7",
+    "semantic_hash": "743704ce4c69be9d857ae911e8abbbf7"
+  },
+  "src/lib/download-images.ts": {
+    "mtime": 1786291666.9968789,
+    "ast_hash": "982df71ef3cd853dc86ad0a055783e06",
+    "semantic_hash": "982df71ef3cd853dc86ad0a055783e06"
+  },
+  "src/lib/favorites-service.ts": {
+    "mtime": 1786295591.559054,
+    "ast_hash": "4799b76a2fefa3a717cdb1b75697cd22",
+    "semantic_hash": "4799b76a2fefa3a717cdb1b75697cd22"
+  },
+  "src/lib/format.ts": {
+    "mtime": 1786294048.1566434,
+    "ast_hash": "962130a96d96e7e8298ee2bfb0ddb1b3",
+    "semantic_hash": "962130a96d96e7e8298ee2bfb0ddb1b3"
+  },
+  "src/lib/notification-display.ts": {
+    "mtime": 1786292534.3379822,
+    "ast_hash": "cd2e70c617a6535e9246ce8775016b33",
+    "semantic_hash": "cd2e70c617a6535e9246ce8775016b33"
+  },
+  "src/lib/notifications.ts": {
+    "mtime": 1786292530.556842,
+    "ast_hash": "6e19214f995c35c3dffb7398684c569f",
+    "semantic_hash": "6e19214f995c35c3dffb7398684c569f"
+  },
+  "src/lib/push-notifications.native.ts": {
+    "mtime": 1786292568.7840166,
+    "ast_hash": "028c0e0c0c3c30a925b00d36448ec830",
+    "semantic_hash": "028c0e0c0c3c30a925b00d36448ec830"
+  },
+  "src/lib/push-notifications.ts": {
+    "mtime": 1786292569.2291615,
+    "ast_hash": "870a6c211dba1e30444a8d2090dbc0d8",
+    "semantic_hash": "870a6c211dba1e30444a8d2090dbc0d8"
+  },
+  "src/lib/rbac.ts": {
+    "mtime": 1786289673.3793938,
+    "ast_hash": "8b3c8f2cf8ef58c1d032162a1fddbed8",
+    "semantic_hash": "8b3c8f2cf8ef58c1d032162a1fddbed8"
+  },
+  "src/lib/share-apartment.ts": {
+    "mtime": 1786292262.966366,
+    "ast_hash": "f8bc096e6a7e63ad2a9e6b4620a2ab8a",
+    "semantic_hash": "f8bc096e6a7e63ad2a9e6b4620a2ab8a"
+  },
+  "src/lib/types.ts": {
+    "mtime": 1786289673.7144117,
+    "ast_hash": "1340f572f54cf6f85b74b1939db99193",
+    "semantic_hash": "1340f572f54cf6f85b74b1939db99193"
+  },
+  "src/navigation/types.ts": {
+    "mtime": 1786289689.769393,
+    "ast_hash": "1dc4383ef1b00c13ed655871ef974138",
+    "semantic_hash": "1dc4383ef1b00c13ed655871ef974138"
+  },
+  "tailwind.config.js": {
+    "mtime": 1786300896.723485,
+    "ast_hash": "5cb5681de6ffc0598c608480bba2e084",
+    "semantic_hash": "5cb5681de6ffc0598c608480bba2e084"
+  },
+  "tsconfig.json": {
+    "mtime": 1786299893.4707146,
+    "ast_hash": "8208e0527efa5bcdf49fcf4762955b0f",
+    "semantic_hash": "8208e0527efa5bcdf49fcf4762955b0f"
+  },
+  "src/components/list-pagination-footer.tsx": {
+    "mtime": 1786303079.599393,
+    "ast_hash": "b14ae99a6f2e7d25058087a9c5621e2b",
+    "semantic_hash": ""
+  },
+  "src/components/sort-pills.tsx": {
+    "mtime": 1786303079.24004,
+    "ast_hash": "3aa28a8b02717ac5c424cd126762295a",
+    "semantic_hash": ""
+  },
+  "src/components/ui/shimmer-block.tsx": {
+    "mtime": 1786303153.4745758,
+    "ast_hash": "fba0b736c479ace95b1a28bc32571f2d",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1786288850.6241105,
+    "ast_hash": "963888ec05f17b13375386f058dd621e",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1786288850.6241105,
+    "ast_hash": "5c27369b226fcf2be8a6cfe52224e767",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1786290121.1354847,
+    "ast_hash": "96dc01030464f5afa8997cfbe096b20c",
+    "semantic_hash": ""
+  },
+  "assets/expo.icon/Assets/expo-symbol 2.svg": {
+    "mtime": 1786288806.9460785,
+    "ast_hash": "6979b664c1ce82c10426a051082412a7",
+    "semantic_hash": ""
+  },
+  "assets/expo.icon/Assets/grid.png": {
+    "mtime": 1786288806.9302082,
+    "ast_hash": "37cdeda9d1af5d7432716d9671b098da",
+    "semantic_hash": ""
+  },
+  "assets/images/android-icon-background.png": {
+    "mtime": 1786288806.9214888,
+    "ast_hash": "2d65569cc0e2afdcea0af9f9902d4173",
+    "semantic_hash": ""
+  },
+  "assets/images/android-icon-foreground.png": {
+    "mtime": 1786288806.9233387,
+    "ast_hash": "72e71a9c846c6aa4ae32476641a00e18",
+    "semantic_hash": ""
+  },
+  "assets/images/android-icon-monochrome.png": {
+    "mtime": 1786288806.9246795,
+    "ast_hash": "1e097dab989759fc0b69440092ca22cd",
+    "semantic_hash": ""
+  },
+  "assets/images/expo-badge-white.png": {
+    "mtime": 1786288806.9266942,
+    "ast_hash": "02efb8472f161bcf8afc8c8489a28fca",
+    "semantic_hash": ""
+  },
+  "assets/images/expo-badge.png": {
+    "mtime": 1786288806.9276993,
+    "ast_hash": "6b0da8ec880685d1bd053c0f5ea9d09d",
+    "semantic_hash": ""
+  },
+  "assets/images/expo-logo.png": {
+    "mtime": 1786288806.9287052,
+    "ast_hash": "5ee5db91d59518c45ebcc99a2f5afc57",
+    "semantic_hash": ""
+  },
+  "assets/images/favicon.png": {
+    "mtime": 1786288806.9287052,
+    "ast_hash": "d9f444efbdfbe7931aa93beada07318a",
+    "semantic_hash": ""
+  },
+  "assets/images/icon.png": {
+    "mtime": 1786288806.9377165,
+    "ast_hash": "8d892ef03dbd43e8d899c1d605ad42df",
+    "semantic_hash": ""
+  },
+  "assets/images/logo-glow.png": {
+    "mtime": 1786288806.9414704,
+    "ast_hash": "dbca075a49dc45e550c5d2e3e9601039",
+    "semantic_hash": ""
+  },
+  "assets/images/react-logo.png": {
+    "mtime": 1786288806.9424732,
+    "ast_hash": "695d5a1c6f29a689130f3aaa573aec6e",
+    "semantic_hash": ""
+  },
+  "assets/images/react-logo@2x.png": {
+    "mtime": 1786288806.9430363,
+    "ast_hash": "b507e7f2c91ebc8fe24dee79ccb3b600",
+    "semantic_hash": ""
+  },
+  "assets/images/react-logo@3x.png": {
+    "mtime": 1786288806.9440522,
+    "ast_hash": "8a4d0e5b845044e56e3b2df627d01cfd",
+    "semantic_hash": ""
+  },
+  "assets/images/splash-icon.png": {
+    "mtime": 1786288806.9440522,
+    "ast_hash": "5ee5db91d59518c45ebcc99a2f5afc57",
+    "semantic_hash": ""
+  },
+  "assets/images/tabIcons/explore.png": {
+    "mtime": 1786288806.925686,
+    "ast_hash": "8409922f7d5c981001e3c9b25e4bfae5",
+    "semantic_hash": ""
+  },
+  "assets/images/tabIcons/explore@2x.png": {
+    "mtime": 1786288806.925686,
+    "ast_hash": "dd40200ba8e8d98061578292d6b73791",
+    "semantic_hash": ""
+  },
+  "assets/images/tabIcons/explore@3x.png": {
+    "mtime": 1786288806.9266942,
+    "ast_hash": "c4278d79298bb11a8b0e68ed3e40da9e",
+    "semantic_hash": ""
+  },
+  "assets/images/tabIcons/home.png": {
+    "mtime": 1786288806.9312205,
+    "ast_hash": "eeb5de2ac12ace75b31dfda235208956",
+    "semantic_hash": ""
+  },
+  "assets/images/tabIcons/home@2x.png": {
+    "mtime": 1786288806.9317236,
+    "ast_hash": "456346cfb0b82cc0f39e921e05d082d9",
+    "semantic_hash": ""
+  },
+  "assets/images/tabIcons/home@3x.png": {
+    "mtime": 1786288806.9322267,
+    "ast_hash": "5d86e963002b3664ab81c128c838559d",
+    "semantic_hash": ""
+  },
+  "assets/images/tutorial-web.png": {
+    "mtime": 1786288806.9450738,
+    "ast_hash": "c62d22797f3002396754d8cc55b0ae1a",
+    "semantic_hash": ""
+  },
+  "src/app/search-results.tsx": {
+    "mtime": 1786304296.5835295,
+    "ast_hash": "a22eea238c2ac9472baad499403c1964",
+    "semantic_hash": ""
+  },
+  "src/lib/search-params.ts": {
+    "mtime": 1786304324.07184,
+    "ast_hash": "2282e6b19f1f4e8336e0aaa9add4433c",
+    "semantic_hash": ""
+  },
+  "src/components/booking-card.tsx": {
+    "mtime": 1786305040.945809,
+    "ast_hash": "a89e6778e62aac07ced59d335bb10a2c",
+    "semantic_hash": ""
+  },
+  "src/components/booking-edit-modal.tsx": {
+    "mtime": 1786305041.4469855,
+    "ast_hash": "17a8f3f81397f99bedf55196a0df629a",
+    "semantic_hash": ""
+  }
+}

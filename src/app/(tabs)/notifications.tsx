@@ -7,7 +7,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -25,6 +25,7 @@ import type { AppNotification } from '@/lib/notifications';
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, role, roleLabel } = useAuth();
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
@@ -85,7 +86,11 @@ export default function NotificationsScreen() {
   );
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[
+        styles.container,
+        { paddingTop: insets.top, backgroundColor: colors.background },
+      ]}>
       <SafeAreaView edges={['bottom']} style={styles.safe}>
         <View style={styles.header}>
           <View style={styles.headerText}>

@@ -1,19 +1,50 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Design tokens — Hanoi Residences Mobile
+ * Hoteliq visual system (#4C4DDC) layered on product data/logic.
  */
 
 import '@/global.css';
 
 import { Platform } from 'react-native';
 
+/** Hoteliq palette from Figma style guide */
+export const Hoteliq = {
+  primary: '#4C4DDC',
+  primarySoft: '#E4E4FA',
+  primaryMuted: '#C8C8F4',
+  ink: '#101010',
+  muted: '#878787',
+  mutedLight: '#A0A0A0',
+  line: '#E1E1E1',
+  canvas: '#FFFFFF',
+  chip: '#F5F5F5',
+  heart: '#FF4D67',
+  star: '#FFC107',
+  shadow: '#070707',
+} as const;
+
+/** Legacy brand kept for non-overhauled screens */
+export const Brand = {
+  gold: '#CDA533',
+  goldDark: '#B88E22',
+  goldSoft: '#FBF8F1',
+  ink: Hoteliq.ink,
+  muted: Hoteliq.muted,
+  canvas: Hoteliq.canvas,
+  surface: '#FFFFFF',
+  line: Hoteliq.line,
+  shadow: Hoteliq.shadow,
+  primary: Hoteliq.primary,
+  primarySoft: Hoteliq.primarySoft,
+} as const;
+
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: Hoteliq.ink,
+    background: Hoteliq.canvas,
+    backgroundElement: Hoteliq.chip,
+    backgroundSelected: Hoteliq.primarySoft,
+    textSecondary: Hoteliq.muted,
   },
   dark: {
     text: '#ffffff',
@@ -28,23 +59,19 @@ export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
+    sans: 'Inter_400Regular',
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
-    sans: 'normal',
+    sans: 'Inter_400Regular',
     serif: 'serif',
     rounded: 'normal',
     mono: 'monospace',
   },
   web: {
-    sans: 'var(--font-display)',
+    sans: 'Inter, system-ui, sans-serif',
     serif: 'var(--font-serif)',
     rounded: 'var(--font-rounded)',
     mono: 'var(--font-mono)',
@@ -61,5 +88,17 @@ export const Spacing = {
   six: 64,
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
+/** Hoteliq tab bar clearance */
+export const BottomTabInset = Platform.select({ ios: 96, android: 104 }) ?? 96;
 export const MaxContentWidth = 800;
+
+export const HoteliqShadow = Platform.select({
+  ios: {
+    shadowColor: Hoteliq.shadow,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
+  },
+  android: { elevation: 3 },
+  default: {},
+});

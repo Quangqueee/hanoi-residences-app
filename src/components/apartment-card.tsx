@@ -1,60 +1,120 @@
 import { useRouter } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { memo, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Platform,
   Pressable,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
 import { ImageCarousel } from '@/components/image-carousel';
+import { Hoteliq } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import {
   formatCommission,
   formatPriceAmount,
-  formatRelativeTime,
   getApartmentDisplayTitle,
-  getListingTimestamp,
   getRoomTypeLabel,
   resolveListingBadge,
 } from '@/lib/apartment-display';
 import { setApartmentFavorite } from '@/lib/favorites-service';
 import type { Apartment } from '@/lib/types';
+import { Image } from 'expo-image';
 
 type Props = {
   apartment: Apartment;
   onFavoriteToggle?: (apartmentId: string, isFavorited: boolean) => void;
+  /**
+   * `rail` — Hoteliq “Near Location” wide card
+   * `compact` — Hoteliq “Popular” horizontal row
+   * `feed` — full-width list card
+   */
+  variant?: 'feed' | 'rail' | 'compact';
+  className?: string;
 };
 
-const Brand = {
-  primary: '#CDA533',
-  ink: '#222222',
-  muted: '#6B655C',
-  surface: '#FFFFFF',
-  soft: '#FBF8F1',
-  border: '#EBE6DA',
-  commission: '#5CB85C',
-  shadow: '#1A1408',
-  heart: '#EF4444',
-  heartIdle: '#9CA3AF',
-} as const;
+const cardShadow = Platform.select({
+  ios: {
+    shadowColor: Hoteliq.shadow,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.05,
+    shadowRadius: 18,
+  },
+  android: { elevation: 3 },
+  default: {},
+});
 
-function ApartmentCardComponent({ apartment, onFavoriteToggle }: Props) {
+function FavoriteButton({
+  isFavorite,
+  updating,
+  onPress,
+  className,
+}: {
+  isFavorite: boolean;
+  updating: boolean;
+  onPress: () => void;
+  className?: string;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={updating}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
+      className={`z-[4] h-9 w-9 items-center justify-center rounded-full bg-white ${className ?? ''}`}
+      style={({ pressed }) => ({
+        opacity: pressed || updating ? 0.85 : 1,
+        ...(Platform.select({
+          ios: {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 6,
+          },
+          android: { elevation: 2 },
+          default: {},
+        }) as object),
+      })}>
+      {updating ? (
+        <ActivityIndicator size="small" color={Hoteliq.heart} />
+      ) : (
+        <Text
+          className={`text-[18px] font-bold leading-5 ${
+            isFavorite ? 'text-hoteliq-heart' : 'text-[#C8C8C8]'
+          }`}>
+          {isFavorite ? '♥' : '♡'}
+        </Text>
+      )}
+    </Pressable>
+  );
+}
+
+function ApartmentCardComponent({
+  apartment,
+  onFavoriteToggle,
+  variant = 'feed',
+  className,
+}: Props) {
+  const isRail = variant === 'rail';
+  const isCompact = variant === 'compact';
   const router = useRouter();
   const { user, userData, role, isAdmin, isCollaborator } = useAuth();
 
-  // Web card: collaborator OR admin share CTV ops UI
   const collaboratorView =
     isCollaborator || isAdmin || role === 'collaborator' || role === 'admin';
 
   const title = getApartmentDisplayTitle(apartment, role);
   const commissionLabel = formatCommission(apartment.commission);
   const badge = resolveListingBadge(apartment, collaboratorView);
-  const timeToDisplay = getListingTimestamp(apartment);
   const images = apartment.imageUrls ?? [];
+  const cover = images[0];
+  const locationLine =
+    apartment.address?.trim() ||
+    `${apartment.district}, Hà Nội`;
 
   const initialFavoriteState =
     typeof apartment.isFavorited === 'boolean'
@@ -103,20 +163,90 @@ function ApartmentCardComponent({ apartment, onFavoriteToggle }: Props) {
     }
   };
 
+  if (isCompact) {
+    return (
+      <Pressable
+        onPress={openDetail}
+        accessibilityRole="button"
+        accessibilityLabel={`Xem chi tiết ${title}`}
+        className={`mb-3 flex-row items-center gap-3.5 rounded-[16px] bg-white p-3 ${className ?? ''}`}
+        style={({ pressed }) => [
+          cardShadow,
+          { opacity: pressed ? 0.92 : 1 },
+        ]}>
+        <View className="h-[72px] w-[72px] overflow-hidden rounded-[12px] bg-hoteliq-chip">
+          {cover ? (
+            <Image
+              source={{ uri: cover }}
+              style={{ width: 72, height: 72 }}
+              contentFit="cover"
+              recyclingKey={`${apartment.id}-compact`}
+            />
+          ) : (
+            <View className="h-full w-full items-center justify-center">
+              <Text className="text-[11px] text-hoteliq-gray">No photo</Text>
+            </View>
+          )}
+        </View>
+
+        <View className="min-w-0 flex-1 gap-1">
+          <View className="flex-row items-start justify-between gap-2">
+            <Text
+              className="min-w-0 flex-1 text-[15px] font-semibold leading-5 text-hoteliq-ink"
+              numberOfLines={1}>
+              {title}
+            </Text>
+            <View className="flex-row items-center gap-1 pt-0.5">
+              <Text className="text-[12px] text-hoteliq-star">★</Text>
+              <Text className="text-[12px] font-semibold text-hoteliq-ink">
+                {getRoomTypeLabel(apartment.roomType)}
+              </Text>
+            </View>
+          </View>
+          <Text
+            className="text-[12px] font-medium leading-4 text-hoteliq-gray"
+            numberOfLines={1}>
+            {locationLine}
+          </Text>
+          <View className="mt-0.5 flex-row items-baseline gap-1">
+            <Text className="text-[15px] font-bold leading-5 text-hoteliq-primary">
+              {formatPriceAmount(apartment.price)}
+            </Text>
+            <Text className="text-[12px] font-medium text-hoteliq-gray">
+              /tháng
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+    );
+  }
+
   return (
-    <View style={styles.card}>
-      <View style={styles.imageWrap}>
+    <View
+      className={`overflow-hidden rounded-[16px] bg-white ${
+        isRail ? 'mb-0 w-[280px]' : 'mb-4 w-full'
+      } ${className ?? ''}`}
+      style={cardShadow as object}>
+      <View className="relative w-full">
         <ImageCarousel
           urls={images}
-          aspectRatio={4 / 3}
+          aspectRatio={isRail ? 16 / 11 : 4 / 3}
           onPress={openDetail}
           showDots
           recyclingKey={apartment.id}
+          style={{
+            width: '100%',
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            backgroundColor: Hoteliq.chip,
+          }}
         />
 
         {collaboratorView && commissionLabel ? (
-          <View style={styles.commissionBadge} pointerEvents="none">
-            <Text style={styles.commissionBadgeText} numberOfLines={1}>
+          <View
+            className="absolute left-3 top-3 z-[2] max-w-[55%] rounded-full bg-brand-commission/95 px-3 py-1.5"
+            pointerEvents="none">
+            <Text className="text-[11px] font-bold text-white" numberOfLines={1}>
               HH: {commissionLabel}
             </Text>
           </View>
@@ -124,87 +254,85 @@ function ApartmentCardComponent({ apartment, onFavoriteToggle }: Props) {
 
         {!collaboratorView && badge ? (
           <View
-            style={[
-              styles.marketingBadge,
-              { backgroundColor: badge.backgroundColor },
-            ]}
+            className="absolute left-0 top-3 z-[2] rounded-r-full py-1.5 pl-3.5 pr-4"
+            style={{ backgroundColor: badge.backgroundColor }}
             pointerEvents="none">
-            <Text style={styles.marketingBadgeText}>{badge.label}</Text>
+            <Text className="text-[10px] font-bold uppercase tracking-widest text-white">
+              {badge.label}
+            </Text>
           </View>
         ) : null}
 
         {collaboratorView && badge ? (
           <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: badge.backgroundColor },
-            ]}
+            className="absolute bottom-8 left-0 z-[2] rounded-r-full py-1.5 pl-3.5 pr-3"
+            style={{ backgroundColor: badge.backgroundColor }}
             pointerEvents="none">
-            <Text style={styles.statusBadgeText}>{badge.label}</Text>
-          </View>
-        ) : null}
-
-        {apartment.sourceCode ? (
-          <View style={styles.idBadge} pointerEvents="none">
-            <Text style={styles.idBadgeText}>ID: {apartment.sourceCode}</Text>
-          </View>
-        ) : null}
-
-        <Pressable
-          onPress={toggleFavorite}
-          disabled={isFavoriteUpdating}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={
-            isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'
-          }
-          style={({ pressed }) => [
-            styles.heartBtn,
-            (pressed || isFavoriteUpdating) && styles.heartBtnPressed,
-          ]}>
-          {isFavoriteUpdating ? (
-            <ActivityIndicator size="small" color={Brand.heart} />
-          ) : (
-            <Text
-              style={[
-                styles.heartIcon,
-                { color: isFavorite ? Brand.heart : Brand.heartIdle },
-              ]}>
-              {isFavorite ? '♥' : '♡'}
+            <Text className="text-[10px] font-bold uppercase tracking-widest text-white">
+              {badge.label}
             </Text>
-          )}
-        </Pressable>
+          </View>
+        ) : null}
+
+        <FavoriteButton
+          isFavorite={isFavorite}
+          updating={isFavoriteUpdating}
+          onPress={() => void toggleFavorite()}
+          className="absolute right-3 top-3"
+        />
       </View>
 
       <Pressable
         onPress={openDetail}
         accessibilityRole="button"
         accessibilityLabel={`Xem chi tiết ${title}`}
-        style={({ pressed }) => [
-          styles.body,
-          pressed && styles.bodyPressed,
-        ]}>
-        <Text style={styles.title} numberOfLines={1}>
-          {title}
-        </Text>
-
-        <Text style={styles.district} numberOfLines={1}>
-          {apartment.district}
-        </Text>
-
-        <View style={styles.metaRow}>
-          <Text style={styles.metaLeft} numberOfLines={1}>
-            {getRoomTypeLabel(apartment.roomType)}
-            {apartment.area ? ` • ${apartment.area} m²` : ''}
+        className={`gap-1.5 active:opacity-90 ${
+          isRail ? 'px-3.5 pb-4 pt-3' : 'px-4 pb-4 pt-3.5'
+        }`}>
+        <View className="flex-row items-start justify-between gap-2">
+          <Text
+            className={`min-w-0 flex-1 font-semibold tracking-tight text-hoteliq-ink ${
+              isRail ? 'text-[15px] leading-5' : 'text-[16px] leading-[22px]'
+            }`}
+            numberOfLines={1}>
+            {title}
           </Text>
-          <Text style={styles.metaRight} numberOfLines={1}>
-            Cập nhật: {formatRelativeTime(timeToDisplay)}
+          <View className="flex-row items-center gap-1 pt-0.5">
+            <Text className="text-[12px] text-hoteliq-star">★</Text>
+            <Text className="text-[12px] font-semibold text-hoteliq-ink">
+              {apartment.area ? `${apartment.area}` : '—'}
+            </Text>
+          </View>
+        </View>
+
+        <View className="flex-row items-center gap-1">
+          <SymbolView
+            name={{
+              ios: 'mappin.and.ellipse',
+              android: 'location_on',
+              web: 'location_on',
+            }}
+            size={12}
+            tintColor={Hoteliq.muted}
+            weight="medium"
+          />
+          <Text
+            className="flex-1 text-[12px] font-medium leading-4 text-hoteliq-gray"
+            numberOfLines={1}>
+            {locationLine}
           </Text>
         </View>
 
-        <View style={styles.priceRow}>
-          <Text style={styles.price}>{formatPriceAmount(apartment.price)}</Text>
-          <Text style={styles.priceUnit}>/tháng</Text>
+        <View className="mt-1 flex-row items-baseline gap-1">
+          <Text
+            className={`font-bold tracking-tight text-hoteliq-primary ${
+              isRail ? 'text-[16px] leading-5' : 'text-[18px] leading-6'
+            }`}>
+            {formatPriceAmount(apartment.price)}
+          </Text>
+          <Text className="text-[12px] font-medium text-hoteliq-gray">
+            /tháng
+          </Text>
         </View>
       </Pressable>
     </View>
@@ -212,191 +340,3 @@ function ApartmentCardComponent({ apartment, onFavoriteToggle }: Props) {
 }
 
 export const ApartmentCard = memo(ApartmentCardComponent);
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Brand.surface,
-    borderRadius: 12,
-    marginBottom: 20,
-    overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Brand.border,
-    ...Platform.select({
-      ios: {
-        shadowColor: Brand.shadow,
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.08,
-        shadowRadius: 18,
-      },
-      android: { elevation: 3 },
-      default: {
-        shadowColor: Brand.shadow,
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.08,
-        shadowRadius: 18,
-      },
-    }),
-  },
-  imageWrap: {
-    width: '100%',
-    position: 'relative',
-  },
-  commissionBadge: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    maxWidth: '55%',
-    backgroundColor: Brand.commission,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    zIndex: 2,
-  },
-  commissionBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  marketingBadge: {
-    position: 'absolute',
-    top: 12,
-    left: 0,
-    paddingLeft: 12,
-    paddingRight: 16,
-    paddingVertical: 6,
-    zIndex: 2,
-    borderTopRightRadius: 4,
-    borderBottomRightRadius: 4,
-  },
-  marketingBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
-  statusBadge: {
-    position: 'absolute',
-    bottom: 28,
-    left: 0,
-    paddingLeft: 12,
-    paddingRight: 10,
-    paddingVertical: 6,
-    borderTopRightRadius: 6,
-    borderBottomRightRadius: 6,
-    zIndex: 2,
-  },
-  statusBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  idBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: 'rgba(34,34,34,0.72)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    zIndex: 2,
-  },
-  idBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  heartBtn: {
-    position: 'absolute',
-    right: 12,
-    bottom: 12,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 4,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.16,
-        shadowRadius: 8,
-      },
-      android: { elevation: 4 },
-      default: {},
-    }),
-  },
-  heartBtnPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.96 }],
-  },
-  heartIcon: {
-    fontSize: 20,
-    lineHeight: 24,
-    fontWeight: '700',
-  },
-  body: {
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 16,
-    gap: 4,
-  },
-  bodyPressed: {
-    opacity: 0.92,
-  },
-  title: {
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: '700',
-    color: Brand.ink,
-    letterSpacing: -0.3,
-  },
-  district: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: Brand.muted,
-    fontWeight: '500',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  metaLeft: {
-    flexShrink: 1,
-    fontSize: 13,
-    lineHeight: 18,
-    color: Brand.muted,
-    fontWeight: '600',
-  },
-  metaRight: {
-    flexShrink: 0,
-    fontSize: 12,
-    lineHeight: 16,
-    color: '#9CA3AF',
-    fontStyle: 'italic',
-  },
-  priceRow: {
-    marginTop: 6,
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
-  },
-  price: {
-    fontSize: 20,
-    lineHeight: 26,
-    fontWeight: '700',
-    color: Brand.primary,
-    letterSpacing: -0.4,
-  },
-  priceUnit: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: Brand.muted,
-  },
-});

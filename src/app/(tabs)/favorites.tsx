@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApartmentCard } from '@/components/apartment-card';
 import { useAuth } from '@/contexts/auth-context';
@@ -30,6 +30,7 @@ const UI = {
 const TAB_BAR_CLEARANCE = 100;
 
 export default function FavoritesScreen() {
+  const insets = useSafeAreaInsets();
   const { user, userData, loading: authLoading } = useAuth();
   const [apartments, setApartments] = useState<
     (Apartment & { isFavorited?: boolean })[]
@@ -96,19 +97,24 @@ export default function FavoritesScreen() {
 
   const keyExtractor = useCallback((item: Apartment) => item.id, []);
 
+  const screenPad = [
+    styles.safe,
+    { paddingTop: insets.top, backgroundColor: UI.canvas },
+  ];
+
   if (authLoading) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <View style={screenPad}>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={UI.primary} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!user) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <View style={screenPad}>
         <View style={styles.centeredPad}>
           <Text style={styles.emptyTitle}>
             Đăng nhập để xem danh sách Yêu thích
@@ -127,12 +133,12 @@ export default function FavoritesScreen() {
             </Pressable>
           </Link>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <View style={screenPad}>
       <View style={styles.container}>
         <View style={styles.pageHeader}>
           <Text style={styles.pageTitle}>Căn hộ yêu thích</Text>
@@ -216,7 +222,7 @@ export default function FavoritesScreen() {
           />
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

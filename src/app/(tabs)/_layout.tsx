@@ -1,22 +1,83 @@
 import { Redirect, Tabs } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { Platform, useColorScheme, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Hoteliq } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 
 const TabUI = {
-  primary: '#1E75FF',
-  inactive: '#B0B6C3',
+  active: Hoteliq.primary,
+  inactive: '#A0A0A0',
+  soft: Hoteliq.primarySoft,
   surface: '#FFFFFF',
-  shadow: '#0F172A',
+  shadow: Hoteliq.shadow,
 } as const;
+
+function HoteliqTabIcon({
+  focused,
+  label,
+  ios,
+  android,
+}: {
+  focused: boolean;
+  label: string;
+  ios: string;
+  android: string;
+}) {
+  if (focused) {
+    return (
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+          backgroundColor: TabUI.soft,
+          borderRadius: 22,
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          minHeight: 40,
+        }}>
+        <SymbolView
+          name={{
+            ios: ios as 'house.fill',
+            android: android as 'home',
+            web: android as 'home',
+          }}
+          size={18}
+          tintColor={TabUI.active}
+          weight="semibold"
+        />
+        <Text
+          style={{
+            color: TabUI.active,
+            fontSize: 12,
+            fontWeight: '600',
+          }}
+          numberOfLines={1}>
+          {label}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <SymbolView
+      name={{
+        ios: ios as 'house',
+        android: android as 'home',
+        web: android as 'home',
+      }}
+      size={22}
+      tintColor={TabUI.inactive}
+      weight="regular"
+    />
+  );
+}
 
 export default function TabsLayout() {
   const { user, loading } = useAuth();
-  const scheme = useColorScheme();
   const insets = useSafeAreaInsets();
-  const isDark = scheme === 'dark';
 
   if (!loading && !user) {
     return <Redirect href="/(auth)/login" />;
@@ -29,35 +90,37 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarActiveTintColor: TabUI.primary,
+        tabBarActiveTintColor: TabUI.active,
         tabBarInactiveTintColor: TabUI.inactive,
         tabBarStyle: {
           position: 'absolute',
-          left: 20,
-          right: 20,
+          left: 16,
+          right: 16,
           bottom: bottomGap,
-          height: 64,
-          marginHorizontal: 4,
-          borderRadius: 32,
-          backgroundColor: isDark ? '#1C1C1E' : TabUI.surface,
+          height: 68,
+          borderRadius: 28,
+          backgroundColor: TabUI.surface,
           borderTopWidth: 0,
-          paddingTop: 8,
-          paddingBottom: 8,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: Hoteliq.line,
+          paddingTop: 10,
+          paddingBottom: 10,
+          paddingHorizontal: 6,
           ...Platform.select({
             ios: {
               shadowColor: TabUI.shadow,
-              shadowOffset: { width: 0, height: 10 },
-              shadowOpacity: 0.14,
-              shadowRadius: 20,
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.08,
+              shadowRadius: 24,
             },
             android: {
-              elevation: 12,
+              elevation: 8,
             },
             default: {
               shadowColor: TabUI.shadow,
-              shadowOffset: { width: 0, height: 10 },
-              shadowOpacity: 0.14,
-              shadowRadius: 20,
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.08,
+              shadowRadius: 24,
             },
           }),
         },
@@ -66,47 +129,40 @@ export default function TabsLayout() {
           alignItems: 'center',
         },
       }}>
-      {/* 1. Home */}
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Trang chủ',
-          tabBarIcon: ({ color, focused }) => (
-            <SymbolView
-              name={{ ios: 'house.fill', android: 'home', web: 'home' }}
-              size={focused ? 26 : 24}
-              tintColor={color}
-              weight={focused ? 'bold' : 'regular'}
+          title: 'Home',
+          tabBarIcon: ({ focused }) => (
+            <HoteliqTabIcon
+              focused={focused}
+              label="Home"
+              ios={focused ? 'house.fill' : 'house'}
+              android="home"
             />
           ),
         }}
       />
 
-      {/* 2. Bookings */}
       <Tabs.Screen
         name="bookings"
         options={{
-          title: 'Lịch hẹn',
-          tabBarIcon: ({ color, focused }) => (
-            <SymbolView
-              name={{
-                ios: 'calendar',
-                android: 'calendar_month',
-                web: 'calendar_month',
-              }}
-              size={focused ? 26 : 24}
-              tintColor={color}
-              weight={focused ? 'bold' : 'regular'}
+          title: 'Schedule',
+          tabBarIcon: ({ focused }) => (
+            <HoteliqTabIcon
+              focused={focused}
+              label="Schedule"
+              ios="calendar"
+              android="calendar_month"
             />
           ),
         }}
       />
 
-      {/* 3. Search — center, emphasized */}
       <Tabs.Screen
         name="search"
         options={{
-          title: 'Tìm kiếm',
+          title: 'Search',
           tabBarIcon: ({ focused }) => (
             <View
               style={{
@@ -114,72 +170,65 @@ export default function TabsLayout() {
                 height: focused ? 52 : 48,
                 marginTop: -18,
                 borderRadius: 26,
-                backgroundColor: TabUI.primary,
+                backgroundColor: TabUI.active,
                 alignItems: 'center',
                 justifyContent: 'center',
                 ...Platform.select({
                   ios: {
-                    shadowColor: TabUI.primary,
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: 0.35,
-                    shadowRadius: 10,
+                    shadowColor: TabUI.active,
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.28,
+                    shadowRadius: 14,
                   },
-                  android: { elevation: 6 },
+                  android: { elevation: 5 },
                   default: {},
                 }),
               }}>
               <SymbolView
-                name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
-                size={focused ? 26 : 24}
+                name={{
+                  ios: 'magnifyingglass',
+                  android: 'search',
+                  web: 'search',
+                }}
+                size={focused ? 22 : 20}
                 tintColor="#FFFFFF"
-                weight="bold"
+                weight="semibold"
               />
             </View>
           ),
         }}
       />
 
-      {/* 4. Favorites */}
       <Tabs.Screen
         name="favorites"
         options={{
-          title: 'Yêu thích',
-          tabBarIcon: ({ color, focused }) => (
-            <SymbolView
-              name={{
-                ios: focused ? 'heart.fill' : 'heart',
-                android: focused ? 'favorite' : 'favorite_border',
-                web: focused ? 'favorite' : 'favorite_border',
-              }}
-              size={focused ? 26 : 24}
-              tintColor={color}
-              weight={focused ? 'bold' : 'regular'}
+          title: 'Saved',
+          tabBarIcon: ({ focused }) => (
+            <HoteliqTabIcon
+              focused={focused}
+              label="Saved"
+              ios={focused ? 'bookmark.fill' : 'bookmark'}
+              android={focused ? 'bookmark' : 'bookmark_border'}
             />
           ),
         }}
       />
 
-      {/* 5. Profile */}
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Cá nhân',
-          tabBarIcon: ({ color, focused }) => (
-            <SymbolView
-              name={{
-                ios: focused ? 'person.fill' : 'person',
-                android: focused ? 'person' : 'person_outline',
-                web: focused ? 'person' : 'person_outline',
-              }}
-              size={focused ? 26 : 24}
-              tintColor={color}
-              weight={focused ? 'bold' : 'regular'}
+          title: 'Profile',
+          tabBarIcon: ({ focused }) => (
+            <HoteliqTabIcon
+              focused={focused}
+              label="Profile"
+              ios={focused ? 'person.fill' : 'person'}
+              android={focused ? 'person' : 'person_outline'}
             />
           ),
         }}
       />
 
-      {/* Hidden from tab bar — still reachable via router.push */}
       <Tabs.Screen
         name="notifications"
         options={{
