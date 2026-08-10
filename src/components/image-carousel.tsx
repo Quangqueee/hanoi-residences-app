@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -12,6 +12,14 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  type SharedValue,
+} from 'react-native-reanimated';
 
 type Props = {
   urls: string[];
@@ -27,9 +35,44 @@ type Props = {
   placeholderLabel?: string;
 };
 
+const DOT_SIZE = 6;
+const DOT_ACTIVE_WIDTH = 16;
+const DOT_GAP = 6;
+
+function CarouselDot({
+  index,
+  progress,
+}: {
+  index: number;
+  progress: SharedValue<number>;
+}) {
+  const style = useAnimatedStyle(() => {
+    const distance = Math.abs(progress.value - index);
+    const width = interpolate(
+      distance,
+      [0, 1],
+      [DOT_ACTIVE_WIDTH, DOT_SIZE],
+      Extrapolation.CLAMP,
+    );
+    const opacity = interpolate(
+      distance,
+      [0, 1],
+      [1, 0.55],
+      Extrapolation.CLAMP,
+    );
+    return {
+      width,
+      opacity,
+    };
+  });
+
+  return <Animated.View style={[styles.dot, style]} />;
+}
+
 /**
  * Horizontal paging carousel — tap navigates; swipe does not.
  * Works on iOS / Android / Web (Expo).
+ * Dots track scroll progress (Airbnb / Hanoi Residence style).
  */
 export function ImageCarousel({
   urls,
@@ -46,6 +89,8 @@ export function ImageCarousel({
   const [index, setIndex] = useState(0);
   const draggingRef = useRef(false);
   const dragTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const progress = useSharedValue(0);
+  const swipeScale = useSharedValue(1);
 
   const images = urls.filter(Boolean);
   const count = images.length;
@@ -60,16 +105,28 @@ export function ImageCarousel({
     [width],
   );
 
+  useEffect(() => {
+    progress.value = index;
+  }, [index, progress]);
+
   const markDragging = () => {
     draggingRef.current = true;
+    swipeScale.value = withSpring(0.985, { damping: 18, stiffness: 220 });
     if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current);
   };
 
   const clearDraggingSoon = () => {
+    swipeScale.value = withSpring(1, { damping: 16, stiffness: 200 });
     if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current);
     dragTimeoutRef.current = setTimeout(() => {
       draggingRef.current = false;
     }, 80);
+  };
+
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (width <= 0) return;
+    const offset = e.nativeEvent.contentOffset.x;
+    progress.value = offset / width;
   };
 
   const onScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -83,6 +140,10 @@ export function ImageCarousel({
     if (draggingRef.current) return;
     onPress?.();
   };
+
+  const mediaStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: swipeScale.value }],
+  }));
 
   if (count === 0) {
     return (
@@ -110,34 +171,37 @@ export function ImageCarousel({
       ]}
       onLayout={onLayout}>
       {width > 0 ? (
-        <ScrollView
-          horizontal
-          pagingEnabled
-          nestedScrollEnabled
-          directionalLockEnabled
-          decelerationRate="fast"
-          showsHorizontalScrollIndicator={false}
-          scrollEventThrottle={16}
-          onScrollBeginDrag={markDragging}
-          onMomentumScrollBegin={markDragging}
-          onScrollEndDrag={onScrollEnd}
-          onMomentumScrollEnd={onScrollEnd}>
-          {images.map((uri, i) => (
-            <Pressable
-              key={`${recyclingKey ?? 'img'}-${i}-${uri}`}
-              onPress={handleTap}
-              style={{ width, height: slideHeight }}
-              accessibilityRole={onPress ? 'button' : undefined}>
-              <Image
-                source={{ uri }}
+        <Animated.View style={[styles.media, mediaStyle]}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            nestedScrollEnabled
+            directionalLockEnabled
+            decelerationRate="fast"
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onScroll={onScroll}
+            onScrollBeginDrag={markDragging}
+            onMomentumScrollBegin={markDragging}
+            onScrollEndDrag={onScrollEnd}
+            onMomentumScrollEnd={onScrollEnd}>
+            {images.map((uri, i) => (
+              <Pressable
+                key={`${recyclingKey ?? 'img'}-${i}-${uri}`}
+                onPress={handleTap}
                 style={{ width, height: slideHeight }}
-                contentFit="cover"
-                transition={200}
-                recyclingKey={`${recyclingKey ?? 'carousel'}-${i}`}
-              />
-            </Pressable>
-          ))}
-        </ScrollView>
+                accessibilityRole={onPress ? 'button' : undefined}>
+                <Image
+                  source={{ uri }}
+                  style={{ width, height: slideHeight }}
+                  contentFit="cover"
+                  transition={200}
+                  recyclingKey={`${recyclingKey ?? 'carousel'}-${i}`}
+                />
+              </Pressable>
+            ))}
+          </ScrollView>
+        </Animated.View>
       ) : (
         <View style={[styles.placeholder, { height: slideHeight || height }]} />
       )}
@@ -153,10 +217,7 @@ export function ImageCarousel({
       {showDots && count > 1 ? (
         <View style={styles.dots} pointerEvents="none">
           {images.map((_, i) => (
-            <View
-              key={`dot-${i}`}
-              style={[styles.dot, i === index && styles.dotActive]}
-            />
+            <CarouselDot key={`dot-${i}`} index={i} progress={progress} />
           ))}
         </View>
       ) : null}
@@ -170,6 +231,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F7F7',
     overflow: 'hidden',
     position: 'relative',
+  },
+  media: {
+    width: '100%',
+    height: '100%',
   },
   placeholder: {
     width: '100%',
@@ -190,19 +255,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
+    gap: DOT_GAP,
   },
   dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.45)',
-  },
-  dotActive: {
+    height: DOT_SIZE,
+    borderRadius: DOT_SIZE / 2,
     backgroundColor: '#FFFFFF',
-    width: 7,
-    height: 7,
-    borderRadius: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.25,
+    shadowRadius: 1.5,
+    elevation: 2,
   },
   counter: {
     position: 'absolute',

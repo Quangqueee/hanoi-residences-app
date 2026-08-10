@@ -15,8 +15,8 @@ import { useAuth } from '@/contexts/auth-context';
 import {
   formatCommission,
   formatPriceAmount,
-  getApartmentDisplayTitle,
-  getRoomTypeLabel,
+  formatRelativeTime,
+  getListingTimestamp,
   resolveListingBadge,
 } from '@/lib/apartment-display';
 import { setApartmentFavorite } from '@/lib/favorites-service';
@@ -40,12 +40,17 @@ function FavoriteButton({
   updating,
   onPress,
   className,
+  /** Overlay on image (User) vs inline in content (CTV/Admin) */
+  tone = 'overlay',
 }: {
   isFavorite: boolean;
   updating: boolean;
   onPress: () => void;
   className?: string;
+  tone?: 'overlay' | 'inline';
 }) {
+  const isOverlay = tone === 'overlay';
+
   return (
     <Pressable
       onPress={onPress}
@@ -53,27 +58,33 @@ function FavoriteButton({
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
-      className={`z-[4] h-9 w-9 items-center justify-center rounded-full bg-white ${className ?? ''}`}
+      className={`${
+        isOverlay
+          ? 'z-[4] h-9 w-9 items-center justify-center rounded-full bg-white'
+          : 'z-[4] h-8 w-8 items-center justify-center'
+      } ${className ?? ''}`}
       style={({ pressed }) => ({
         opacity: pressed || updating ? 0.85 : 1,
-        ...(Platform.select({
-          ios: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 6,
-          },
-          android: { elevation: 2 },
-          default: {},
-        }) as object),
+        ...(isOverlay
+          ? ((Platform.select({
+              ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 6,
+              },
+              android: { elevation: 2 },
+              default: {},
+            }) as object) ?? {})
+          : {}),
       })}>
       {updating ? (
         <ActivityIndicator size="small" color={Hoteliq.heart} />
       ) : (
         <Text
-          className={`text-[18px] font-bold leading-5 ${
-            isFavorite ? 'text-hoteliq-heart' : 'text-[#C8C8C8]'
-          }`}>
+          className={`font-bold leading-5 ${
+            isOverlay ? 'text-[18px]' : 'text-[20px]'
+          } ${isFavorite ? 'text-hoteliq-heart' : 'text-[#C8C8C8]'}`}>
           {isFavorite ? '♥' : '♡'}
         </Text>
       )}
@@ -95,14 +106,20 @@ function ApartmentCardComponent({
   const collaboratorView =
     isCollaborator || isAdmin || role === 'collaborator' || role === 'admin';
 
-  const title = getApartmentDisplayTitle(apartment, role);
+  // Match website card: always short listing title (never SEO title).
+  const title = apartment.title?.trim() || 'Căn hộ';
   const commissionLabel = formatCommission(apartment.commission);
   const badge = resolveListingBadge(apartment, collaboratorView);
   const images = apartment.imageUrls ?? [];
   const cover = images[0];
-  const locationLine =
-    apartment.address?.trim() ||
-    `${apartment.district}, Hà Nội`;
+  const districtLine = apartment.district?.trim() || 'Hà Nội';
+  const roomMeta = [
+    apartment.roomType,
+    apartment.area != null ? `${apartment.area} m²` : null,
+  ]
+    .filter(Boolean)
+    .join(' • ');
+  const updatedLabel = formatRelativeTime(getListingTimestamp(apartment));
 
   const initialFavoriteState =
     typeof apartment.isFavorited === 'boolean'
@@ -174,25 +191,24 @@ function ApartmentCardComponent({
           )}
         </View>
 
-        <View className="min-w-0 flex-1 gap-1">
-          <View className="flex-row items-start justify-between gap-2">
-            <Text
-              className="min-w-0 flex-1 text-[15px] font-semibold leading-5 text-hoteliq-ink"
-              numberOfLines={1}>
-              {title}
-            </Text>
-            <View className="flex-row items-center gap-1 pt-0.5">
-              <Text className="text-[12px] text-hoteliq-star">★</Text>
-              <Text className="text-[12px] font-semibold text-hoteliq-ink">
-                {getRoomTypeLabel(apartment.roomType)}
-              </Text>
-            </View>
-          </View>
+        <View className="min-w-0 flex-1 gap-0.5">
+          <Text
+            className="text-[15px] font-semibold leading-5 text-hoteliq-ink"
+            numberOfLines={1}>
+            {title}
+          </Text>
           <Text
             className="text-[12px] font-medium leading-4 text-hoteliq-gray"
             numberOfLines={1}>
-            {locationLine}
+            {districtLine}
           </Text>
+          {roomMeta ? (
+            <Text
+              className="text-[12px] leading-4 text-hoteliq-gray"
+              numberOfLines={1}>
+              {roomMeta}
+            </Text>
+          ) : null}
           <View className="mt-0.5 flex-row items-baseline gap-1">
             <Text className="text-[15px] font-semibold leading-5 text-hoteliq-ink">
               {formatPriceAmount(apartment.price)}
@@ -206,7 +222,8 @@ function ApartmentCardComponent({
 
   return (
     <View
-      className={`${isRail ? 'mb-0 w-[280px]' : 'mb-8 w-full'} ${className ?? ''}`}>
+      className={`${isRail ? 'mb-0 w-[280px]' : 'mb-7 w-full'} ${className ?? ''}`}>
+      {/* 1. Ảnh + overlays */}
       <View className="relative w-full overflow-hidden rounded-[12px] bg-hoteliq-chip">
         <ImageCarousel
           urls={images}
@@ -221,9 +238,10 @@ function ApartmentCardComponent({
           }}
         />
 
+        {/* 2. Hoa hồng (CTV/Admin) */}
         {collaboratorView && commissionLabel ? (
           <View
-            className="absolute left-3 top-3 z-[2] max-w-[55%] rounded-full bg-brand-commission/95 px-3 py-1.5"
+            className="absolute left-3 top-3 z-[2] max-w-[52%] rounded-md bg-brand-commission px-2.5 py-1"
             pointerEvents="none">
             <Text className="text-[11px] font-bold text-white" numberOfLines={1}>
               HH: {commissionLabel}
@@ -231,78 +249,122 @@ function ApartmentCardComponent({
           </View>
         ) : null}
 
+        {/* Marketing badge (User/Landlord) */}
         {!collaboratorView && badge ? (
           <View
-            className="absolute left-0 top-3 z-[2] rounded-r-full py-1.5 pl-3.5 pr-4"
+            className="absolute left-0 top-3 z-[2] py-1.5 pl-3 pr-4"
             style={{ backgroundColor: badge.backgroundColor }}
             pointerEvents="none">
-            <Text className="text-[10px] font-bold uppercase tracking-widest text-white">
+            <Text className="text-[10px] font-bold uppercase tracking-wide text-white">
               {badge.label}
             </Text>
           </View>
         ) : null}
 
+        {/* Trạng thái phòng (CTV/Admin) */}
         {collaboratorView && badge ? (
           <View
-            className="absolute bottom-8 left-0 z-[2] rounded-r-full py-1.5 pl-3.5 pr-3"
+            className="absolute bottom-8 left-0 z-[2] rounded-r-md py-1.5 pl-3 pr-2.5"
             style={{ backgroundColor: badge.backgroundColor }}
             pointerEvents="none">
-            <Text className="text-[10px] font-bold uppercase tracking-widest text-white">
+            <Text className="text-[10px] font-bold uppercase tracking-wider text-white">
               {badge.label}
             </Text>
           </View>
         ) : null}
 
-        <FavoriteButton
-          isFavorite={isFavorite}
-          updating={isFavoriteUpdating}
-          onPress={() => void toggleFavorite()}
-          className="absolute right-3 top-3"
-        />
+        {/* Mã nguồn — CTV/Admin (website card ID badge) */}
+        {collaboratorView && apartment.sourceCode ? (
+          <View
+            className="absolute right-3 top-3 z-[2] max-w-[42%] rounded-md bg-black/60 px-2 py-1"
+            pointerEvents="none">
+            <Text className="text-[11px] font-bold text-white" numberOfLines={1}>
+              ID: {apartment.sourceCode}
+            </Text>
+          </View>
+        ) : null}
+
+        {/* Favorite on image — User/Landlord only */}
+        {!collaboratorView ? (
+          <FavoriteButton
+            isFavorite={isFavorite}
+            updating={isFavoriteUpdating}
+            onPress={() => void toggleFavorite()}
+            tone="overlay"
+            className="absolute right-3 top-3"
+          />
+        ) : null}
       </View>
 
+      {/* Content — hierarchy matches website */}
       <Pressable
         onPress={openDetail}
         accessibilityRole="button"
         accessibilityLabel={`Xem chi tiết ${title}`}
-        className="gap-0.5 pt-3.5 active:opacity-90">
-        <View className="flex-row items-start justify-between gap-2">
-          <Text
-            className={`min-w-0 flex-1 font-semibold text-hoteliq-ink ${
-              isRail ? 'text-[14px] leading-[18px]' : 'text-[15px] leading-5'
-            }`}
-            numberOfLines={1}>
-            {title}
-          </Text>
-          <View className="flex-row items-center gap-1">
-            <Text className="text-[12px] text-hoteliq-star">★</Text>
-            <Text className="text-[12px] text-hoteliq-ink">
-              {apartment.area ? `${apartment.area}` : '—'}
-            </Text>
-          </View>
-        </View>
-
+        className={`${isRail ? 'gap-0.5 pt-2.5' : 'gap-0.5 pt-3'} active:opacity-90`}>
+        {/* 3. Tiêu đề */}
         <Text
-          className={`text-hoteliq-gray ${
-            isRail ? 'text-[13px] leading-[18px]' : 'text-[14px] leading-[18px]'
+          className={`font-semibold text-hoteliq-ink ${
+            isRail ? 'text-[14px] leading-[18px]' : 'text-[16px] leading-5'
           }`}
           numberOfLines={1}>
-          {locationLine}
+          {title}
         </Text>
 
-        <View className="mt-1 flex-row items-baseline gap-1">
+        {/* 4. Khu vực */}
+        <Text
+          className={`text-hoteliq-gray ${
+            isRail ? 'text-[12px] leading-4' : 'text-[13px] leading-[18px]'
+          }`}
+          numberOfLines={1}>
+          {districtLine}
+        </Text>
+
+        {/* 5. Loại phòng + diện tích */}
+        {roomMeta ? (
           <Text
-            className={`font-semibold text-hoteliq-ink ${
-              isRail ? 'text-[14px] leading-[18px]' : 'text-[15px] leading-5'
+            className={`font-medium text-hoteliq-gray ${
+              isRail ? 'text-[12px] leading-4' : 'text-[13px] leading-[18px]'
+            }`}
+            numberOfLines={1}>
+            {roomMeta}
+          </Text>
+        ) : null}
+
+        {/* 6. Giá */}
+        <View className={`${isRail ? 'mt-1' : 'mt-1.5'} flex-row items-baseline`}>
+          <Text
+            className={`font-bold text-hoteliq-ink ${
+              isRail ? 'text-[15px] leading-5' : 'text-[17px] leading-6'
             }`}>
             {formatPriceAmount(apartment.price)}
           </Text>
           <Text
-            className={`text-hoteliq-gray ${
-              isRail ? 'text-[13px]' : 'text-[14px]'
+            className={`ml-1 font-medium text-hoteliq-gray ${
+              isRail ? 'text-[12px]' : 'text-[13px]'
             }`}>
             /tháng
           </Text>
+        </View>
+
+        {/* 7. Ngày cập nhật + Favorite (CTV/Admin) */}
+        <View className="mt-1.5 flex-row items-center justify-between gap-2">
+          <Text
+            className={`flex-1 italic text-hoteliq-gray ${
+              isRail ? 'text-[11px] leading-4' : 'text-[12px] leading-4'
+            }`}
+            numberOfLines={1}>
+            Cập nhật: {updatedLabel}
+          </Text>
+
+          {collaboratorView ? (
+            <FavoriteButton
+              isFavorite={isFavorite}
+              updating={isFavoriteUpdating}
+              onPress={() => void toggleFavorite()}
+              tone="inline"
+            />
+          ) : null}
         </View>
       </Pressable>
     </View>
