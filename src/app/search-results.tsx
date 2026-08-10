@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
@@ -13,6 +14,7 @@ import { ApartmentCard } from '@/components/apartment-card';
 import { ListPaginationFooter } from '@/components/list-pagination-footer';
 import { SortPills, type SortOption } from '@/components/sort-pills';
 import { ApartmentCardSkeleton } from '@/components/ui/shimmer-block';
+import { Hoteliq } from '@/constants/theme';
 import { useApartments } from '@/hooks/use-apartments';
 import type { ApartmentFilters } from '@/lib/apartments-service';
 import {
@@ -22,9 +24,6 @@ import {
   type FilterState,
 } from '@/lib/search-params';
 import type { Apartment } from '@/lib/types';
-
-const BRAND = '#CDA533';
-const BRAND_DARK = '#B88E22';
 
 function toServiceFilters(
   filterState: FilterState,
@@ -123,7 +122,7 @@ export default function SearchResultsScreen() {
 
   const listHeader = (
     <View className="mb-4 gap-4 pt-1">
-      <Text className="text-[15px] font-semibold text-brand-muted">
+      <Text className="text-[14px] leading-[18px] text-hoteliq-gray">
         {showSkeleton
           ? 'Đang tìm kiếm…'
           : `Tìm thấy ${filteredApartments.length}${
@@ -136,8 +135,8 @@ export default function SearchResultsScreen() {
   );
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center gap-2.5 px-3 pb-3.5 pt-1.5">
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+      <View className="flex-row items-center gap-2.5 px-4 pb-3.5 pt-1.5">
         <Pressable
           onPress={() => {
             if (router.canGoBack()) router.back();
@@ -146,16 +145,25 @@ export default function SearchResultsScreen() {
           hitSlop={14}
           accessibilityRole="button"
           accessibilityLabel="Quay lại"
-          className="h-11 w-11 items-center justify-center rounded-full bg-white">
-          <Text className="text-lg font-semibold text-foreground">←</Text>
+          className="h-11 w-11 items-center justify-center rounded-full border border-hoteliq-line bg-white">
+          <SymbolView
+            name={{
+              ios: 'chevron.left',
+              android: 'arrow_back',
+              web: 'arrow_back',
+            }}
+            size={18}
+            tintColor={Hoteliq.ink}
+            weight="semibold"
+          />
         </Pressable>
 
         <View className="min-w-0 flex-1 gap-0.5">
-          <Text className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#A8A29A]">
+          <Text className="text-[12px] leading-4 text-hoteliq-gray">
             Kết quả
           </Text>
           <Text
-            className="text-[15px] font-semibold text-foreground"
+            className="text-[15px] font-semibold leading-5 text-hoteliq-ink"
             numberOfLines={1}>
             {summary}
           </Text>
@@ -166,9 +174,11 @@ export default function SearchResultsScreen() {
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Sửa bộ lọc"
-          className="rounded-full bg-brand-soft px-3.5 py-2"
+          className="min-h-11 items-center justify-center rounded-full border border-hoteliq-line bg-white px-4"
           style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
-          <Text className="text-[13px] font-semibold text-brand">Sửa bộ lọc</Text>
+          <Text className="text-[13px] font-semibold text-hoteliq-ink">
+            Sửa bộ lọc
+          </Text>
         </Pressable>
       </View>
 
@@ -178,7 +188,7 @@ export default function SearchResultsScreen() {
         renderItem={renderItem}
         ListHeaderComponent={listHeader}
         contentContainerStyle={{
-          paddingHorizontal: 20,
+          paddingHorizontal: 24,
           paddingBottom: Math.max(insets.bottom, 16) + 24,
           flexGrow: 1,
         }}
@@ -194,8 +204,8 @@ export default function SearchResultsScreen() {
             onRefresh={() => {
               void refresh();
             }}
-            tintColor={BRAND}
-            colors={[BRAND]}
+            tintColor={Hoteliq.primary}
+            colors={[Hoteliq.primary]}
           />
         }
         onEndReached={() => {
@@ -210,16 +220,25 @@ export default function SearchResultsScreen() {
               <ApartmentCardSkeleton />
             </View>
           ) : (
-            <View className="items-center gap-3 rounded-3xl border border-brand-border bg-white px-7 py-10">
-              <View className="mb-1 h-16 w-16 items-center justify-center rounded-full bg-[#FBF8F1]">
-                <Text className="text-3xl text-brand">⌕</Text>
+            <View className="items-center gap-3 rounded-[12px] bg-hoteliq-chip px-7 py-10">
+              <View className="mb-1 h-16 w-16 items-center justify-center rounded-full bg-white">
+                <SymbolView
+                  name={{
+                    ios: 'magnifyingglass',
+                    android: 'search',
+                    web: 'search',
+                  }}
+                  size={26}
+                  tintColor={Hoteliq.ink}
+                  weight="regular"
+                />
               </View>
-              <Text className="text-center text-[18px] font-bold tracking-tight text-foreground">
+              <Text className="text-center text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
                 {error
                   ? 'Không tải được danh sách'
                   : 'Không tìm thấy kết quả phù hợp'}
               </Text>
-              <Text className="text-center text-sm leading-5 text-brand-muted">
+              <Text className="text-center text-[14px] leading-5 text-hoteliq-gray">
                 {error
                   ? error
                   : 'Thử đổi từ khóa, nới khoảng giá hoặc chỉnh lại bộ lọc.'}
@@ -228,21 +247,21 @@ export default function SearchResultsScreen() {
                 <Pressable
                   onPress={() => void reload()}
                   hitSlop={8}
-                  className="mt-2 min-h-11 items-center justify-center rounded-full bg-brand px-6"
-                  style={({ pressed }) => [
-                    pressed ? { backgroundColor: BRAND_DARK } : null,
-                  ]}>
-                  <Text className="text-sm font-bold text-white">Thử lại</Text>
+                  className="mt-2 min-h-11 items-center justify-center rounded-full bg-hoteliq-ink px-6"
+                  style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+                  <Text className="text-sm font-semibold text-white">
+                    Thử lại
+                  </Text>
                 </Pressable>
               ) : (
                 <Pressable
                   onPress={editFilters}
                   hitSlop={8}
-                  className="mt-2 min-h-11 items-center justify-center rounded-full bg-brand px-6"
-                  style={({ pressed }) => [
-                    pressed ? { backgroundColor: BRAND_DARK } : null,
-                  ]}>
-                  <Text className="text-sm font-bold text-white">Tìm lại</Text>
+                  className="mt-2 min-h-11 items-center justify-center rounded-full bg-hoteliq-ink px-6"
+                  style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+                  <Text className="text-sm font-semibold text-white">
+                    Tìm lại
+                  </Text>
                 </Pressable>
               )}
             </View>

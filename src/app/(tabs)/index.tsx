@@ -105,7 +105,7 @@ export default function HomeScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: Apartment }) => (
-      <ApartmentCard apartment={item} variant="compact" />
+      <ApartmentCard apartment={item} variant="feed" />
     ),
     [],
   );
@@ -132,11 +132,11 @@ export default function HomeScreen() {
                 web: 'location_on',
               }}
               size={16}
-              tintColor={Hoteliq.primary}
+              tintColor={Hoteliq.ink}
               weight="semibold"
             />
             <Text
-              className="flex-1 text-[16px] font-semibold leading-5 text-hoteliq-ink"
+              className="flex-1 text-[16px] font-semibold leading-[22px] text-hoteliq-ink"
               numberOfLines={1}>
               {preferredDistrict}
             </Text>
@@ -148,7 +148,7 @@ export default function HomeScreen() {
           accessibilityRole="button"
           accessibilityLabel="Thông báo"
           hitSlop={8}
-          className="h-11 w-11 items-center justify-center rounded-[12px] border border-hoteliq-line bg-white"
+          className="h-11 w-11 items-center justify-center rounded-full border border-hoteliq-line bg-white"
           style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}>
           <SymbolView
             name={{
@@ -166,11 +166,11 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
-      {/* Category pills */}
+      {/* Category tabs — Airbnb style: icon trên, label dưới, gạch chân khi active */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 10, paddingRight: 8 }}>
+        contentContainerStyle={{ gap: 18, paddingRight: 8 }}>
         {CATEGORIES.map((item) => {
           const active = category === item.key;
           return (
@@ -179,28 +179,25 @@ export default function HomeScreen() {
               onPress={() => setCategory(item.key)}
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
-              className={`h-[44px] flex-row items-center gap-2 rounded-[12px] px-3.5 ${
-                active ? 'bg-hoteliq-primary' : 'bg-hoteliq-chip'
+              className={`min-h-[56px] min-w-[56px] items-center justify-center gap-1 border-b-2 px-2 pb-2.5 pt-1 ${
+                active ? 'border-hoteliq-ink' : 'border-transparent'
               }`}
-              style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
-              <View
-                className={`h-7 w-7 items-center justify-center rounded-[8px] ${
-                  active ? 'bg-white/20' : 'bg-white'
-                }`}>
-                <SymbolView
-                  name={{
-                    ios: item.ios as 'building.2.fill',
-                    android: item.android as 'apartment',
-                    web: item.android as 'apartment',
-                  }}
-                  size={14}
-                  tintColor={active ? '#FFFFFF' : Hoteliq.muted}
-                  weight="medium"
-                />
-              </View>
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+              <SymbolView
+                name={{
+                  ios: item.ios as 'building.2.fill',
+                  android: item.android as 'apartment',
+                  web: item.android as 'apartment',
+                }}
+                size={24}
+                tintColor={active ? Hoteliq.ink : Hoteliq.muted}
+                weight={active ? 'semibold' : 'regular'}
+              />
               <Text
-                className={`text-[13px] font-semibold ${
-                  active ? 'text-white' : 'text-hoteliq-gray'
+                className={`text-[12px] leading-4 ${
+                  active
+                    ? 'font-semibold text-hoteliq-ink'
+                    : 'font-medium text-hoteliq-gray'
                 }`}>
                 {item.label}
               </Text>
@@ -212,11 +209,11 @@ export default function HomeScreen() {
       {/* Near Location rail */}
       <View className="gap-3.5">
         <View className="flex-row items-center justify-between">
-          <Text className="text-[18px] font-semibold tracking-tight text-hoteliq-ink">
+          <Text className="text-[22px] font-semibold leading-7 text-hoteliq-ink">
             Near Location
           </Text>
-          <Pressable onPress={goToSearch} hitSlop={8}>
-            <Text className="text-[13px] font-semibold text-hoteliq-primary">
+          <Pressable onPress={goToSearch} hitSlop={8} className="min-h-[44px] justify-center">
+            <Text className="text-[14px] font-semibold text-hoteliq-ink underline">
               See all
             </Text>
           </Pressable>
@@ -244,11 +241,11 @@ export default function HomeScreen() {
       {/* Popular section title */}
       {!loading && apartments.length > 0 ? (
         <View className="mt-1 flex-row items-center justify-between">
-          <Text className="text-[18px] font-semibold tracking-tight text-hoteliq-ink">
+          <Text className="text-[22px] font-semibold leading-7 text-hoteliq-ink">
             Popular Hotel
           </Text>
-          <Pressable onPress={goToSearch} hitSlop={8}>
-            <Text className="text-[13px] font-semibold text-hoteliq-primary">
+          <Pressable onPress={goToSearch} hitSlop={8} className="min-h-[44px] justify-center">
+            <Text className="text-[14px] font-semibold text-hoteliq-ink underline">
               See all
             </Text>
           </Pressable>
@@ -272,7 +269,7 @@ export default function HomeScreen() {
         renderItem={renderItem}
         ListHeaderComponent={listHeader}
         contentContainerStyle={{
-          paddingHorizontal: 20,
+          paddingHorizontal: 24,
           paddingBottom: TAB_BAR_CLEARANCE,
           flexGrow: 1,
         }}
@@ -299,16 +296,15 @@ export default function HomeScreen() {
         ListEmptyComponent={
           loading ? (
             <View className="mt-2 gap-3">
-              <ApartmentCardSkeleton variant="compact" />
               <ApartmentCardSkeleton />
               <ApartmentCardSkeleton />
             </View>
           ) : (
-            <View className="items-center gap-3 rounded-[16px] bg-hoteliq-chip px-7 py-10">
-              <Text className="text-center text-[17px] font-semibold text-hoteliq-ink">
+            <View className="items-center gap-3 rounded-[12px] bg-hoteliq-chip px-7 py-10">
+              <Text className="text-center text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
                 {error ? 'Không tải được danh sách' : 'Chưa có căn phù hợp'}
               </Text>
-              <Text className="text-center text-sm leading-6 text-hoteliq-gray">
+              <Text className="text-center text-[14px] leading-5 text-hoteliq-gray">
                 {error
                   ? error
                   : 'Mở tab Tìm kiếm để lọc theo quận, giá hoặc loại phòng.'}
@@ -316,16 +312,20 @@ export default function HomeScreen() {
               {error ? (
                 <Pressable
                   onPress={() => void reload()}
-                  className="mt-1 min-h-11 items-center justify-center rounded-[12px] bg-hoteliq-primary px-6"
+                  className="mt-1 min-h-11 items-center justify-center rounded-full bg-hoteliq-ink px-6"
                   style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
-                  <Text className="text-sm font-bold text-white">Thử lại</Text>
+                  <Text className="text-sm font-semibold text-white">
+                    Thử lại
+                  </Text>
                 </Pressable>
               ) : (
                 <Pressable
                   onPress={goToSearch}
-                  className="mt-1 min-h-11 items-center justify-center rounded-[12px] bg-hoteliq-primary px-6"
+                  className="mt-1 min-h-11 items-center justify-center rounded-full bg-hoteliq-ink px-6"
                   style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
-                  <Text className="text-sm font-bold text-white">Tìm kiếm</Text>
+                  <Text className="text-sm font-semibold text-white">
+                    Tìm kiếm
+                  </Text>
                 </Pressable>
               )}
             </View>

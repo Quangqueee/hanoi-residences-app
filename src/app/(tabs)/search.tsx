@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useMemo, useState } from 'react';
 import {
   Keyboard,
@@ -14,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApartmentFiltersBar } from '@/components/apartment-filters-bar';
 import { SortPills } from '@/components/sort-pills';
+import { Hoteliq } from '@/constants/theme';
 import {
   DEFAULT_FILTER_STATE,
   filterStateToApartmentFilters,
@@ -23,20 +25,26 @@ import {
   type SortOption,
 } from '@/lib/search-params';
 
-const Brand = {
-  primary: '#CDA533',
-  primaryDark: '#B88E22',
-} as const;
-
 const TAB_BAR_CLEARANCE = 64;
 const APPLY_BAR_HEIGHT = 76;
 
+const searchBarShadow = Platform.select({
+  ios: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+  },
+  android: { elevation: 3 },
+  default: {},
+});
+
 const applyBtnShadow = Platform.select({
   ios: {
-    shadowColor: Brand.primary,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
+    shadowColor: Hoteliq.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
   },
   android: { elevation: 4 },
   default: {},
@@ -96,8 +104,8 @@ export default function SearchFilterCenterScreen() {
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View className="flex-1">
-          <View className="flex-row items-center justify-between px-5 pb-3 pt-3">
-            <Text className="text-[30px] font-semibold tracking-tight text-foreground">
+          <View className="flex-row items-center justify-between px-6 pb-3 pt-3">
+            <Text className="text-[26px] font-semibold leading-[34px] text-hoteliq-ink">
               Tìm kiếm
             </Text>
             {hasActiveFilters ? (
@@ -105,8 +113,9 @@ export default function SearchFilterCenterScreen() {
                 onPress={clearAll}
                 hitSlop={12}
                 accessibilityRole="button"
-                accessibilityLabel="Xóa bộ lọc">
-                <Text className="text-[13px] font-semibold text-brand">
+                accessibilityLabel="Xóa bộ lọc"
+                className="min-h-[44px] justify-center">
+                <Text className="text-[14px] font-semibold text-hoteliq-ink underline">
                   Xóa bộ lọc
                 </Text>
               </Pressable>
@@ -118,7 +127,7 @@ export default function SearchFilterCenterScreen() {
           <ScrollView
             className="flex-1"
             contentContainerStyle={{
-              paddingHorizontal: 20,
+              paddingHorizontal: 24,
               paddingBottom: APPLY_BAR_HEIGHT + TAB_BAR_CLEARANCE + 48,
               gap: 28,
             }}
@@ -127,21 +136,20 @@ export default function SearchFilterCenterScreen() {
             onScrollBeginDrag={Keyboard.dismiss}
             showsVerticalScrollIndicator={false}>
             <View className="gap-7">
+              {/* Search pill kiểu Airbnb: viền hairline + shadow nhẹ */}
               <View
-                className="min-h-[56px] flex-row items-center gap-3 rounded-full bg-white px-5"
-                style={
-                  Platform.select({
-                    ios: {
-                      shadowColor: '#1A1408',
-                      shadowOffset: { width: 0, height: 6 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 16,
-                    },
-                    android: { elevation: 2 },
-                    default: {},
-                  }) as object
-                }>
-                <Text className="text-xl text-[#B0AAA0]">⌕</Text>
+                className="min-h-[56px] flex-row items-center gap-3 rounded-full border-[0.5px] border-hoteliq-line bg-white px-5"
+                style={searchBarShadow as object}>
+                <SymbolView
+                  name={{
+                    ios: 'magnifyingglass',
+                    android: 'search',
+                    web: 'search',
+                  }}
+                  size={18}
+                  tintColor={Hoteliq.ink}
+                  weight="semibold"
+                />
                 <TextInput
                   value={filters.query}
                   onChangeText={(query) => {
@@ -149,8 +157,8 @@ export default function SearchFilterCenterScreen() {
                     setPriceError(null);
                   }}
                   placeholder="Từ khóa: căn hộ, mã căn, quận…"
-                  placeholderTextColor="#A8A29A"
-                  className="flex-1 py-3.5 text-[15px] leading-[22px] text-foreground"
+                  placeholderTextColor={Hoteliq.muted}
+                  className="flex-1 py-3.5 text-[15px] leading-[22px] text-hoteliq-ink"
                   returnKeyType="search"
                   clearButtonMode="while-editing"
                   autoCorrect={false}
@@ -174,19 +182,19 @@ export default function SearchFilterCenterScreen() {
           </ScrollView>
 
           <View
-            className="absolute left-0 right-0 bg-transparent px-5 pb-2 pt-2.5"
+            className="absolute left-0 right-0 bg-transparent px-6 pb-2 pt-2.5"
             style={{ bottom: Math.max(insets.bottom, 10) + TAB_BAR_CLEARANCE }}>
             <Pressable
               onPress={handleApply}
               hitSlop={6}
               accessibilityRole="button"
               accessibilityLabel="Xem kết quả"
-              className="min-h-[56px] items-center justify-center rounded-full bg-brand"
+              className="min-h-[56px] items-center justify-center rounded-full bg-hoteliq-primary"
               style={({ pressed }) => [
                 applyBtnShadow,
-                pressed ? { backgroundColor: Brand.primaryDark } : null,
+                pressed ? { backgroundColor: Hoteliq.primaryDark } : null,
               ]}>
-              <Text className="text-[15px] font-semibold text-white">
+              <Text className="text-[16px] font-semibold text-white">
                 Xem kết quả
               </Text>
             </Pressable>

@@ -6,16 +6,14 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
+  Text,
   TextInput,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Colors, Spacing } from '@/constants/theme';
+import { Hoteliq } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 function getAuthErrorMessage(error: unknown): string {
   const code =
@@ -35,10 +33,10 @@ function getAuthErrorMessage(error: unknown): string {
   }
 }
 
+type FieldKey = 'fullName' | 'email' | 'phoneNumber' | 'password';
+
 export default function SignupScreen() {
   const { user, loading, signup } = useAuth();
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -46,6 +44,7 @@ export default function SignupScreen() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [focusedField, setFocusedField] = useState<FieldKey | null>(null);
 
   if (!loading && user) {
     return <Redirect href="/(tabs)" />;
@@ -68,141 +67,131 @@ export default function SignupScreen() {
     }
   };
 
+  const inputClass = (field: FieldKey) =>
+    `h-[52px] rounded-[12px] border bg-white px-4 text-[16px] leading-[22px] text-hoteliq-ink ${
+      focusedField === field ? 'border-hoteliq-ink' : 'border-hoteliq-line'
+    }`;
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safe}>
+    <View className="flex-1 bg-white">
+      <SafeAreaView className="flex-1" edges={['top', 'bottom']}>
         <KeyboardAvoidingView
-          style={styles.flex}
+          className="flex-1"
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled">
-            <ThemedText type="title">Tạo tài khoản</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              Đồng bộ với hệ thống Hanoi Residences
-            </ThemedText>
+            className="flex-1"
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingHorizontal: 24,
+              paddingBottom: 24,
+            }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}>
+            {/* Header */}
+            <View className="gap-2 pt-14">
+              <Text className="text-[26px] font-semibold leading-[34px] text-hoteliq-ink">
+                Tạo tài khoản
+              </Text>
+              <Text className="text-[14px] leading-5 text-hoteliq-gray">
+                Đồng bộ với hệ thống Hanoi Residences
+              </Text>
+            </View>
 
-            <TextInput
-              placeholder="Họ và tên"
-              placeholderTextColor={colors.textSecondary}
-              style={[
-                styles.input,
-                {
-                  color: colors.text,
-                  backgroundColor: colors.backgroundElement,
-                },
-              ]}
-              value={fullName}
-              onChangeText={setFullName}
-            />
-            <TextInput
-              autoCapitalize="none"
-              autoComplete="email"
-              keyboardType="email-address"
-              placeholder="Email"
-              placeholderTextColor={colors.textSecondary}
-              style={[
-                styles.input,
-                {
-                  color: colors.text,
-                  backgroundColor: colors.backgroundElement,
-                },
-              ]}
-              value={email}
-              onChangeText={setEmail}
-            />
-            <TextInput
-              keyboardType="phone-pad"
-              placeholder="Số điện thoại (tuỳ chọn)"
-              placeholderTextColor={colors.textSecondary}
-              style={[
-                styles.input,
-                {
-                  color: colors.text,
-                  backgroundColor: colors.backgroundElement,
-                },
-              ]}
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-            />
-            <TextInput
-              secureTextEntry
-              placeholder="Mật khẩu"
-              placeholderTextColor={colors.textSecondary}
-              style={[
-                styles.input,
-                {
-                  color: colors.text,
-                  backgroundColor: colors.backgroundElement,
-                },
-              ]}
-              value={password}
-              onChangeText={setPassword}
-            />
+            {/* Spacer keeps the form + CTA in the lower half for one-hand reach */}
+            <View className="min-h-[24px] flex-1" />
 
-            {error ? (
-              <ThemedText type="small" style={styles.error}>
-                {error}
-              </ThemedText>
-            ) : null}
+            {/* Form */}
+            <View className="gap-4">
+              <TextInput
+                placeholder="Họ và tên"
+                placeholderTextColor={Hoteliq.muted}
+                className={inputClass('fullName')}
+                value={fullName}
+                onChangeText={setFullName}
+                onFocus={() => setFocusedField('fullName')}
+                onBlur={() => setFocusedField(null)}
+              />
+              <TextInput
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                placeholder="Email"
+                placeholderTextColor={Hoteliq.muted}
+                className={inputClass('email')}
+                value={email}
+                onChangeText={setEmail}
+                onFocus={() => setFocusedField('email')}
+                onBlur={() => setFocusedField(null)}
+              />
+              <TextInput
+                keyboardType="phone-pad"
+                placeholder="Số điện thoại (tuỳ chọn)"
+                placeholderTextColor={Hoteliq.muted}
+                className={inputClass('phoneNumber')}
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                onFocus={() => setFocusedField('phoneNumber')}
+                onBlur={() => setFocusedField(null)}
+              />
+              <TextInput
+                secureTextEntry
+                placeholder="Mật khẩu"
+                placeholderTextColor={Hoteliq.muted}
+                className={inputClass('password')}
+                value={password}
+                onChangeText={setPassword}
+                onFocus={() => setFocusedField('password')}
+                onBlur={() => setFocusedField(null)}
+              />
 
-            <Pressable
-              onPress={onSubmit}
-              disabled={submitting}
-              style={({ pressed }) => [
-                styles.button,
-                {
-                  backgroundColor: colors.text,
-                  opacity: pressed || submitting ? 0.7 : 1,
-                },
-              ]}>
-              {submitting ? (
-                <ActivityIndicator color={colors.background} />
-              ) : (
-                <ThemedText
-                  type="smallBold"
-                  style={{ color: colors.background }}>
-                  Đăng ký
-                </ThemedText>
-              )}
-            </Pressable>
+              {error ? (
+                <Text className="text-[13px] leading-[18px] text-[#C13515]">
+                  {error}
+                </Text>
+              ) : null}
 
-            <Link href="/(auth)/login" style={styles.footerLink}>
-              <ThemedText type="link">Đã có tài khoản? Đăng nhập</ThemedText>
-            </Link>
+              <Pressable
+                onPress={onSubmit}
+                disabled={submitting}
+                accessibilityRole="button"
+                className="mt-1 h-12 items-center justify-center rounded-full bg-hoteliq-primary"
+                style={({ pressed }) => ({
+                  backgroundColor: pressed
+                    ? Hoteliq.primaryDark
+                    : Hoteliq.primary,
+                  opacity: submitting ? 0.7 : 1,
+                })}>
+                {submitting ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text className="text-[16px] font-semibold text-white">
+                    Đăng ký
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+
+            {/* Footer */}
+            <View className="mt-6 min-h-[44px] flex-row items-center justify-center">
+              <Text
+                className="text-[14px] leading-5 text-hoteliq-gray"
+                numberOfLines={1}>
+                Đã có tài khoản?{' '}
+              </Text>
+              <Link href="/(auth)/login" asChild>
+                <Pressable
+                  hitSlop={8}
+                  className="min-h-[44px] justify-center"
+                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+                  <Text className="text-[14px] font-semibold leading-5 text-hoteliq-ink underline">
+                    Đăng nhập
+                  </Text>
+                </Pressable>
+              </Link>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </ThemedView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safe: { flex: 1 },
-  flex: { flex: 1 },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.three,
-  },
-  input: {
-    minHeight: 48,
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    fontSize: 16,
-  },
-  button: {
-    minHeight: 48,
-    borderRadius: Spacing.two,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: Spacing.two,
-  },
-  error: { color: '#C62828' },
-  footerLink: {
-    alignSelf: 'center',
-    marginTop: Spacing.two,
-  },
-});

@@ -15,9 +15,9 @@ type Props = {
   compact?: boolean;
 };
 
-/** Brand primary from hanoiresidence.site */
-const PRIMARY = '#CDA533';
-const PRIMARY_DARK = '#B88E22';
+/** Airbnb-style dark CTA */
+const PRIMARY = '#0A0A0A';
+const PRIMARY_DARK = '#2A2A2A';
 
 export function QuickDownloadButton({ apartment, compact = false }: Props) {
   const [busy, setBusy] = useState(false);
@@ -85,25 +85,24 @@ export function QuickDownloadButton({ apartment, compact = false }: Props) {
 
 const styles = StyleSheet.create({
   btn: {
-    minHeight: 44,
+    minHeight: 48,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: 9999,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: PRIMARY,
   },
   compactBtn: {
-    minHeight: 40,
+    minHeight: 44,
     paddingHorizontal: 14,
-    borderRadius: 12,
+    borderRadius: 9999,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: PRIMARY,
   },
   btnText: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.2,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

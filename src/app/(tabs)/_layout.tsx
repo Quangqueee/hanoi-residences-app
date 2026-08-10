@@ -6,10 +6,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Hoteliq } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 
+/** Airbnb-style tab bar: icon + label luôn hiện, active đỏ, inactive xám */
 const TabUI = {
-  active: Hoteliq.primary,
-  inactive: '#A0A0A0',
-  soft: Hoteliq.primarySoft,
+  active: Hoteliq.primaryDark,
+  inactive: Hoteliq.muted,
   surface: '#FFFFFF',
   shadow: Hoteliq.shadow,
 } as const;
@@ -25,53 +25,37 @@ function HoteliqTabIcon({
   ios: string;
   android: string;
 }) {
-  if (focused) {
-    return (
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 6,
-          backgroundColor: TabUI.soft,
-          borderRadius: 22,
-          paddingHorizontal: 12,
-          paddingVertical: 8,
-          minHeight: 40,
-        }}>
-        <SymbolView
-          name={{
-            ios: ios as 'house.fill',
-            android: android as 'home',
-            web: android as 'home',
-          }}
-          size={18}
-          tintColor={TabUI.active}
-          weight="semibold"
-        />
-        <Text
-          style={{
-            color: TabUI.active,
-            fontSize: 12,
-            fontWeight: '600',
-          }}
-          numberOfLines={1}>
-          {label}
-        </Text>
-      </View>
-    );
-  }
-
+  const tint = focused ? TabUI.active : TabUI.inactive;
   return (
-    <SymbolView
-      name={{
-        ios: ios as 'house',
-        android: android as 'home',
-        web: android as 'home',
-      }}
-      size={22}
-      tintColor={TabUI.inactive}
-      weight="regular"
-    />
+    <View
+      style={{
+        minWidth: 56,
+        minHeight: 44,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 3,
+      }}>
+      <SymbolView
+        name={{
+          ios: ios as 'house',
+          android: android as 'home',
+          web: android as 'home',
+        }}
+        size={24}
+        tintColor={tint}
+        weight={focused ? 'semibold' : 'regular'}
+      />
+      <Text
+        style={{
+          color: tint,
+          fontSize: 10,
+          lineHeight: 13,
+          fontWeight: focused ? '600' : '400',
+        }}
+        numberOfLines={1}>
+        {label}
+      </Text>
+    </View>
   );
 }
 
@@ -109,18 +93,18 @@ export default function TabsLayout() {
           ...Platform.select({
             ios: {
               shadowColor: TabUI.shadow,
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.08,
-              shadowRadius: 24,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.12,
+              shadowRadius: 8,
             },
             android: {
-              elevation: 8,
+              elevation: 6,
             },
             default: {
               shadowColor: TabUI.shadow,
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.08,
-              shadowRadius: 24,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.12,
+              shadowRadius: 8,
             },
           }),
         },
@@ -170,15 +154,15 @@ export default function TabsLayout() {
                 height: focused ? 52 : 48,
                 marginTop: -18,
                 borderRadius: 26,
-                backgroundColor: TabUI.active,
+                backgroundColor: Hoteliq.primary,
                 alignItems: 'center',
                 justifyContent: 'center',
                 ...Platform.select({
                   ios: {
-                    shadowColor: TabUI.active,
-                    shadowOffset: { width: 0, height: 8 },
-                    shadowOpacity: 0.28,
-                    shadowRadius: 14,
+                    shadowColor: Hoteliq.primary,
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: 0.32,
+                    shadowRadius: 10,
                   },
                   android: { elevation: 5 },
                   default: {},

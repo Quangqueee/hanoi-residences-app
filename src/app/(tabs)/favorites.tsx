@@ -6,28 +6,19 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApartmentCard } from '@/components/apartment-card';
+import { ApartmentCardSkeleton } from '@/components/ui/shimmer-block';
+import { Hoteliq } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import { getFullFavoriteApartments } from '@/lib/favorites-service';
 import type { Apartment } from '@/lib/types';
 
-const UI = {
-  primary: '#1E75FF',
-  ink: '#1A1A1A',
-  muted: '#7A7A7A',
-  canvas: '#FFFFFF',
-  soft: '#F3F5F9',
-  border: '#E5E7EB',
-  heart: '#EF4444',
-} as const;
-
-const TAB_BAR_CLEARANCE = 100;
+const TAB_BAR_CLEARANCE = 108;
 
 export default function FavoritesScreen() {
   const insets = useSafeAreaInsets();
@@ -89,6 +80,7 @@ export default function FavoritesScreen() {
     ({ item }: { item: Apartment }) => (
       <ApartmentCard
         apartment={item}
+        variant="feed"
         onFavoriteToggle={handleFavoriteToggle}
       />
     ),
@@ -97,16 +89,11 @@ export default function FavoritesScreen() {
 
   const keyExtractor = useCallback((item: Apartment) => item.id, []);
 
-  const screenPad = [
-    styles.safe,
-    { paddingTop: insets.top, backgroundColor: UI.canvas },
-  ];
-
   if (authLoading) {
     return (
-      <View style={screenPad}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={UI.primary} />
+      <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color={Hoteliq.primary} />
         </View>
       </View>
     );
@@ -114,258 +101,130 @@ export default function FavoritesScreen() {
 
   if (!user) {
     return (
-      <View style={screenPad}>
-        <View style={styles.centeredPad}>
-          <Text style={styles.emptyTitle}>
-            Đăng nhập để xem danh sách Yêu thích
-          </Text>
-          <Text style={styles.emptyBody}>
-            Bạn có thể tạo, xem hoặc chỉnh sửa danh sách yêu thích sau khi đăng
-            nhập.
-          </Text>
-          <Link href="/(auth)/login" asChild>
-            <Pressable
-              style={({ pressed }) => [
-                styles.ctaBtn,
-                pressed && styles.ctaPressed,
-              ]}>
-              <Text style={styles.ctaText}>Đăng nhập</Text>
-            </Pressable>
-          </Link>
+      <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+        <View
+          className="flex-1 justify-center px-6"
+          style={{ paddingBottom: TAB_BAR_CLEARANCE }}>
+          <View className="items-center gap-3 rounded-[12px] bg-hoteliq-chip px-7 py-10">
+            <Text className="text-center text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
+              Đăng nhập để xem danh sách Yêu thích
+            </Text>
+            <Text className="text-center text-[14px] leading-5 text-hoteliq-gray">
+              Bạn có thể tạo, xem hoặc chỉnh sửa danh sách yêu thích sau khi
+              đăng nhập.
+            </Text>
+            <Link href="/(auth)/login" asChild>
+              <Pressable
+                accessibilityRole="button"
+                className="mt-1 h-12 min-h-11 items-center justify-center rounded-full bg-hoteliq-ink px-7"
+                style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+                <Text className="text-sm font-semibold text-white">
+                  Đăng nhập
+                </Text>
+              </Pressable>
+            </Link>
+          </View>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={screenPad}>
-      <View style={styles.container}>
-        <View style={styles.pageHeader}>
-          <Text style={styles.pageTitle}>Căn hộ yêu thích</Text>
-          {!loading ? (
-            <Text style={styles.countText}>
-              Tìm thấy{' '}
-              <Text style={styles.countBold}>{apartments.length}</Text> kết quả
-            </Text>
-          ) : null}
-        </View>
-
-        {loading ? (
-          <View style={styles.skeletonList}>
-            {[0, 1, 2].map((i) => (
-              <View key={i} style={styles.skeletonCard}>
-                <View style={styles.skeletonImage} />
-                <View style={styles.skeletonLineWide} />
-                <View style={styles.skeletonLineMid} />
-                <View style={styles.skeletonLineShort} />
-              </View>
-            ))}
-          </View>
-        ) : (
-          <FlatList
-            data={apartments}
-            keyExtractor={keyExtractor}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={() => {
-                  void loadFavorites('refresh');
-                }}
-                tintColor={UI.primary}
-                colors={[UI.primary]}
-              />
-            }
-            ListEmptyComponent={
-              <View style={styles.emptyWrap}>
-                {error ? (
-                  <>
-                    <Text style={styles.emptyTitle}>Không tải được dữ liệu</Text>
-                    <Text style={styles.emptyBody}>{error}</Text>
-                    <Pressable
-                      onPress={() => void loadFavorites('initial')}
-                      style={({ pressed }) => [
-                        styles.ctaBtn,
-                        pressed && styles.ctaPressed,
-                      ]}>
-                      <Text style={styles.ctaText}>Thử lại</Text>
-                    </Pressable>
-                  </>
-                ) : (
-                  <>
-                    <View style={styles.heartRing}>
-                      <View style={styles.heartInner}>
-                        <Text style={styles.heartGlyph}>♡</Text>
-                      </View>
-                    </View>
-                    <Text style={styles.emptyTitle}>
-                      Danh sách yêu thích trống
-                    </Text>
-                    <Text style={styles.emptyBody}>
-                      Bạn chưa có căn hộ yêu thích nào.
-                    </Text>
-                    <Link href="/(tabs)" asChild>
-                      <Pressable
-                        style={({ pressed }) => [
-                          styles.ctaBtn,
-                          pressed && styles.ctaPressed,
-                        ]}>
-                        <Text style={styles.ctaText}>Bắt đầu tìm kiếm</Text>
-                      </Pressable>
-                    </Link>
-                  </>
-                )}
-              </View>
-            }
-          />
-        )}
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+      {/* Page header — Airbnb "Wishlists" pattern */}
+      <View className="gap-1.5 px-6 pb-4 pt-2">
+        <Text className="text-[26px] font-semibold leading-[34px] text-hoteliq-ink">
+          Căn hộ yêu thích
+        </Text>
+        {!loading ? (
+          <Text className="text-[14px] leading-[18px] text-hoteliq-gray">
+            Tìm thấy{' '}
+            <Text className="font-semibold text-hoteliq-ink">
+              {apartments.length}
+            </Text>{' '}
+            kết quả
+          </Text>
+        ) : null}
       </View>
+
+      {loading ? (
+        <View className="px-6 pt-2">
+          <ApartmentCardSkeleton />
+          <ApartmentCardSkeleton />
+        </View>
+      ) : (
+        <FlatList
+          data={apartments}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          contentContainerStyle={{
+            paddingHorizontal: 24,
+            paddingTop: 4,
+            paddingBottom: TAB_BAR_CLEARANCE,
+            flexGrow: 1,
+          }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => {
+                void loadFavorites('refresh');
+              }}
+              tintColor={Hoteliq.primary}
+              colors={[Hoteliq.primary]}
+            />
+          }
+          ListEmptyComponent={
+            <View className="mt-2 items-center gap-3 rounded-[12px] bg-hoteliq-chip px-7 py-10">
+              {error ? (
+                <>
+                  <Text className="text-center text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
+                    Không tải được dữ liệu
+                  </Text>
+                  <Text className="text-center text-[14px] leading-5 text-hoteliq-gray">
+                    {error}
+                  </Text>
+                  <Pressable
+                    onPress={() => void loadFavorites('initial')}
+                    accessibilityRole="button"
+                    className="mt-1 h-12 min-h-11 items-center justify-center rounded-full bg-hoteliq-ink px-7"
+                    style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+                    <Text className="text-sm font-semibold text-white">
+                      Thử lại
+                    </Text>
+                  </Pressable>
+                </>
+              ) : (
+                <>
+                  <View className="h-14 w-14 items-center justify-center rounded-full bg-white">
+                    <Text className="text-[26px] leading-8 text-hoteliq-heart">
+                      ♡
+                    </Text>
+                  </View>
+                  <Text className="text-center text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
+                    Danh sách yêu thích trống
+                  </Text>
+                  <Text className="text-center text-[14px] leading-5 text-hoteliq-gray">
+                    Bạn chưa có căn hộ yêu thích nào.
+                  </Text>
+                  <Link href="/(tabs)" asChild>
+                    <Pressable
+                      accessibilityRole="button"
+                      className="mt-1 h-12 min-h-11 items-center justify-center rounded-full bg-hoteliq-ink px-7"
+                      style={({ pressed }) => ({
+                        opacity: pressed ? 0.88 : 1,
+                      })}>
+                      <Text className="text-sm font-semibold text-white">
+                        Bắt đầu tìm kiếm
+                      </Text>
+                    </Pressable>
+                  </Link>
+                </>
+              )}
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: UI.canvas,
-  },
-  container: {
-    flex: 1,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  centeredPad: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 28,
-    gap: 12,
-    paddingBottom: TAB_BAR_CLEARANCE,
-  },
-  pageHeader: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-    gap: 6,
-  },
-  pageTitle: {
-    fontSize: 28,
-    lineHeight: 34,
-    fontWeight: '800',
-    color: UI.ink,
-    letterSpacing: -0.6,
-  },
-  countText: {
-    fontSize: 14,
-    color: UI.muted,
-    fontWeight: '500',
-  },
-  countBold: {
-    color: UI.ink,
-    fontWeight: '700',
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: TAB_BAR_CLEARANCE,
-    flexGrow: 1,
-  },
-  skeletonList: {
-    paddingHorizontal: 20,
-    gap: 20,
-  },
-  skeletonCard: {
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: UI.border,
-    padding: 12,
-    gap: 10,
-    backgroundColor: '#FAFBFC',
-  },
-  skeletonImage: {
-    width: '100%',
-    aspectRatio: 4 / 3,
-    borderRadius: 12,
-    backgroundColor: UI.soft,
-  },
-  skeletonLineWide: {
-    height: 16,
-    width: '75%',
-    borderRadius: 6,
-    backgroundColor: UI.soft,
-  },
-  skeletonLineMid: {
-    height: 12,
-    width: '50%',
-    borderRadius: 6,
-    backgroundColor: UI.soft,
-  },
-  skeletonLineShort: {
-    height: 12,
-    width: '33%',
-    borderRadius: 6,
-    backgroundColor: UI.soft,
-  },
-  emptyWrap: {
-    marginTop: 48,
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    gap: 10,
-  },
-  heartRing: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: UI.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  heartInner: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: UI.soft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heartGlyph: {
-    fontSize: 32,
-    color: UI.muted,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: UI.ink,
-    textAlign: 'center',
-  },
-  emptyBody: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: UI.muted,
-    textAlign: 'center',
-    maxWidth: 300,
-  },
-  ctaBtn: {
-    marginTop: 12,
-    minHeight: 48,
-    paddingHorizontal: 22,
-    borderRadius: 24,
-    backgroundColor: UI.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctaPressed: {
-    opacity: 0.88,
-  },
-  ctaText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-});

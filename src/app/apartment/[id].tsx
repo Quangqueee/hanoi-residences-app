@@ -37,17 +37,17 @@ import type { Apartment } from '@/lib/types';
 const UI = {
   descriptionPreview: 160,
   bottomBarClearance: 108,
-  heroRadius: 20,
+  heroHeight: 300,
 } as const;
 
-const softShadow = Platform.select({
+const overlayBtnShadow = Platform.select({
   ios: {
-    shadowColor: Hoteliq.shadow,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.05,
-    shadowRadius: 16,
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
   },
-  android: { elevation: 2 },
+  android: { elevation: 3 },
   default: {},
 });
 
@@ -76,6 +76,7 @@ function buildInternalCopyText(apartment: Apartment): string {
   return lines.filter((line) => line !== null).join('\n');
 }
 
+/** Nút tròn trắng nổi trên ảnh hero — kiểu Airbnb */
 function HeaderIconButton({
   onPress,
   label,
@@ -94,10 +95,11 @@ function HeaderIconButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       hitSlop={8}
-      className="h-11 w-11 items-center justify-center rounded-[12px] border border-hoteliq-line bg-white"
-      style={({ pressed }) => ({
-        opacity: disabled || pressed ? 0.7 : 1,
-      })}>
+      className="h-11 w-11 items-center justify-center rounded-full bg-white"
+      style={({ pressed }) => [
+        overlayBtnShadow as object,
+        { opacity: disabled || pressed ? 0.7 : 1 },
+      ]}>
       {children}
     </Pressable>
   );
@@ -181,10 +183,8 @@ export default function ApartmentDetailScreen() {
       <View
         className="flex-1 items-center justify-center bg-white px-8"
         style={{ paddingTop: insets.top }}>
-        <View
-          className="w-full items-center gap-3 rounded-[16px] bg-hoteliq-chip px-7 py-10"
-          style={softShadow}>
-          <Text className="text-center text-[17px] font-semibold text-hoteliq-ink">
+        <View className="w-full items-center gap-3 rounded-[12px] bg-hoteliq-chip px-7 py-10">
+          <Text className="text-center text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
             {error ?? 'Không có dữ liệu.'}
           </Text>
           <Pressable
@@ -193,7 +193,7 @@ export default function ApartmentDetailScreen() {
               else router.replace('/(tabs)');
             }}
             hitSlop={8}
-            className="mt-2 min-h-11 items-center justify-center rounded-[12px] bg-hoteliq-primary px-6"
+            className="mt-2 min-h-11 items-center justify-center rounded-full bg-hoteliq-ink px-6"
             style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
             <Text className="text-sm font-semibold text-white">Quay lại</Text>
           </Pressable>
@@ -289,7 +289,7 @@ export default function ApartmentDetailScreen() {
   ];
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-white">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{
@@ -297,108 +297,103 @@ export default function ApartmentDetailScreen() {
         }}
         showsVerticalScrollIndicator={false}
         bounces>
-        {/* Top bar */}
-        <View className="flex-row items-center justify-between px-5 pb-3 pt-2">
-          <HeaderIconButton
-            label="Quay lại"
-            onPress={() => {
-              if (router.canGoBack()) router.back();
-              else router.replace('/(tabs)');
-            }}>
-            <SymbolView
-              name={{
-                ios: 'chevron.left',
-                android: 'arrow_back_ios',
-                web: 'arrow_back_ios',
-              }}
-              size={18}
-              weight="semibold"
-              tintColor={Hoteliq.ink}
-            />
-          </HeaderIconButton>
+        {/* Hero full-bleed + nút overlay kiểu Airbnb */}
+        <View className="relative">
+          <ImageCarousel
+            urls={apartment.imageUrls ?? []}
+            height={UI.heroHeight}
+            showDots
+            recyclingKey={apartment.id}
+            style={{
+              width: '100%',
+              backgroundColor: Hoteliq.chip,
+            }}
+          />
 
-          <Text className="text-[16px] font-semibold text-hoteliq-ink">
-            Detail
-          </Text>
-
-          <HeaderIconButton
-            label="Chia sẻ"
-            disabled={sharing}
-            onPress={() => {
-              void (async () => {
-                if (sharing) return;
-                setSharing(true);
-                try {
-                  await shareApartment(apartment, role);
-                } finally {
-                  setSharing(false);
-                }
-              })();
-            }}>
-            {sharing ? (
-              <ActivityIndicator color={Hoteliq.primary} size="small" />
-            ) : (
+          <View
+            className="absolute left-5 right-5 z-[4] flex-row items-center justify-between"
+            style={{ top: insets.top + 8 }}>
+            <HeaderIconButton
+              label="Quay lại"
+              onPress={() => {
+                if (router.canGoBack()) router.back();
+                else router.replace('/(tabs)');
+              }}>
               <SymbolView
                 name={{
-                  ios: 'ellipsis',
-                  android: 'more_horiz',
-                  web: 'more_horiz',
+                  ios: 'chevron.left',
+                  android: 'arrow_back',
+                  web: 'arrow_back',
                 }}
-                size={20}
-                weight="medium"
+                size={18}
+                weight="semibold"
                 tintColor={Hoteliq.ink}
               />
-            )}
-          </HeaderIconButton>
+            </HeaderIconButton>
+
+            <View className="flex-row items-center gap-2.5">
+              <HeaderIconButton
+                label="Chia sẻ"
+                disabled={sharing}
+                onPress={() => {
+                  void (async () => {
+                    if (sharing) return;
+                    setSharing(true);
+                    try {
+                      await shareApartment(apartment, role);
+                    } finally {
+                      setSharing(false);
+                    }
+                  })();
+                }}>
+                {sharing ? (
+                  <ActivityIndicator color={Hoteliq.primary} size="small" />
+                ) : (
+                  <SymbolView
+                    name={{
+                      ios: 'square.and.arrow.up',
+                      android: 'ios_share',
+                      web: 'ios_share',
+                    }}
+                    size={18}
+                    weight="medium"
+                    tintColor={Hoteliq.ink}
+                  />
+                )}
+              </HeaderIconButton>
+
+              <HeaderIconButton
+                label={isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
+                disabled={favoriteUpdating}
+                onPress={() => void toggleFavorite()}>
+                {favoriteUpdating ? (
+                  <ActivityIndicator size="small" color={Hoteliq.heart} />
+                ) : (
+                  <Text
+                    className={`text-[18px] font-bold ${
+                      isFavorite ? 'text-hoteliq-heart' : 'text-hoteliq-ink'
+                    }`}>
+                    {isFavorite ? '♥' : '♡'}
+                  </Text>
+                )}
+              </HeaderIconButton>
+            </View>
+          </View>
         </View>
 
-        <View className="gap-5 px-5">
-          {/* Hero */}
-          <View className="relative">
-            <ImageCarousel
-              urls={apartment.imageUrls ?? []}
-              height={240}
-              showDots
-              recyclingKey={apartment.id}
-              style={{
-                width: '100%',
-                borderRadius: UI.heroRadius,
-                overflow: 'hidden',
-                backgroundColor: Hoteliq.chip,
-              }}
-            />
-            <Pressable
-              onPress={() => void toggleFavorite()}
-              disabled={favoriteUpdating}
-              accessibilityRole="button"
-              accessibilityLabel={
-                isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'
-              }
-              className="absolute right-3 top-3 z-[4] h-9 w-9 items-center justify-center rounded-full bg-white"
-              style={({ pressed }) => ({
-                opacity: pressed || favoriteUpdating ? 0.85 : 1,
-                ...(Platform.select({
-                  ios: {
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 6,
-                  },
-                  android: { elevation: 2 },
-                  default: {},
-                }) as object),
-              })}>
-              {favoriteUpdating ? (
-                <ActivityIndicator size="small" color={Hoteliq.heart} />
-              ) : (
-                <Text
-                  className={`text-[18px] font-bold ${
-                    isFavorite ? 'text-hoteliq-heart' : 'text-[#C8C8C8]'
-                  }`}>
-                  {isFavorite ? '♥' : '♡'}
-                </Text>
-              )}
-            </Pressable>
+        <View className="gap-5 px-6 pt-5">
+          {/* Title + location */}
+          <View className="gap-1.5">
+            <Text
+              className="text-[22px] font-semibold leading-7 text-hoteliq-ink"
+              numberOfLines={3}>
+              {title}
+            </Text>
+            <Text
+              className="text-[14px] leading-[18px] text-hoteliq-gray"
+              numberOfLines={2}>
+              {locationLine}
+            </Text>
           </View>
 
           {/* Amenity chips */}
@@ -409,60 +404,23 @@ export default function ApartmentDetailScreen() {
             {amenityChips.map((chip) => (
               <View
                 key={chip.label}
-                className="h-10 flex-row items-center gap-2 rounded-[12px] border border-hoteliq-line bg-white px-3">
+                className="h-10 flex-row items-center gap-2 rounded-full border border-hoteliq-line bg-white px-3.5">
                 <Text className="text-[13px]">{chip.icon}</Text>
-                <Text className="text-[12px] font-semibold text-hoteliq-ink">
+                <Text className="text-[13px] font-semibold text-hoteliq-ink">
                   {chip.label}
                 </Text>
               </View>
             ))}
           </ScrollView>
 
-          {/* Title + price */}
-          <View className="gap-2">
-            <View className="flex-row items-start justify-between gap-3">
-              <Text
-                className="min-w-0 flex-1 text-[20px] font-bold leading-7 text-hoteliq-ink"
-                numberOfLines={2}>
-                {title}
-              </Text>
-              <View className="items-end pt-0.5">
-                <Text className="text-[18px] font-bold text-hoteliq-primary">
-                  {formatPriceAmount(apartment.price)}
-                </Text>
-                <Text className="text-[12px] font-medium text-hoteliq-gray">
-                  /tháng
-                </Text>
-              </View>
-            </View>
+          <View className="h-px bg-hoteliq-line" />
 
-            <View className="flex-row items-center gap-1.5">
-              <SymbolView
-                name={{
-                  ios: 'mappin.and.ellipse',
-                  android: 'location_on',
-                  web: 'location_on',
-                }}
-                size={14}
-                tintColor={Hoteliq.primary}
-                weight="medium"
-              />
-              <Text
-                className="flex-1 text-[13px] font-medium leading-5 text-hoteliq-gray"
-                numberOfLines={2}>
-                {locationLine}
-              </Text>
-            </View>
-          </View>
-
-          {/* Ops meta */}
+          {/* Ops meta — chỉ hiện cho Admin/CTV */}
           {showCommission || showOpsTools ? (
-            <View
-              className="gap-2 rounded-[16px] bg-hoteliq-soft px-4 py-3.5"
-              style={softShadow}>
+            <View className="gap-2.5 rounded-[12px] border border-hoteliq-line bg-white px-4 py-3.5">
               {showCommission ? (
                 <View className="flex-row items-center justify-between gap-3">
-                  <Text className="text-[12px] font-semibold text-hoteliq-gray">
+                  <Text className="text-[13px] leading-[18px] text-hoteliq-gray">
                     Hoa hồng
                   </Text>
                   <Text className="text-[14px] font-semibold text-[#2F7D4A]">
@@ -472,7 +430,7 @@ export default function ApartmentDetailScreen() {
               ) : null}
               {showOpsTools ? (
                 <View className="flex-row items-center justify-between gap-3">
-                  <Text className="text-[12px] font-semibold text-hoteliq-gray">
+                  <Text className="text-[13px] leading-[18px] text-hoteliq-gray">
                     SĐT chủ nhà
                   </Text>
                   <Text className="text-[14px] font-semibold text-hoteliq-ink">
@@ -485,7 +443,7 @@ export default function ApartmentDetailScreen() {
 
           {/* Description */}
           <View className="gap-2.5">
-            <Text className="text-[16px] font-semibold text-hoteliq-ink">
+            <Text className="text-[22px] font-semibold leading-7 text-hoteliq-ink">
               Description
             </Text>
             {showAiMarkdown ? (
@@ -495,8 +453,8 @@ export default function ApartmentDetailScreen() {
                   <Pressable
                     onPress={() => setDescExpanded((v) => !v)}
                     hitSlop={8}
-                    className="mt-1 self-start">
-                    <Text className="text-[13px] font-semibold text-hoteliq-primary">
+                    className="mt-2 min-h-[32px] justify-center self-start">
+                    <Text className="text-[14px] font-semibold text-hoteliq-ink underline">
                       {descExpanded ? 'Thu gọn' : 'Read More...'}
                     </Text>
                   </Pressable>
@@ -504,15 +462,15 @@ export default function ApartmentDetailScreen() {
               </View>
             ) : (
               <View>
-                <Text className="text-[13px] font-normal leading-5 text-hoteliq-gray">
+                <Text className="text-[14px] leading-[22px] text-hoteliq-gray">
                   {visibleOriginalDescription}
                 </Text>
                 {needsTruncate ? (
                   <Pressable
                     onPress={() => setDescExpanded((v) => !v)}
                     hitSlop={8}
-                    className="mt-1 self-start">
-                    <Text className="text-[13px] font-semibold text-hoteliq-primary">
+                    className="mt-2 min-h-[32px] justify-center self-start">
+                    <Text className="text-[14px] font-semibold text-hoteliq-ink underline">
                       {descExpanded ? 'Thu gọn' : 'Read More...'}
                     </Text>
                   </Pressable>
@@ -522,11 +480,11 @@ export default function ApartmentDetailScreen() {
           </View>
 
           {showAiMarkdown && highlights.length > 0 ? (
-            <View className="gap-2">
+            <View className="gap-2.5">
               {highlights.slice(0, 4).map((item) => (
-                <View key={item} className="flex-row gap-2">
-                  <Text className="text-hoteliq-primary">•</Text>
-                  <Text className="flex-1 text-[13px] leading-5 text-hoteliq-gray">
+                <View key={item} className="flex-row gap-2.5">
+                  <Text className="text-hoteliq-ink">•</Text>
+                  <Text className="flex-1 text-[14px] leading-5 text-hoteliq-gray">
                     {item}
                   </Text>
                 </View>
@@ -534,17 +492,19 @@ export default function ApartmentDetailScreen() {
             </View>
           ) : null}
 
+          <View className="h-px bg-hoteliq-line" />
+
           {/* Preview thumbnails */}
           {previewUrls.length > 0 ? (
             <View className="gap-3">
-              <Text className="text-[16px] font-semibold text-hoteliq-ink">
+              <Text className="text-[22px] font-semibold leading-7 text-hoteliq-ink">
                 Preview
               </Text>
               <View className="flex-row gap-3">
                 {previewUrls.map((uri, index) => (
                   <View
                     key={`${uri}-${index}`}
-                    className="h-[72px] flex-1 overflow-hidden rounded-[12px] bg-hoteliq-chip">
+                    className="h-[104px] flex-1 overflow-hidden rounded-[10px] bg-hoteliq-chip">
                     <Image
                       source={{ uri }}
                       style={{ width: '100%', height: '100%' }}
@@ -564,9 +524,9 @@ export default function ApartmentDetailScreen() {
                 onPress={() => void onCopyApartmentInfo()}
                 accessibilityRole="button"
                 accessibilityLabel="Sao chép thông tin căn hộ"
-                className="min-h-12 flex-row items-center justify-center gap-2 rounded-[12px] bg-hoteliq-soft px-4"
+                className="min-h-12 flex-row items-center justify-center gap-2 rounded-full border border-hoteliq-ink bg-white px-4"
                 style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
-                <Text className="text-[14px] font-semibold text-hoteliq-primary">
+                <Text className="text-[14px] font-semibold text-hoteliq-ink">
                   Sao chép thông tin
                 </Text>
               </Pressable>
@@ -575,29 +535,42 @@ export default function ApartmentDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Sticky Booking Now */}
+      {/* Sticky bar kiểu Airbnb: giá trái — CTA phải */}
       <View
-        className="absolute bottom-0 left-0 right-0 border-t border-hoteliq-line bg-white px-5 pt-3"
+        className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between gap-4 border-t border-hoteliq-line bg-white px-6 pt-3"
         style={{ paddingBottom: Math.max(insets.bottom, 14) }}>
+        <View className="min-w-0 flex-1">
+          <View className="flex-row items-baseline gap-1">
+            <Text
+              className="text-[16px] font-semibold leading-[22px] text-hoteliq-ink"
+              numberOfLines={1}>
+              {formatPriceAmount(apartment.price)}
+            </Text>
+            <Text className="text-[14px] leading-[18px] text-hoteliq-gray">
+              /tháng
+            </Text>
+          </View>
+          <Text
+            className="text-[12px] leading-4 text-hoteliq-gray"
+            numberOfLines={1}>
+            {getRoomTypeLabel(apartment.roomType)}
+            {apartment.area ? ` ∙ ${apartment.area} m²` : ''}
+          </Text>
+        </View>
+
         <Pressable
           onPress={() => setBookingOpen(true)}
           accessibilityRole="button"
           accessibilityLabel={bookLabel}
-          className="min-h-[56px] items-center justify-center rounded-[16px] bg-hoteliq-primary"
+          className="min-h-[48px] items-center justify-center rounded-full bg-hoteliq-primary px-7"
           style={({ pressed }) => [
-            Platform.select({
-              ios: {
-                shadowColor: Hoteliq.primary,
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.25,
-                shadowRadius: 16,
-              },
-              android: { elevation: 4 },
-              default: {},
-            }),
-            pressed ? { opacity: 0.9, transform: [{ scale: 0.99 }] } : null,
+            pressed
+              ? { backgroundColor: Hoteliq.primaryDark }
+              : null,
           ]}>
-          <Text className="text-[16px] font-bold text-white">{bookLabel}</Text>
+          <Text className="text-[15px] font-semibold text-white">
+            {bookLabel}
+          </Text>
         </Pressable>
       </View>
 

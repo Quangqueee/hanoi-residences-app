@@ -167,7 +167,7 @@ export function ImageCarousel({
 const styles = StyleSheet.create({
   wrap: {
     width: '100%',
-    backgroundColor: '#F5F0E6',
+    backgroundColor: '#F7F7F7',
     overflow: 'hidden',
     position: 'relative',
   },
@@ -175,10 +175,10 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F5F0E6',
+    backgroundColor: '#F7F7F7',
   },
   placeholderText: {
-    color: '#6B655C',
+    color: '#717375',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -208,10 +208,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 12,
     top: 12,
-    backgroundColor: 'rgba(34,34,34,0.72)',
+    backgroundColor: 'rgba(10,10,10,0.72)',
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 8,
+    borderRadius: 100,
   },
   counterText: {
     color: '#FFFFFF',

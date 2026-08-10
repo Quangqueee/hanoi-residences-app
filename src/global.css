@@ -3,6 +3,35 @@
 @tailwind utilities;
 
 /*
- * Design tokens live as static hex in tailwind.config.js (NativeWind-safe).
- * Typeface: Inter (Hoteliq Figma). Loaded via @expo-google-fonts/inter in root layout.
+ * Design tokens (Airbnb-style) live as static hex in tailwind.config.js
+ * (NativeWind-safe — không dùng CSS variables trên native).
+ * Typeface: Inter (map từ Airbnb Cereal App: Book→400, Medium→500).
+ * Loaded via @expo-google-fonts/inter in root layout.
+ *
+ * :root dưới đây chỉ có tác dụng trên web (Expo Web) — tài liệu hoá palette
+ * và giữ parity với bản web Next.js. Native bỏ qua block này.
  */
+:root {
+  /* Primary (Rausch) */
+  --primary: #ff385c;
+  --primary-dark: #d42f4d;
+  --primary-soft: #fff0f3;
+
+  /* Neutral scale — Figma Neutral/10 → Neutral/100 */
+  --neutral-10: #ffffff;
+  --neutral-20: #f7f7f7;
+  --neutral-40: #d8dce0;
+  --neutral-70: #717375;
+  --neutral-80: #5d5f61;
+  --neutral-100: #0a0a0a;
+
+  /* Semantic */
+  --background: var(--neutral-10);
+  --foreground: var(--neutral-100);
+  --muted: var(--neutral-20);
+  --muted-foreground: var(--neutral-70);
+  --border: var(--neutral-40);
+
+  /* Shadow đặc trưng Airbnb: cực nhẹ, kết hợp border hairline */
+  --shadow-search: 0 0 8px rgba(0, 0, 0, 0.12);
+}

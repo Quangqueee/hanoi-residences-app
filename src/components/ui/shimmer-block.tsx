@@ -39,7 +39,7 @@ export function ShimmerBlock({
 
   return (
     <Animated.View
-      className={`overflow-hidden rounded-xl bg-[#E8E4D8] ${className ?? ''}`}
+      className={`overflow-hidden rounded-xl bg-[#EAEAEA] ${className ?? ''}`}
       style={[
         { height, width: width as number | `${number}%` },
         animatedStyle,
@@ -59,8 +59,8 @@ export function ApartmentCardSkeleton({
 
   if (isCompact) {
     return (
-      <View className="mb-3 flex-row items-center gap-3.5 rounded-[16px] border border-hoteliq-line bg-white p-3">
-        <ShimmerBlock className="h-[72px] w-[72px] rounded-[12px]" />
+      <View className="mb-3 flex-row items-center gap-3.5 rounded-[12px] border border-hoteliq-line bg-white p-3">
+        <ShimmerBlock className="h-[72px] w-[72px] rounded-[10px]" />
         <View className="min-w-0 flex-1 gap-2">
           <ShimmerBlock className="h-4 w-[70%] rounded-md" />
           <ShimmerBlock className="h-3 w-[55%] rounded-md" />
@@ -71,21 +71,18 @@ export function ApartmentCardSkeleton({
   }
 
   return (
-    <View
-      className={`overflow-hidden rounded-[16px] border border-hoteliq-line bg-white ${
-        isRail ? 'mb-0 w-[268px]' : 'mb-4 w-full'
-      }`}>
+    <View className={isRail ? 'mb-0 w-[280px]' : 'mb-8 w-full'}>
       <ShimmerBlock
         className={
           isRail
-            ? 'h-[168px] w-full rounded-none'
-            : 'h-[210px] w-full rounded-none'
+            ? 'h-[192px] w-full rounded-[12px]'
+            : 'h-[245px] w-full rounded-[12px]'
         }
       />
-      <View className="gap-2.5 px-3.5 pb-4 pt-3">
+      <View className="gap-2 pt-3.5">
         <ShimmerBlock className="h-4 w-[78%] rounded-md" />
-        <ShimmerBlock className="h-3 w-[42%] rounded-md" />
-        <ShimmerBlock className="mt-1 h-5 w-[55%] rounded-md" />
+        <ShimmerBlock className="h-3.5 w-[42%] rounded-md" />
+        <ShimmerBlock className="mt-1 h-4 w-[55%] rounded-md" />
       </View>
     </View>
   );

@@ -42,6 +42,7 @@ type ChipProps = {
   onPress: () => void;
 };
 
+/** Airbnb filter chip: nền trắng viền hairline, chọn = nền đen chữ trắng */
 function FilterChip({ label, selected, onPress }: ChipProps) {
   return (
     <Pressable
@@ -49,13 +50,15 @@ function FilterChip({ label, selected, onPress }: ChipProps) {
         Keyboard.dismiss();
         onPress();
       }}
-      className={`rounded-full px-4 py-2.5 ${
-        selected ? 'bg-brand' : 'bg-[#F3F0E8]'
+      className={`min-h-11 items-center justify-center rounded-full border px-4 ${
+        selected
+          ? 'border-hoteliq-ink bg-hoteliq-ink'
+          : 'border-hoteliq-line bg-white'
       }`}
-      style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
       <Text
-        className={`text-[13px] ${
-          selected ? 'font-semibold text-white' : 'font-medium text-[#4A453E]'
+        className={`text-[14px] leading-[18px] ${
+          selected ? 'font-semibold text-white' : 'text-hoteliq-ink'
         }`}>
         {label}
       </Text>
@@ -97,18 +100,24 @@ export function ApartmentFiltersBar({
   return (
     <View className="gap-8">
       <View className="flex-row items-center justify-between gap-3">
-        <Text className="text-[22px] font-semibold tracking-tight text-foreground">
+        <Text className="text-[22px] font-semibold leading-7 text-hoteliq-ink">
           Bộ lọc
         </Text>
         {showClear ? (
-          <Pressable onPress={onClear} hitSlop={10} accessibilityRole="button">
-            <Text className="text-[13px] font-bold text-brand">Xóa bộ lọc</Text>
+          <Pressable
+            onPress={onClear}
+            hitSlop={10}
+            accessibilityRole="button"
+            className="min-h-[44px] justify-center">
+            <Text className="text-[14px] font-semibold text-hoteliq-ink underline">
+              Xóa bộ lọc
+            </Text>
           </Pressable>
         ) : null}
       </View>
 
       <View className="gap-3.5">
-        <Text className="text-[15px] font-semibold tracking-tight text-foreground">
+        <Text className="text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
           Khu vực
         </Text>
         <View className="flex-row flex-wrap gap-2.5">
@@ -130,9 +139,9 @@ export function ApartmentFiltersBar({
               Keyboard.dismiss();
               setDistrictsExpanded((v) => !v);
             }}
-            className="rounded-xl bg-transparent px-3.5 py-2.5"
-            style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
-            <Text className="text-sm font-bold text-brand">
+            className="min-h-11 items-center justify-center rounded-full px-3.5"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+            <Text className="text-[14px] font-semibold text-hoteliq-ink underline">
               {districtsExpanded ? 'Thu gọn' : 'Xem thêm'}
             </Text>
           </Pressable>
@@ -140,7 +149,7 @@ export function ApartmentFiltersBar({
       </View>
 
       <View className="gap-3.5">
-        <Text className="text-[15px] font-semibold tracking-tight text-foreground">
+        <Text className="text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
           Loại phòng
         </Text>
         <View className="flex-row flex-wrap gap-2.5">
@@ -161,51 +170,51 @@ export function ApartmentFiltersBar({
       </View>
 
       <View className="gap-3.5">
-        <Text className="text-[15px] font-semibold tracking-tight text-foreground">
+        <Text className="text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
           Mức giá
         </Text>
-        <Text className="-mt-1.5 text-[13px] font-medium text-brand-muted">
+        <Text className="-mt-1.5 text-[13px] leading-[18px] text-hoteliq-gray">
           Đơn vị: triệu VNĐ / tháng
         </Text>
         <View className="flex-row items-center gap-2.5">
           <View
-            className={`min-h-[52px] flex-1 flex-row items-center gap-1.5 rounded-2xl border bg-white px-3.5 ${
-              minFocused ? 'border-brand' : 'border-[#EFECE4]'
+            className={`min-h-[52px] flex-1 flex-row items-center gap-1.5 rounded-[12px] border bg-white px-3.5 ${
+              minFocused ? 'border-hoteliq-ink' : 'border-hoteliq-line'
             }`}>
-            <Text className="text-[15px] font-bold text-brand-muted">₫</Text>
+            <Text className="text-[15px] text-hoteliq-gray">₫</Text>
             <TextInput
               value={value.priceMinInput}
               onChangeText={(priceMinInput) =>
                 onChange({ ...value, priceMinInput })
               }
               placeholder="Từ"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor="#717375"
               keyboardType="decimal-pad"
               inputMode="decimal"
-              className="flex-1 py-3 text-base font-semibold text-foreground"
+              className="flex-1 py-3 text-base font-semibold text-hoteliq-ink"
               onFocus={() => setMinFocused(true)}
               onBlur={() => setMinFocused(false)}
               returnKeyType="next"
             />
           </View>
 
-          <Text className="text-lg font-bold text-brand-muted">–</Text>
+          <Text className="text-lg text-hoteliq-gray">–</Text>
 
           <View
-            className={`min-h-[52px] flex-1 flex-row items-center gap-1.5 rounded-2xl border bg-white px-3.5 ${
-              maxFocused ? 'border-brand' : 'border-[#EFECE4]'
+            className={`min-h-[52px] flex-1 flex-row items-center gap-1.5 rounded-[12px] border bg-white px-3.5 ${
+              maxFocused ? 'border-hoteliq-ink' : 'border-hoteliq-line'
             }`}>
-            <Text className="text-[15px] font-bold text-brand-muted">₫</Text>
+            <Text className="text-[15px] text-hoteliq-gray">₫</Text>
             <TextInput
               value={value.priceMaxInput}
               onChangeText={(priceMaxInput) =>
                 onChange({ ...value, priceMaxInput })
               }
               placeholder="Đến"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor="#717375"
               keyboardType="decimal-pad"
               inputMode="decimal"
-              className="flex-1 py-3 text-base font-semibold text-foreground"
+              className="flex-1 py-3 text-base font-semibold text-hoteliq-ink"
               onFocus={() => setMaxFocused(true)}
               onBlur={() => setMaxFocused(false)}
               returnKeyType="done"
@@ -214,7 +223,7 @@ export function ApartmentFiltersBar({
           </View>
         </View>
         {priceError ? (
-          <Text className="text-[13px] font-semibold text-red-600">
+          <Text className="text-[13px] font-semibold text-[#C13515]">
             {priceError}
           </Text>
         ) : null}

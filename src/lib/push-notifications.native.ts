@@ -24,7 +24,7 @@ export async function ensureAndroidChannel(): Promise<void> {
     name: 'Thông báo Hanoi Residences',
     importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 250, 250, 250],
-    lightColor: '#CDA533',
+    lightColor: '#FF385C',
   });
 }
 

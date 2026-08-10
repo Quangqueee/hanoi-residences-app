@@ -1,5 +1,4 @@
 import { useRouter } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 import { memo, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -35,17 +34,6 @@ type Props = {
   variant?: 'feed' | 'rail' | 'compact';
   className?: string;
 };
-
-const cardShadow = Platform.select({
-  ios: {
-    shadowColor: Hoteliq.shadow,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.05,
-    shadowRadius: 18,
-  },
-  android: { elevation: 3 },
-  default: {},
-});
 
 function FavoriteButton({
   isFavorite,
@@ -169,12 +157,9 @@ function ApartmentCardComponent({
         onPress={openDetail}
         accessibilityRole="button"
         accessibilityLabel={`Xem chi tiết ${title}`}
-        className={`mb-3 flex-row items-center gap-3.5 rounded-[16px] bg-white p-3 ${className ?? ''}`}
-        style={({ pressed }) => [
-          cardShadow,
-          { opacity: pressed ? 0.92 : 1 },
-        ]}>
-        <View className="h-[72px] w-[72px] overflow-hidden rounded-[12px] bg-hoteliq-chip">
+        className={`mb-3 flex-row items-center gap-3.5 rounded-[12px] border border-hoteliq-line bg-white p-3 ${className ?? ''}`}
+        style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}>
+        <View className="h-[72px] w-[72px] overflow-hidden rounded-[10px] bg-hoteliq-chip">
           {cover ? (
             <Image
               source={{ uri: cover }}
@@ -209,12 +194,10 @@ function ApartmentCardComponent({
             {locationLine}
           </Text>
           <View className="mt-0.5 flex-row items-baseline gap-1">
-            <Text className="text-[15px] font-bold leading-5 text-hoteliq-primary">
+            <Text className="text-[15px] font-semibold leading-5 text-hoteliq-ink">
               {formatPriceAmount(apartment.price)}
             </Text>
-            <Text className="text-[12px] font-medium text-hoteliq-gray">
-              /tháng
-            </Text>
+            <Text className="text-[12px] text-hoteliq-gray">/tháng</Text>
           </View>
         </View>
       </Pressable>
@@ -223,11 +206,8 @@ function ApartmentCardComponent({
 
   return (
     <View
-      className={`overflow-hidden rounded-[16px] bg-white ${
-        isRail ? 'mb-0 w-[280px]' : 'mb-4 w-full'
-      } ${className ?? ''}`}
-      style={cardShadow as object}>
-      <View className="relative w-full">
+      className={`${isRail ? 'mb-0 w-[280px]' : 'mb-8 w-full'} ${className ?? ''}`}>
+      <View className="relative w-full overflow-hidden rounded-[12px] bg-hoteliq-chip">
         <ImageCarousel
           urls={images}
           aspectRatio={isRail ? 16 / 11 : 4 / 3}
@@ -236,8 +216,7 @@ function ApartmentCardComponent({
           recyclingKey={apartment.id}
           style={{
             width: '100%',
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
+            borderRadius: 12,
             backgroundColor: Hoteliq.chip,
           }}
         />
@@ -286,51 +265,42 @@ function ApartmentCardComponent({
         onPress={openDetail}
         accessibilityRole="button"
         accessibilityLabel={`Xem chi tiết ${title}`}
-        className={`gap-1.5 active:opacity-90 ${
-          isRail ? 'px-3.5 pb-4 pt-3' : 'px-4 pb-4 pt-3.5'
-        }`}>
+        className="gap-0.5 pt-3.5 active:opacity-90">
         <View className="flex-row items-start justify-between gap-2">
           <Text
-            className={`min-w-0 flex-1 font-semibold tracking-tight text-hoteliq-ink ${
-              isRail ? 'text-[15px] leading-5' : 'text-[16px] leading-[22px]'
+            className={`min-w-0 flex-1 font-semibold text-hoteliq-ink ${
+              isRail ? 'text-[14px] leading-[18px]' : 'text-[15px] leading-5'
             }`}
             numberOfLines={1}>
             {title}
           </Text>
-          <View className="flex-row items-center gap-1 pt-0.5">
+          <View className="flex-row items-center gap-1">
             <Text className="text-[12px] text-hoteliq-star">★</Text>
-            <Text className="text-[12px] font-semibold text-hoteliq-ink">
+            <Text className="text-[12px] text-hoteliq-ink">
               {apartment.area ? `${apartment.area}` : '—'}
             </Text>
           </View>
         </View>
 
-        <View className="flex-row items-center gap-1">
-          <SymbolView
-            name={{
-              ios: 'mappin.and.ellipse',
-              android: 'location_on',
-              web: 'location_on',
-            }}
-            size={12}
-            tintColor={Hoteliq.muted}
-            weight="medium"
-          />
-          <Text
-            className="flex-1 text-[12px] font-medium leading-4 text-hoteliq-gray"
-            numberOfLines={1}>
-            {locationLine}
-          </Text>
-        </View>
+        <Text
+          className={`text-hoteliq-gray ${
+            isRail ? 'text-[13px] leading-[18px]' : 'text-[14px] leading-[18px]'
+          }`}
+          numberOfLines={1}>
+          {locationLine}
+        </Text>
 
         <View className="mt-1 flex-row items-baseline gap-1">
           <Text
-            className={`font-bold tracking-tight text-hoteliq-primary ${
-              isRail ? 'text-[16px] leading-5' : 'text-[18px] leading-6'
+            className={`font-semibold text-hoteliq-ink ${
+              isRail ? 'text-[14px] leading-[18px]' : 'text-[15px] leading-5'
             }`}>
             {formatPriceAmount(apartment.price)}
           </Text>
-          <Text className="text-[12px] font-medium text-hoteliq-gray">
+          <Text
+            className={`text-hoteliq-gray ${
+              isRail ? 'text-[13px]' : 'text-[14px]'
+            }`}>
             /tháng
           </Text>
         </View>

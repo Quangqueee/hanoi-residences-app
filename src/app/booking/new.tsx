@@ -6,18 +6,15 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
+  Text,
   TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Colors, Spacing } from '@/constants/theme';
+import { Hoteliq } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { getApartmentById } from '@/lib/apartments-service';
 import {
   createBooking,
@@ -47,8 +44,6 @@ export default function NewBookingScreen() {
     isCollaborator,
     roleLabel,
   } = useAuth();
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
 
   const [apartment, setApartment] = useState<Apartment | null>(null);
   const [loadingApt, setLoadingApt] = useState(!!apartmentId);
@@ -249,123 +244,111 @@ export default function NewBookingScreen() {
 
   if (loadingApt) {
     return (
-      <ThemedView style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.text} />
-      </ThemedView>
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color={Hoteliq.ink} />
+      </View>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView edges={['bottom']} style={styles.flex}>
+    <View className="flex-1 bg-white">
+      <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
         <KeyboardAvoidingView
-          style={styles.flex}
+          className="flex-1"
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView
-            contentContainerStyle={styles.content}
+            contentContainerStyle={{
+              paddingHorizontal: 24,
+              paddingTop: 16,
+              paddingBottom: 32,
+              gap: 16,
+            }}
             keyboardShouldPersistTaps="handled">
-            <ThemedText type="subtitle">{screenTitle}</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              Vai trò: {roleLabel ?? '—'}
-              {apartment?.sourceCode ? ` · Mã căn ${apartment.sourceCode}` : ''}
-            </ThemedText>
+            <View className="min-w-0 gap-1.5">
+              <Text className="text-[26px] font-semibold leading-[34px] text-hoteliq-ink">
+                {screenTitle}
+              </Text>
+              <Text className="text-[14px] leading-[18px] text-hoteliq-gray">
+                Vai trò: {roleLabel ?? '—'}
+                {apartment?.sourceCode ? ` · Mã căn ${apartment.sourceCode}` : ''}
+              </Text>
+            </View>
 
             {isAdmin ? (
-              <View style={styles.segment}>
+              <View className="flex-row gap-2">
                 <Pressable
                   onPress={() => setAdminMode('personal')}
-                  style={[
-                    styles.segmentBtn,
-                    {
-                      backgroundColor:
-                        adminMode === 'personal'
-                          ? colors.text
-                          : colors.backgroundElement,
-                    },
-                  ]}>
-                  <ThemedText
-                    type="smallBold"
-                    style={{
-                      color:
-                        adminMode === 'personal'
-                          ? colors.background
-                          : colors.text,
-                    }}>
+                  className={`min-h-11 flex-1 items-center justify-center rounded-full px-3 ${
+                    adminMode === 'personal' ? 'bg-hoteliq-ink' : 'bg-hoteliq-chip'
+                  }`}>
+                  <Text
+                    className={`text-[13px] font-semibold ${
+                      adminMode === 'personal'
+                        ? 'text-white'
+                        : 'text-hoteliq-ink'
+                    }`}>
                     Lịch cá nhân
-                  </ThemedText>
+                  </Text>
                 </Pressable>
                 <Pressable
                   onPress={() => setAdminMode('assign_ctv')}
-                  style={[
-                    styles.segmentBtn,
-                    {
-                      backgroundColor:
-                        adminMode === 'assign_ctv'
-                          ? colors.text
-                          : colors.backgroundElement,
-                    },
-                  ]}>
-                  <ThemedText
-                    type="smallBold"
-                    style={{
-                      color:
-                        adminMode === 'assign_ctv'
-                          ? colors.background
-                          : colors.text,
-                    }}>
+                  className={`min-h-11 flex-1 items-center justify-center rounded-full px-3 ${
+                    adminMode === 'assign_ctv'
+                      ? 'bg-hoteliq-ink'
+                      : 'bg-hoteliq-chip'
+                  }`}>
+                  <Text
+                    className={`text-[13px] font-semibold ${
+                      adminMode === 'assign_ctv'
+                        ? 'text-white'
+                        : 'text-hoteliq-ink'
+                    }`}>
                     Gán cho CTV
-                  </ThemedText>
+                  </Text>
                 </Pressable>
               </View>
             ) : null}
 
             {isAdmin && adminMode === 'assign_ctv' ? (
-              <View style={styles.block}>
-                <ThemedText type="smallBold">Chọn CTV *</ThemedText>
+              <View className="gap-2">
+                <Text className="text-[12px] font-semibold leading-4 text-hoteliq-gray">
+                  Chọn CTV *
+                </Text>
                 <TextInput
                   placeholder="Tìm tên hoặc SĐT CTV"
-                  placeholderTextColor={colors.textSecondary}
+                  placeholderTextColor={Hoteliq.mutedLight}
                   value={ctvSearch}
                   onChangeText={setCtvSearch}
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.text,
-                      backgroundColor: colors.backgroundElement,
-                    },
-                  ]}
+                  className="min-h-[48px] rounded-[12px] border border-hoteliq-line bg-white px-4 text-[15px] text-hoteliq-ink"
                 />
                 {loadingCtv ? (
-                  <ActivityIndicator color={colors.text} />
+                  <ActivityIndicator color={Hoteliq.primary} />
                 ) : (
-                  <View style={styles.ctvList}>
+                  <View className="gap-2">
                     {filteredCtv.slice(0, 8).map((ctv) => {
                       const selected = selectedCtv?.uid === ctv.uid;
                       return (
                         <Pressable
                           key={ctv.uid}
                           onPress={() => setSelectedCtv(ctv)}
-                          style={[
-                            styles.ctvItem,
-                            {
-                              backgroundColor: selected
-                                ? colors.backgroundSelected
-                                : colors.backgroundElement,
-                            },
-                          ]}>
-                          <ThemedText type="smallBold">
+                          className={`gap-0.5 rounded-[12px] border px-4 py-3 ${
+                            selected
+                              ? 'border-hoteliq-ink bg-hoteliq-soft'
+                              : 'border-hoteliq-line bg-white'
+                          }`}>
+                          <Text className="text-[14px] font-semibold text-hoteliq-ink">
                             {ctv.displayName}
-                          </ThemedText>
-                          <ThemedText type="small" themeColor="textSecondary">
+                          </Text>
+                          <Text className="text-[12px] leading-4 text-hoteliq-gray">
                             {ctv.phoneNumber || 'Chưa có SĐT'}
-                          </ThemedText>
+                          </Text>
                         </Pressable>
                       );
                     })}
                     {filteredCtv.length === 0 ? (
-                      <ThemedText type="small" themeColor="textSecondary">
+                      <Text className="text-[14px] leading-[18px] text-hoteliq-gray">
                         Không tìm thấy CTV.
-                      </ThemedText>
+                      </Text>
                     ) : null}
                   </View>
                 )}
@@ -378,27 +361,23 @@ export default function NewBookingScreen() {
                   label="Tên khách *"
                   value={clientName}
                   onChangeText={setClientName}
-                  colors={colors}
                 />
                 <Field
                   label="SĐT khách *"
                   value={clientPhone}
                   onChangeText={setClientPhone}
-                  colors={colors}
                   keyboardType="phone-pad"
                 />
                 <Field
                   label={isCollaborator ? 'Giá tư vấn *' : 'Giá tư vấn'}
                   value={consultationPrice}
                   onChangeText={setConsultationPrice}
-                  colors={colors}
                   placeholder="Giá báo khách..."
                 />
                 <Field
                   label="Nhu cầu / ngân sách"
                   value={budget}
                   onChangeText={setBudget}
-                  colors={colors}
                   placeholder="VD: 8-10tr, có pet..."
                 />
               </>
@@ -408,20 +387,17 @@ export default function NewBookingScreen() {
                   label="Tên khách *"
                   value={clientName}
                   onChangeText={setClientName}
-                  colors={colors}
                 />
                 <Field
                   label="SĐT khách *"
                   value={clientPhone}
                   onChangeText={setClientPhone}
-                  colors={colors}
                   keyboardType="phone-pad"
                 />
                 <Field
                   label="Ngân sách"
                   value={budget}
                   onChangeText={setBudget}
-                  colors={colors}
                   placeholder="VD: 5-7 triệu"
                 />
               </>
@@ -431,20 +407,17 @@ export default function NewBookingScreen() {
                   label="Họ và tên *"
                   value={name}
                   onChangeText={setName}
-                  colors={colors}
                 />
                 <Field
                   label="Số điện thoại *"
                   value={phone}
                   onChangeText={setPhone}
-                  colors={colors}
                   keyboardType="phone-pad"
                 />
                 <Field
                   label="Ngân sách"
                   value={budget}
                   onChangeText={setBudget}
-                  colors={colors}
                   placeholder="VD: 5-7 triệu"
                 />
               </>
@@ -454,21 +427,18 @@ export default function NewBookingScreen() {
               label="Ngày xem *"
               value={bookingDate}
               onChangeText={setBookingDate}
-              colors={colors}
               placeholder="YYYY-MM-DD"
             />
             <Field
               label="Giờ xem (tuỳ chọn)"
               value={bookingTime}
               onChangeText={setBookingTime}
-              colors={colors}
               placeholder="HH:mm"
             />
             <Field
               label="Ghi chú / nhu cầu cụ thể"
               value={notes}
               onChangeText={setNotes}
-              colors={colors}
               placeholder={
                 isCollaborator
                   ? 'Tài chính, xe điện, pet...'
@@ -476,31 +446,29 @@ export default function NewBookingScreen() {
               }
               multiline
             />
+          </ScrollView>
 
+          {/* Sticky submit CTA */}
+          <View className="border-t border-hoteliq-line bg-white px-6 pb-2 pt-3">
             <Pressable
               onPress={onSubmit}
               disabled={submitting}
-              style={({ pressed }) => [
-                styles.submit,
-                {
-                  backgroundColor: colors.text,
-                  opacity: pressed || submitting ? 0.7 : 1,
-                },
-              ]}>
+              className="h-12 items-center justify-center rounded-full bg-hoteliq-primary"
+              style={({ pressed }) => ({
+                opacity: pressed || submitting ? 0.7 : 1,
+              })}>
               {submitting ? (
-                <ActivityIndicator color={colors.background} />
+                <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <ThemedText
-                  type="smallBold"
-                  style={{ color: colors.background }}>
+                <Text className="text-[15px] font-semibold text-white">
                   Xác nhận tạo lịch
-                </ThemedText>
+                </Text>
               )}
             </Pressable>
-          </ScrollView>
+          </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </ThemedView>
+    </View>
   );
 }
 
@@ -508,7 +476,6 @@ function Field({
   label,
   value,
   onChangeText,
-  colors,
   placeholder,
   keyboardType,
   multiline,
@@ -516,89 +483,30 @@ function Field({
   label: string;
   value: string;
   onChangeText: (v: string) => void;
-  colors: {
-    text: string;
-    background: string;
-    backgroundElement: string;
-    backgroundSelected: string;
-    textSecondary: string;
-  };
   placeholder?: string;
   keyboardType?: 'default' | 'phone-pad';
   multiline?: boolean;
 }) {
+  const [focused, setFocused] = useState(false);
   return (
-    <View style={styles.field}>
-      <ThemedText type="smallBold">{label}</ThemedText>
+    <View className="gap-1.5">
+      <Text className="text-[12px] font-semibold leading-4 text-hoteliq-gray">
+        {label}
+      </Text>
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={colors.textSecondary}
+        placeholderTextColor={Hoteliq.mutedLight}
         keyboardType={keyboardType}
         multiline={multiline}
         textAlignVertical={multiline ? 'top' : 'center'}
-        style={[
-          styles.input,
-          multiline ? styles.textarea : null,
-          {
-            color: colors.text,
-            backgroundColor: colors.backgroundElement,
-          },
-        ]}
+        className={`rounded-[12px] border bg-white px-4 text-[15px] text-hoteliq-ink ${
+          multiline ? 'min-h-[96px] py-3' : 'min-h-[48px] py-3'
+        } ${focused ? 'border-hoteliq-ink' : 'border-hoteliq-line'}`}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  flex: { flex: 1 },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
-  segment: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-  },
-  segmentBtn: {
-    flex: 1,
-    minHeight: 40,
-    borderRadius: Spacing.two,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  block: { gap: Spacing.two },
-  ctvList: { gap: Spacing.two },
-  ctvItem: {
-    padding: Spacing.three,
-    borderRadius: Spacing.two,
-    gap: 2,
-  },
-  field: { gap: Spacing.one },
-  input: {
-    minHeight: 48,
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    fontSize: 16,
-  },
-  textarea: {
-    minHeight: 96,
-    paddingVertical: Spacing.three,
-  },
-  submit: {
-    marginTop: Spacing.two,
-    minHeight: 48,
-    borderRadius: Spacing.two,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

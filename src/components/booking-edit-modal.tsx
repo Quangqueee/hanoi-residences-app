@@ -16,6 +16,7 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Hoteliq } from '@/constants/theme';
 import {
   CTV_BOOKINGS_COLLECTION,
   updateBooking,
@@ -82,20 +83,20 @@ function Field({
   const [focused, setFocused] = useState(false);
   return (
     <View className="gap-1.5">
-      <Text className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280]">
+      <Text className="text-[12px] font-semibold leading-4 text-hoteliq-gray">
         {label}
       </Text>
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={Hoteliq.mutedLight}
         keyboardType={keyboardType}
         multiline={multiline}
         textAlignVertical={multiline ? 'top' : 'center'}
-        className={`rounded-2xl border-[1.5px] bg-white px-4 text-base font-semibold text-[#111827] ${
-          multiline ? 'min-h-[96px] py-3' : 'min-h-[52px] py-3'
-        } ${focused ? 'border-brand' : 'border-[#E5E7EB]'}`}
+        className={`rounded-[12px] border bg-white px-4 text-[15px] text-hoteliq-ink ${
+          multiline ? 'min-h-[96px] py-3' : 'min-h-[48px] py-3'
+        } ${focused ? 'border-hoteliq-ink' : 'border-hoteliq-line'}`}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
       />
@@ -200,14 +201,21 @@ export function BookingEditModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}>
       <View
-        className="flex-1 bg-background"
+        className="flex-1 rounded-t-[20px] bg-white"
         style={{ paddingTop: Math.max(insets.top, 8) }}>
-        <View className="flex-row items-center justify-between border-b border-black/[0.06] px-5 pb-3">
-          <Text className="text-xl font-extrabold text-[#111827]">
+        <View className="mb-1 h-1 w-10 self-center rounded-full bg-hoteliq-line" />
+        <View className="flex-row items-center justify-between border-b border-hoteliq-line px-6 pb-3 pt-1">
+          <Text className="text-[20px] font-semibold leading-7 text-hoteliq-ink">
             Chi tiết lịch hẹn
           </Text>
-          <Pressable onPress={onClose} hitSlop={12} disabled={saving}>
-            <Text className="text-base font-bold text-brand-muted">Đóng</Text>
+          <Pressable
+            onPress={onClose}
+            hitSlop={12}
+            disabled={saving}
+            className="min-h-[44px] justify-center">
+            <Text className="text-[14px] font-semibold text-hoteliq-ink underline">
+              Đóng
+            </Text>
           </Pressable>
         </View>
 
@@ -217,14 +225,15 @@ export function BookingEditModal({
           <ScrollView
             className="flex-1"
             contentContainerStyle={{
-              padding: 20,
+              paddingHorizontal: 24,
+              paddingVertical: 20,
               paddingBottom: 40 + insets.bottom,
               gap: 16,
             }}
             keyboardShouldPersistTaps="handled">
-            <Text className="text-sm font-semibold text-brand-muted">
+            <Text className="text-[14px] leading-[18px] text-hoteliq-gray">
               Mã căn{' '}
-              <Text className="font-extrabold text-brand">
+              <Text className="font-semibold text-hoteliq-ink">
                 {booking?.apartmentCode || 'N/A'}
               </Text>
             </Text>
@@ -272,11 +281,11 @@ export function BookingEditModal({
                   setPickerValue(parseDateTime(`${bookingDate}T${bookingTime || '09:00'}`).date);
                   setPickerMode('date');
                 }}
-                className="min-h-[52px] flex-1 justify-center rounded-2xl border-[1.5px] border-[#E5E7EB] bg-white px-4">
-                <Text className="text-[11px] font-bold uppercase text-[#9CA3AF]">
+                className="min-h-[52px] flex-1 justify-center gap-0.5 rounded-[12px] border border-hoteliq-line bg-white px-4 py-2">
+                <Text className="text-[12px] font-medium leading-4 text-hoteliq-gray">
                   Ngày
                 </Text>
-                <Text className="text-base font-bold text-[#111827]">
+                <Text className="text-[15px] font-semibold text-hoteliq-ink">
                   {bookingDate || 'Chọn ngày'}
                 </Text>
               </Pressable>
@@ -285,11 +294,11 @@ export function BookingEditModal({
                   setPickerValue(parseDateTime(`${bookingDate}T${bookingTime || '09:00'}`).date);
                   setPickerMode('time');
                 }}
-                className="min-h-[52px] flex-1 justify-center rounded-2xl border-[1.5px] border-[#E5E7EB] bg-white px-4">
-                <Text className="text-[11px] font-bold uppercase text-[#9CA3AF]">
+                className="min-h-[52px] flex-1 justify-center gap-0.5 rounded-[12px] border border-hoteliq-line bg-white px-4 py-2">
+                <Text className="text-[12px] font-medium leading-4 text-hoteliq-gray">
                   Giờ
                 </Text>
-                <Text className="text-base font-bold text-[#111827]">
+                <Text className="text-[15px] font-semibold text-hoteliq-ink">
                   {bookingTime || 'Cả ngày'}
                 </Text>
               </Pressable>
@@ -304,11 +313,11 @@ export function BookingEditModal({
             />
 
             {booking?.adminNotes?.trim() ? (
-              <View className="rounded-2xl bg-[#EFF6FF] px-4 py-3">
-                <Text className="mb-1 text-[11px] font-bold uppercase text-[#3B82F6]">
+              <View className="rounded-[12px] bg-hoteliq-chip px-4 py-3">
+                <Text className="mb-1 text-[12px] font-semibold leading-4 text-hoteliq-gray">
                   Phản hồi BQT
                 </Text>
-                <Text className="text-sm leading-5 text-[#1E3A5F]">
+                <Text className="text-[14px] leading-5 text-hoteliq-ink">
                   {booking.adminNotes}
                 </Text>
               </View>
@@ -317,14 +326,14 @@ export function BookingEditModal({
             <Pressable
               onPress={() => void handleSave()}
               disabled={saving}
-              className="mt-2 min-h-14 items-center justify-center rounded-[28px] bg-brand"
+              className="mt-2 h-12 items-center justify-center rounded-full bg-hoteliq-primary"
               style={({ pressed }) => ({
                 opacity: saving ? 0.7 : pressed ? 0.9 : 1,
               })}>
               {saving ? (
                 <ActivityIndicator color="#FFF" />
               ) : (
-                <Text className="text-base font-bold text-white">
+                <Text className="text-[15px] font-semibold text-white">
                   Lưu thay đổi
                 </Text>
               )}
@@ -344,9 +353,9 @@ export function BookingEditModal({
         {Platform.OS === 'ios' && pickerMode ? (
           <Pressable
             onPress={() => setPickerMode(null)}
-            className="items-center border-t border-[#E5E7EB] bg-white py-3"
+            className="items-center border-t border-hoteliq-line bg-white py-3"
             style={{ paddingBottom: insets.bottom || 12 }}>
-            <Text className="text-base font-bold text-brand">Xong</Text>
+            <Text className="text-[15px] font-semibold text-hoteliq-ink">Xong</Text>
           </Pressable>
         ) : null}
       </View>

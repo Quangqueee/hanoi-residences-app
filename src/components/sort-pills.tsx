@@ -17,11 +17,11 @@ type Props = {
 
 export function SortPills({ value, onChange }: Props) {
   return (
-    <View className="gap-3">
-      <Text className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#A8A29A]">
+    <View className="gap-3.5">
+      <Text className="text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
         Sắp xếp
       </Text>
-      <View className="flex-row flex-wrap gap-2">
+      <View className="flex-row flex-wrap gap-2.5">
         {OPTIONS.map((opt) => {
           const selected = value === opt.value;
           return (
@@ -30,15 +30,15 @@ export function SortPills({ value, onChange }: Props) {
               onPress={() => onChange(opt.value)}
               accessibilityRole="button"
               accessibilityState={{ selected }}
-              className={`min-h-10 items-center justify-center rounded-full px-4 ${
-                selected ? 'bg-brand' : 'bg-[#F3F0E8]'
+              className={`min-h-11 items-center justify-center rounded-full border px-4 ${
+                selected
+                  ? 'border-hoteliq-ink bg-hoteliq-ink'
+                  : 'border-hoteliq-line bg-white'
               }`}
-              style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
               <Text
-                className={`text-[13px] ${
-                  selected
-                    ? 'font-semibold text-white'
-                    : 'font-medium text-[#4A453E]'
+                className={`text-[14px] leading-[18px] ${
+                  selected ? 'font-semibold text-white' : 'text-hoteliq-ink'
                 }`}>
                 {opt.label}
               </Text>
