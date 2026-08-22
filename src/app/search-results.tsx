@@ -28,16 +28,17 @@ import type { Apartment } from '@/lib/types';
 function toServiceFilters(
   filterState: FilterState,
   sort: SortOption,
-): { query: string; apartmentFilters: ApartmentFilters } {
+): { apartmentFilters: ApartmentFilters } {
   const converted = filterStateToApartmentFilters(filterState, sort);
   if (!converted.ok) {
     return {
-      query: filterState.query.trim(),
-      apartmentFilters: { sortBy: sort },
+      apartmentFilters: {
+        sortBy: sort,
+        searchQuery: filterState.query.trim() || undefined,
+      },
     };
   }
   return {
-    query: converted.query,
     apartmentFilters: converted.apartmentFilters,
   };
 }
@@ -60,7 +61,7 @@ export default function SearchResultsScreen() {
     setSort(payload.sort);
   }, [payload]);
 
-  const { query, apartmentFilters } = useMemo(
+  const { apartmentFilters } = useMemo(
     () => toServiceFilters(filterState, sort),
     [filterState, sort],
   );
@@ -76,23 +77,6 @@ export default function SearchResultsScreen() {
     loadMore,
     reload,
   } = useApartments(apartmentFilters);
-
-  const filteredApartments = useMemo(() => {
-    const q = query.toLowerCase();
-    if (!q) return apartments;
-    return apartments.filter((apt) => {
-      const title = (apt.title ?? '').toLowerCase();
-      const code = (apt.sourceCode ?? '').toLowerCase();
-      const district = (apt.district ?? '').toLowerCase();
-      const seo = (apt.aiContent?.seoTitle ?? '').toLowerCase();
-      return (
-        title.includes(q) ||
-        code.includes(q) ||
-        district.includes(q) ||
-        seo.includes(q)
-      );
-    });
-  }, [apartments, query]);
 
   const summary = useMemo(
     () => summarizeFilterState(filterState, sort),
@@ -125,8 +109,8 @@ export default function SearchResultsScreen() {
       <Text className="text-[14px] leading-[18px] text-hoteliq-gray">
         {showSkeleton
           ? 'Đang tìm kiếm…'
-          : `Tìm thấy ${filteredApartments.length}${
-              hasMore && !query ? '+' : ''
+          : `Tìm thấy ${apartments.length}${
+              hasMore ? '+' : ''
             } căn hộ phù hợp`}
       </Text>
 
@@ -183,7 +167,7 @@ export default function SearchResultsScreen() {
       </View>
 
       <FlatList
-        data={showSkeleton ? [] : filteredApartments}
+        data={showSkeleton ? [] : apartments}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         ListHeaderComponent={listHeader}
@@ -271,8 +255,8 @@ export default function SearchResultsScreen() {
           showSkeleton ? null : (
             <ListPaginationFooter
               loadingMore={loadingMore}
-              hasMore={hasMore && !query}
-              itemCount={filteredApartments.length}
+              hasMore={hasMore}
+              itemCount={apartments.length}
             />
           )
         }

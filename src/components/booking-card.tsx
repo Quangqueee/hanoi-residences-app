@@ -1,6 +1,9 @@
 import { Pressable, Text, View } from 'react-native';
 
 import {
+  CTV_BOOKINGS_COLLECTION,
+  GUEST_CONSULTATIONS_COLLECTION,
+  USER_BOOKINGS_COLLECTION,
   formatBookingTimeDisplay,
   getBookingCustomer,
   getStatusMeta,
@@ -10,9 +13,22 @@ import {
 type Props = {
   booking: BookingRecord;
   onEdit: (booking: BookingRecord) => void;
+  showSource?: boolean;
 };
 
-export function BookingCard({ booking, onEdit }: Props) {
+function sourceLabel(collection: BookingRecord['_collection']): string {
+  switch (collection) {
+    case CTV_BOOKINGS_COLLECTION:
+      return 'CTV';
+    case GUEST_CONSULTATIONS_COLLECTION:
+      return 'Vãng lai';
+    case USER_BOOKINGS_COLLECTION:
+    default:
+      return 'Khách';
+  }
+}
+
+export function BookingCard({ booking, onEdit, showSource }: Props) {
   const status = getStatusMeta(booking.status);
   const customer = getBookingCustomer(booking);
   const feedback = booking.adminNotes?.trim();
@@ -24,6 +40,7 @@ export function BookingCard({ booking, onEdit }: Props) {
         <View className="min-w-0 flex-1 gap-0.5">
           <Text className="text-[12px] font-medium leading-4 text-hoteliq-gray">
             Mã căn
+            {showSource ? ` · ${sourceLabel(booking._collection)}` : ''}
           </Text>
           <Text
             className="text-[18px] font-semibold leading-6 text-hoteliq-ink"

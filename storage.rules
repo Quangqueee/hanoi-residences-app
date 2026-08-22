@@ -1,0 +1,25 @@
+rules_version = '2';
+
+/**
+ * Hanoi Residences — Storage rules (Phase 8).
+ * Deploy: firebase deploy --only storage
+ *
+ * Public read ảnh listing; create/update chỉ user đã đăng nhập + ảnh < 15MB;
+ * delete cần auth. Path khác: deny.
+ */
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /apartments/{allPaths=**} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && request.resource.size < 15 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

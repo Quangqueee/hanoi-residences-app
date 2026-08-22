@@ -209,18 +209,64 @@ export function getStatusMeta(status: string): {
 }
 
 export async function fetchCollaborators(): Promise<CollaboratorOption[]> {
-  const snap = await getDocs(
-    query(collection(db, USERS_COLLECTION), where('role', '==', 'collaborator')),
-  );
+  try {
+    const snap = await getDocs(
+      query(collection(db, USERS_COLLECTION), where('role', '==', 'collaborator')),
+    );
 
-  return snap.docs.map((docSnap) => {
-    const data = docSnap.data();
-    return {
-      uid: docSnap.id,
-      displayName: String(data.displayName || data.email || 'CTV'),
-      phoneNumber: String(data.phoneNumber || ''),
-    };
-  });
+    return snap.docs.map((docSnap) => {
+      const data = docSnap.data();
+      return {
+        uid: docSnap.id,
+        displayName: String(data.displayName || data.email || 'CTV'),
+        phoneNumber: String(data.phoneNumber || ''),
+      };
+    });
+  } catch (error) {
+    console.error('fetchCollaborators error:', error);
+    throw error;
+  }
+}
+
+function mapBookingDocs(
+  snap: { docs: { id: string; data: () => Record<string, unknown> }[] },
+  collectionName: BookingCollection,
+): BookingRecord[] {
+  return snap.docs.map((d) => ({
+    id: d.id,
+    _collection: collectionName,
+    ...(d.data() as Omit<BookingRecord, 'id' | '_collection'>),
+  }));
+}
+
+function sortBookingsNewest(list: BookingRecord[]): BookingRecord[] {
+  return list.sort(
+    (a, b) =>
+      Math.max(toMillis(b.updatedAt), toMillis(b.createdAt)) -
+      Math.max(toMillis(a.updatedAt), toMillis(a.createdAt)),
+  );
+}
+
+/**
+ * Admin CRM — list all 3 booking collections (Web `/[adminPath]/bookings`).
+ */
+export async function fetchAdminAllBookings(): Promise<BookingRecord[]> {
+  try {
+    const [users, ctv, guest] = await Promise.all([
+      getDocs(collection(db, USER_BOOKINGS_COLLECTION)),
+      getDocs(collection(db, CTV_BOOKINGS_COLLECTION)),
+      getDocs(collection(db, GUEST_CONSULTATIONS_COLLECTION)),
+    ]);
+
+    return sortBookingsNewest([
+      ...mapBookingDocs(users, USER_BOOKINGS_COLLECTION),
+      ...mapBookingDocs(ctv, CTV_BOOKINGS_COLLECTION),
+      ...mapBookingDocs(guest, GUEST_CONSULTATIONS_COLLECTION),
+    ]);
+  } catch (error) {
+    console.error('fetchAdminAllBookings error:', error);
+    throw error;
+  }
 }
 
 /**
@@ -232,146 +278,270 @@ export async function fetchMyBookings(input: {
   role: UserRole | null | undefined;
 }): Promise<BookingRecord[]> {
   const { uid, role } = input;
-  const fetched: BookingRecord[] = [];
 
-  if (role === 'admin') {
-    const [snap1, snap2] = await Promise.all([
-      getDocs(
-        query(
-          collection(db, USER_BOOKINGS_COLLECTION),
-          where('createdByAdminId', '==', uid),
+  try {
+    const fetched: BookingRecord[] = [];
+
+    if (role === 'admin') {
+      const [snap1, snap2] = await Promise.all([
+        getDocs(
+          query(
+            collection(db, USER_BOOKINGS_COLLECTION),
+            where('createdByAdminId', '==', uid),
+          ),
         ),
-      ),
-      getDocs(
+        getDocs(
+          query(
+            collection(db, CTV_BOOKINGS_COLLECTION),
+            where('ctvId', '==', uid),
+          ),
+        ),
+      ]);
+
+      fetched.push(...mapBookingDocs(snap1, USER_BOOKINGS_COLLECTION));
+      fetched.push(...mapBookingDocs(snap2, CTV_BOOKINGS_COLLECTION));
+    } else if (role === 'collaborator') {
+      const snap = await getDocs(
         query(
           collection(db, CTV_BOOKINGS_COLLECTION),
           where('ctvId', '==', uid),
         ),
-      ),
-    ]);
+      );
+      fetched.push(...mapBookingDocs(snap, CTV_BOOKINGS_COLLECTION));
+    } else {
+      const snap = await getDocs(
+        query(
+          collection(db, USER_BOOKINGS_COLLECTION),
+          where('userId', '==', uid),
+        ),
+      );
+      fetched.push(...mapBookingDocs(snap, USER_BOOKINGS_COLLECTION));
+    }
 
-    snap1.docs.forEach((d) =>
-      fetched.push({
-        id: d.id,
-        _collection: USER_BOOKINGS_COLLECTION,
-        ...(d.data() as Omit<BookingRecord, 'id' | '_collection'>),
-      }),
-    );
-    snap2.docs.forEach((d) =>
-      fetched.push({
-        id: d.id,
-        _collection: CTV_BOOKINGS_COLLECTION,
-        ...(d.data() as Omit<BookingRecord, 'id' | '_collection'>),
-      }),
-    );
-  } else if (role === 'collaborator') {
-    const snap = await getDocs(
-      query(
-        collection(db, CTV_BOOKINGS_COLLECTION),
-        where('ctvId', '==', uid),
-      ),
-    );
-    snap.docs.forEach((d) =>
-      fetched.push({
-        id: d.id,
-        _collection: CTV_BOOKINGS_COLLECTION,
-        ...(d.data() as Omit<BookingRecord, 'id' | '_collection'>),
-      }),
-    );
-  } else {
-    const snap = await getDocs(
-      query(
-        collection(db, USER_BOOKINGS_COLLECTION),
-        where('userId', '==', uid),
-      ),
-    );
-    snap.docs.forEach((d) =>
-      fetched.push({
-        id: d.id,
-        _collection: USER_BOOKINGS_COLLECTION,
-        ...(d.data() as Omit<BookingRecord, 'id' | '_collection'>),
-      }),
-    );
+    return sortBookingsNewest(fetched);
+  } catch (error) {
+    console.error('fetchMyBookings error:', error);
+    throw error;
   }
+}
 
-  return fetched.sort(
-    (a, b) =>
-      Math.max(toMillis(b.updatedAt), toMillis(b.createdAt)) -
-      Math.max(toMillis(a.updatedAt), toMillis(a.createdAt)),
-  );
+function getBookingNotifyRecipient(booking: BookingRecord): string | null {
+  if (booking._collection === CTV_BOOKINGS_COLLECTION) {
+    return booking.ctvId || null;
+  }
+  if (booking._collection === USER_BOOKINGS_COLLECTION) {
+    return booking.userId || null;
+  }
+  return null;
+}
+
+/** Port of Web admin bookings `handleStatusChange` + notify. */
+export async function updateBookingStatus(input: {
+  collectionName: BookingCollection;
+  bookingId: string;
+  status: BookingStatus;
+  booking?: BookingRecord;
+}): Promise<void> {
+  try {
+    await updateDoc(doc(db, input.collectionName, input.bookingId), {
+      status: input.status,
+      updatedAt: serverTimestamp(),
+    });
+
+    const recipientId = input.booking
+      ? getBookingNotifyRecipient(input.booking)
+      : null;
+    if (recipientId) {
+      try {
+        const label = getStatusMeta(String(input.status)).label;
+        await createNotification({
+          recipientId,
+          title: 'Cập nhật trạng thái lịch hẹn',
+          message: `Lịch hẹn của bạn cho căn ${input.booking?.apartmentCode || 'N/A'} đã được chuyển sang trạng thái ${label}.`,
+          type: 'status_update',
+          link: '/profile/bookings',
+        });
+      } catch (notifyError) {
+        console.error('updateBookingStatus notify error:', notifyError);
+      }
+    }
+  } catch (error) {
+    console.error('updateBookingStatus error:', error);
+    throw error;
+  }
+}
+
+export async function updateBookingAdminNotes(input: {
+  collectionName: BookingCollection;
+  bookingId: string;
+  adminNotes: string;
+  booking?: BookingRecord;
+}): Promise<void> {
+  try {
+    await updateDoc(doc(db, input.collectionName, input.bookingId), {
+      adminNotes: input.adminNotes.trim(),
+      updatedAt: serverTimestamp(),
+    });
+
+    const recipientId = input.booking
+      ? getBookingNotifyRecipient(input.booking)
+      : null;
+    if (recipientId && input.adminNotes.trim()) {
+      try {
+        await createNotification({
+          recipientId,
+          title: 'Ghi chú mới từ Ban quản trị',
+          message: `Lịch hẹn căn ${input.booking?.apartmentCode || 'N/A'}: ${input.adminNotes.trim()}`,
+          type: 'status_update',
+          link: '/profile/bookings',
+        });
+      } catch (notifyError) {
+        console.error('updateBookingAdminNotes notify error:', notifyError);
+      }
+    }
+  } catch (error) {
+    console.error('updateBookingAdminNotes error:', error);
+    throw error;
+  }
 }
 
 /** Port of Web handleSaveChanges on profile/bookings. */
 export async function updateBooking(input: UpdateBookingInput): Promise<void> {
-  const dateTime = toDateTime(input.bookingDate, input.bookingTime);
-  const ref = doc(db, input.collectionName, input.bookingId);
+  try {
+    const dateTime = toDateTime(input.bookingDate, input.bookingTime);
+    const ref = doc(db, input.collectionName, input.bookingId);
 
-  let payload: Record<string, unknown> = {
-    dateTime,
-    notes: input.notes ?? '',
-    budget: input.budget ?? '',
-    updatedAt: Timestamp.now(),
-  };
+    let payload: Record<string, unknown> = {
+      dateTime,
+      notes: input.notes ?? '',
+      budget: input.budget ?? '',
+      updatedAt: Timestamp.now(),
+    };
 
-  if (input.collectionName === CTV_BOOKINGS_COLLECTION) {
-    payload = {
-      ...payload,
-      clientName: input.clientName ?? '',
-      clientPhone: input.clientPhone ?? '',
-      consultationPrice: input.consultationPrice ?? '',
-    };
-  } else {
-    payload = {
-      ...payload,
-      name: input.name ?? '',
-      phone: input.phone ?? '',
-      consultationPrice: input.consultationPrice ?? '',
-    };
+    if (input.collectionName === CTV_BOOKINGS_COLLECTION) {
+      payload = {
+        ...payload,
+        clientName: input.clientName ?? '',
+        clientPhone: input.clientPhone ?? '',
+        consultationPrice: input.consultationPrice ?? '',
+      };
+    } else {
+      payload = {
+        ...payload,
+        name: input.name ?? '',
+        phone: input.phone ?? '',
+        consultationPrice: input.consultationPrice ?? '',
+      };
+    }
+
+    await updateDoc(ref, payload);
+  } catch (error) {
+    console.error('updateBooking error:', error);
+    throw error;
   }
+}
 
-  await updateDoc(ref, payload);
+async function safeNotifyAdmins(
+  data: Parameters<typeof notifyAdmins>[0],
+): Promise<void> {
+  try {
+    await notifyAdmins(data);
+  } catch (error) {
+    console.error('notifyAdmins (non-blocking):', error);
+  }
+}
+
+async function safeCreateNotification(
+  data: Parameters<typeof createNotification>[0],
+): Promise<void> {
+  try {
+    await createNotification(data);
+  } catch (error) {
+    console.error('createNotification (non-blocking):', error);
+  }
 }
 
 export async function createBooking(input: CreateBookingInput): Promise<void> {
-  const dateTime = toDateTime(input.bookingDate, input.bookingTime);
-  const apartmentLink = getApartmentShareUrl(input.apartmentId);
-  const isGuest = input.isGuest || (!input.userId && !input.role);
+  try {
+    const dateTime = toDateTime(input.bookingDate, input.bookingTime);
+    const apartmentLink = getApartmentShareUrl(input.apartmentId);
+    const isGuest = input.isGuest || (!input.userId && !input.role);
 
-  const base = {
-    apartmentId: input.apartmentId,
-    apartmentCode: input.apartmentCode || '',
-    apartmentLink,
-    notes: input.notes?.trim() || '',
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    status: input.role === 'admin' ? 'approved' : 'pending',
-  };
+    const base = {
+      apartmentId: input.apartmentId,
+      apartmentCode: input.apartmentCode || '',
+      apartmentLink,
+      notes: input.notes?.trim() || '',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      status: input.role === 'admin' ? 'approved' : 'pending',
+    };
 
-  // Guest vãng lai → guest_consultations (Web booking-widget)
-  if (isGuest || !input.role) {
-    await addDoc(collection(db, GUEST_CONSULTATIONS_COLLECTION), {
-      ...base,
-      name: input.name || '',
-      phone: input.phone || '',
-      budget: input.budget || '',
-      dateTime,
-    });
+    // Guest vãng lai → guest_consultations (Web booking-widget)
+    if (isGuest || !input.role) {
+      await addDoc(collection(db, GUEST_CONSULTATIONS_COLLECTION), {
+        ...base,
+        name: input.name || '',
+        phone: input.phone || '',
+        budget: input.budget || '',
+        dateTime,
+      });
 
-    await notifyAdmins({
-      title: 'Khách vãng lai đặt lịch tư vấn',
-      message: `Khách ${input.name || 'vãng lai'} (SĐT: ${input.phone || 'N/A'}) đã đặt lịch mới xem mã căn ${input.apartmentCode || 'N/A'}.`,
-      type: 'new_booking',
-      link: ADMIN_BOOKINGS_LINK,
-    });
-    return;
-  }
+      await safeNotifyAdmins({
+        title: 'Khách vãng lai đặt lịch tư vấn',
+        message: `Khách ${input.name || 'vãng lai'} (SĐT: ${input.phone || 'N/A'}) đã đặt lịch mới xem mã căn ${input.apartmentCode || 'N/A'}.`,
+        type: 'new_booking',
+        link: ADMIN_BOOKINGS_LINK,
+      });
+      return;
+    }
 
-  if (input.role === 'admin') {
-    if (input.adminMode === 'assign_ctv') {
+    if (input.role === 'admin') {
+      if (input.adminMode === 'assign_ctv') {
+        await addDoc(collection(db, CTV_BOOKINGS_COLLECTION), {
+          ...base,
+          ctvId: input.ctvId || 'manual_entry',
+          ctvName: input.ctvName || 'Chưa rõ',
+          ctvPhone: input.ctvPhone || 'N/A',
+          address: input.apartmentTitle || '',
+          consultationPrice: input.consultationPrice || '',
+          clientName: input.clientName || '',
+          clientPhone: input.clientPhone || '',
+          budget: input.budget || '',
+          dateTime,
+          createdByAdminId: input.createdByAdminId,
+        });
+
+        if (input.ctvId && input.ctvId !== 'manual_entry') {
+          await safeCreateNotification({
+            recipientId: input.ctvId,
+            title: 'Lịch hẹn mới được gán',
+            message: `Admin đã gán lịch dẫn khách xem mã căn ${input.apartmentCode || 'N/A'}.`,
+            type: 'new_booking',
+            link: '/profile/bookings',
+          });
+        }
+        return;
+      }
+
+      await addDoc(collection(db, USER_BOOKINGS_COLLECTION), {
+        ...base,
+        name: input.clientName || input.name || '',
+        phone: input.clientPhone || input.phone || '',
+        budget: input.budget || '',
+        consultationPrice: input.consultationPrice || '',
+        dateTime,
+        isExternal: true,
+        createdByAdminId: input.createdByAdminId,
+      });
+      return;
+    }
+
+    if (input.role === 'collaborator') {
       await addDoc(collection(db, CTV_BOOKINGS_COLLECTION), {
         ...base,
-        ctvId: input.ctvId || 'manual_entry',
-        ctvName: input.ctvName || 'Chưa rõ',
+        ctvId: input.ctvId,
+        ctvName: input.ctvName || 'Cộng tác viên',
         ctvPhone: input.ctvPhone || 'N/A',
         address: input.apartmentTitle || '',
         consultationPrice: input.consultationPrice || '',
@@ -379,14 +549,20 @@ export async function createBooking(input: CreateBookingInput): Promise<void> {
         clientPhone: input.clientPhone || '',
         budget: input.budget || '',
         dateTime,
-        createdByAdminId: input.createdByAdminId,
       });
 
-      if (input.ctvId && input.ctvId !== 'manual_entry') {
-        await createNotification({
+      await safeNotifyAdmins({
+        title: 'Lịch hẹn CTV mới',
+        message: `CTV ${input.ctvName || 'Cộng tác viên'} đã đặt lịch dẫn khách ${input.clientName || 'khách hàng'} xem mã căn ${input.apartmentCode || 'N/A'}.`,
+        type: 'new_booking',
+        link: ADMIN_BOOKINGS_LINK,
+      });
+
+      if (input.ctvId) {
+        await safeCreateNotification({
           recipientId: input.ctvId,
-          title: 'Lịch hẹn mới được gán',
-          message: `Admin đã gán lịch dẫn khách xem mã căn ${input.apartmentCode || 'N/A'}.`,
+          title: 'Đặt lịch thành công',
+          message: `Bạn đã đặt lịch hẹn thành công cho căn ${input.apartmentCode || 'N/A'}.`,
           type: 'new_booking',
           link: '/profile/bookings',
         });
@@ -394,76 +570,34 @@ export async function createBooking(input: CreateBookingInput): Promise<void> {
       return;
     }
 
+    // Regular user
     await addDoc(collection(db, USER_BOOKINGS_COLLECTION), {
       ...base,
-      name: input.clientName || input.name || '',
-      phone: input.clientPhone || input.phone || '',
-      budget: input.budget || '',
-      consultationPrice: input.consultationPrice || '',
-      dateTime,
-      isExternal: true,
-      createdByAdminId: input.createdByAdminId,
-    });
-    return;
-  }
-
-  if (input.role === 'collaborator') {
-    await addDoc(collection(db, CTV_BOOKINGS_COLLECTION), {
-      ...base,
-      ctvId: input.ctvId,
-      ctvName: input.ctvName || 'Cộng tác viên',
-      ctvPhone: input.ctvPhone || 'N/A',
-      address: input.apartmentTitle || '',
-      consultationPrice: input.consultationPrice || '',
-      clientName: input.clientName || '',
-      clientPhone: input.clientPhone || '',
+      userId: input.userId,
+      name: input.name || '',
+      phone: input.phone || '',
       budget: input.budget || '',
       dateTime,
     });
 
-    await notifyAdmins({
-      title: 'Lịch hẹn CTV mới',
-      message: `CTV ${input.ctvName || 'Cộng tác viên'} đã đặt lịch dẫn khách ${input.clientName || 'khách hàng'} xem mã căn ${input.apartmentCode || 'N/A'}.`,
+    await safeNotifyAdmins({
+      title: 'Lịch hẹn mới từ khách hàng',
+      message: `Khách ${input.name || 'Người dùng'} đã đặt lịch mới xem mã căn ${input.apartmentCode || 'N/A'}.`,
       type: 'new_booking',
       link: ADMIN_BOOKINGS_LINK,
     });
 
-    if (input.ctvId) {
-      await createNotification({
-        recipientId: input.ctvId,
+    if (input.userId) {
+      await safeCreateNotification({
+        recipientId: input.userId,
         title: 'Đặt lịch thành công',
         message: `Bạn đã đặt lịch hẹn thành công cho căn ${input.apartmentCode || 'N/A'}.`,
         type: 'new_booking',
         link: '/profile/bookings',
       });
     }
-    return;
-  }
-
-  // Regular user
-  await addDoc(collection(db, USER_BOOKINGS_COLLECTION), {
-    ...base,
-    userId: input.userId,
-    name: input.name || '',
-    phone: input.phone || '',
-    budget: input.budget || '',
-    dateTime,
-  });
-
-  await notifyAdmins({
-    title: 'Lịch hẹn mới từ khách hàng',
-    message: `Khách ${input.name || 'Người dùng'} đã đặt lịch mới xem mã căn ${input.apartmentCode || 'N/A'}.`,
-    type: 'new_booking',
-    link: ADMIN_BOOKINGS_LINK,
-  });
-
-  if (input.userId) {
-    await createNotification({
-      recipientId: input.userId,
-      title: 'Đặt lịch thành công',
-      message: `Bạn đã đặt lịch hẹn thành công cho căn ${input.apartmentCode || 'N/A'}.`,
-      type: 'new_booking',
-      link: '/profile/bookings',
-    });
+  } catch (error) {
+    console.error('createBooking error:', error);
+    throw error;
   }
 }

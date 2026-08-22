@@ -1,0 +1,13 @@
+---
+description: Hướng 1 — app mobile cùng Firebase với website, không REST clone Server Actions. Dùng khi làm Expo/React Native, đồng bộ web-mobile, listings, bookings, admin, landlord.
+globs: docs/mobile/**/*.md, .cursor/skills/mobile-firebase-sync/**, apps/mobile/**, src/lib/types.ts, src/lib/rbac.ts, firestore.rules, storage.rules
+alwaysApply: false
+---
+
+# Mobile = client Firebase thứ hai
+
+- Nguồn sự thật: Firestore project `quang-apartment`. Không clone DB, không bọc Server Actions.
+- Playbook: skill `mobile-firebase-sync`. Kiến trúc: `docs/mobile/GRAPH_REPORT.md`. Cấm/bẫy: `docs/mobile/NOTES.md`.
+- Tái sử dụng `types.ts`, `rbac.ts`, `source-code.ts`, `price-range.ts`, `generateSearchKeywords`. Feed công khai: `submissionStatus == "published"`.
+- Groq/AI chỉ Cloud Function. Giá đơn vị triệu VND. Đẩy tin = bump `createdAt`+`updatedAt`.
+- Bọc mọi đọc/ghi Firebase trong `try/catch`. Không xóa chức năng web để làm app.

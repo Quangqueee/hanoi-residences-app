@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import { useRouter } from 'expo-router';
 
 import { useAuth } from '@/contexts/auth-context';
 import { useNotifications } from '@/hooks/use-notifications';
@@ -10,11 +12,33 @@ import {
   setAppBadgeCount,
 } from '@/lib/push-notifications';
 
+function resolveNotificationRoute(link?: string): string | null {
+  if (!link) return null;
+  if (link.includes('/profile/bookings') || link.includes('bookings')) {
+    return '/(tabs)/bookings';
+  }
+  if (link.includes('/profile/apartments') || link.includes('apartments')) {
+    return '/profile/apartments';
+  }
+  if (link.includes('/ctv-register')) return '/ctv-register';
+  if (link.includes('/partner-register')) return '/partner-register';
+  if (link.includes('/admin/users')) return '/admin/users';
+  if (link.includes('/admin/partners')) return '/admin/partners';
+  if (link.includes('/admin/submissions')) return '/admin/submissions';
+  if (link.includes('/admin/bookings') || link.includes('/admin/apartments')) {
+    return '/admin';
+  }
+  const apt = link.match(/\/apartments\/([^/?#]+)/);
+  if (apt?.[1]) return `/apartment/${apt[1]}`;
+  return '/(tabs)/notifications';
+}
+
 /**
- * Registers Expo push when signed in, syncs badge, and mirrors new
- * Firestore notifications as local push while the app is open.
+ * Registers Expo push when signed in, syncs badge, mirrors new
+ * Firestore notifications as local push, and deep-links on tap.
  */
 export function usePushNotifications() {
+  const router = useRouter();
   const { user } = useAuth();
   const { notifications, unreadCount } = useNotifications(user?.uid);
   const knownIdsRef = useRef<Set<string> | null>(null);
@@ -30,13 +54,30 @@ export function usePushNotifications() {
   }, [unreadCount]);
 
   useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    const sub = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        const data = response.notification.request.content.data as {
+          link?: string;
+        };
+        const route = resolveNotificationRoute(data?.link);
+        if (route) {
+          router.push(route as never);
+        }
+      },
+    );
+
+    return () => sub.remove();
+  }, [router]);
+
+  useEffect(() => {
     if (!user?.uid) {
       knownIdsRef.current = null;
       primedRef.current = false;
       return;
     }
 
-    // First snapshot: seed known IDs without firing local pushes.
     if (!primedRef.current) {
       knownIdsRef.current = new Set(notifications.map((n) => n.id));
       primedRef.current = true;
@@ -61,7 +102,6 @@ export function usePushNotifications() {
       known.add(n.id);
     });
 
-    // Keep set updated with current page
     notifications.forEach((n) => known.add(n.id));
     knownIdsRef.current = known;
   }, [notifications, user?.uid]);

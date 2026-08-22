@@ -40,7 +40,7 @@ export function useNotifications(userId?: string | null) {
       collection(db, NOTIFICATIONS_COLLECTION),
       where('recipientId', '==', userId),
       orderBy('createdAt', 'desc'),
-      limit(50),
+      limit(20),
     );
 
     const unsubscribe = onSnapshot(

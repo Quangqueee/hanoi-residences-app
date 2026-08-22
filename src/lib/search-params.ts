@@ -94,6 +94,7 @@ export function filterStateToApartmentFilters(
       roomType: roomTypes.length > 0 ? roomTypes : undefined,
       priceRange,
       sortBy: sort,
+      searchQuery: filters.query.trim() || undefined,
     },
   };
 }

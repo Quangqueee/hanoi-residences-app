@@ -18,6 +18,10 @@ import { db } from '@/firebase/app';
 import { APARTMENTS_PAGE_SIZE } from '@/lib/constants';
 import { isPriceInRange, parsePriceRange } from '@/lib/format';
 import {
+  matchesAllSearchTokens,
+  planApartmentTextSearch,
+} from '@/lib/search-keywords';
+import {
   APARTMENTS_COLLECTION,
   type Apartment,
   type RoomType,
@@ -30,6 +34,8 @@ export type ApartmentFilters = {
   /** Single room type or multi-select */
   roomType?: RoomType | RoomType[];
   sortBy?: 'newest' | 'price-asc' | 'price-desc';
+  /** Free-text — Web `planApartmentTextSearch` / `searchKeywords` */
+  searchQuery?: string;
 };
 
 export type ApartmentsPageResult = {
@@ -37,6 +43,8 @@ export type ApartmentsPageResult = {
   lastDoc: QueryDocumentSnapshot<DocumentData> | null;
   hasMore: boolean;
 };
+
+const SEARCH_CANDIDATE_CAP = 500;
 
 const toPlainTimestamp = (ts: unknown) => {
   if (!ts || typeof ts !== 'object') {
@@ -107,13 +115,8 @@ function normalizeStringList(
     .filter(Boolean);
 }
 
-function buildConstraints(
-  filters: ApartmentFilters,
-  pageSize: number,
-  cursor?: QueryDocumentSnapshot<DocumentData> | null,
-): QueryConstraint[] {
+function buildBaseConstraints(filters: ApartmentFilters): QueryConstraint[] {
   const constraints: QueryConstraint[] = [
-    // Public listing only — same as Web data.ts
     where('submissionStatus', '==', 'published'),
   ];
 
@@ -122,7 +125,6 @@ function buildConstraints(
     filters.roomType as string | string[] | undefined,
   );
 
-  // Mirror Web data.ts: Firestore `in` supports ≤ 30 values
   if (districtArray.length > 0) {
     constraints.push(
       districtArray.length === 1
@@ -139,25 +141,35 @@ function buildConstraints(
     );
   }
 
-  const sortBy = filters.sortBy ?? 'newest';
-  if (sortBy === 'price-asc') {
-    constraints.push(orderBy('price', 'asc'));
-  } else if (sortBy === 'price-desc') {
-    constraints.push(orderBy('price', 'desc'));
-  } else {
-    constraints.push(orderBy('createdAt', 'desc'));
-  }
-
-  if (cursor) {
-    constraints.push(startAfter(cursor));
-  }
-
-  // Over-fetch slightly when price is filtered client-side
-  const hasPriceFilter =
-    !!filters.priceRange && filters.priceRange !== 'all';
-  constraints.push(limit(hasPriceFilter ? pageSize * 2 : pageSize));
-
   return constraints;
+}
+
+function buildSortConstraints(
+  filters: ApartmentFilters,
+): QueryConstraint[] {
+  const sortBy = filters.sortBy ?? 'newest';
+  if (sortBy === 'price-asc') return [orderBy('price', 'asc')];
+  if (sortBy === 'price-desc') return [orderBy('price', 'desc')];
+  return [orderBy('createdAt', 'desc')];
+}
+
+function applyClientFilters(
+  apartments: Apartment[],
+  filters: ApartmentFilters,
+  searchTokens: string[] | null,
+): Apartment[] {
+  let next = apartments;
+
+  if (filters.priceRange && filters.priceRange !== 'all') {
+    const range = parsePriceRange(filters.priceRange);
+    next = next.filter((apt) => isPriceInRange(apt.price, range));
+  }
+
+  if (searchTokens && searchTokens.length > 0) {
+    next = next.filter((apt) => matchesAllSearchTokens(apt, searchTokens));
+  }
+
+  return next;
 }
 
 export async function fetchApartmentsPage(
@@ -165,33 +177,124 @@ export async function fetchApartmentsPage(
   cursor?: QueryDocumentSnapshot<DocumentData> | null,
   pageSize: number = APARTMENTS_PAGE_SIZE,
 ): Promise<ApartmentsPageResult> {
-  const apartmentsRef = collection(db, APARTMENTS_COLLECTION);
-  const q = query(apartmentsRef, ...buildConstraints(filters, pageSize, cursor));
-  const snapshot = await getDocs(q);
+  try {
+    const apartmentsRef = collection(db, APARTMENTS_COLLECTION);
+    const searchPlan = filters.searchQuery?.trim()
+      ? planApartmentTextSearch(filters.searchQuery)
+      : null;
+    const searchTokens = searchPlan?.tokens ?? null;
+    const searchValues = searchPlan?.firestoreValues ?? [];
+    const needsCandidateScan =
+      !!searchPlan &&
+      (searchPlan.tokens.length > 1 || searchValues.length > 1);
 
-  let apartments = snapshot.docs.map(toApartment);
+    const hasPriceFilter =
+      !!filters.priceRange && filters.priceRange !== 'all';
+    const hasClientFilter = hasPriceFilter || !!searchPlan;
 
-  if (filters.priceRange && filters.priceRange !== 'all') {
-    const range = parsePriceRange(filters.priceRange);
-    apartments = apartments.filter((apt) => isPriceInRange(apt.price, range));
+    // Multi-token / đ–d variants: mirror Web candidate scan (cap), then page in memory.
+    // Cursor pagination on Firestore docs is unsafe after client AND-filter.
+    if (needsCandidateScan && searchPlan) {
+      const snapshots = await Promise.all(
+        searchValues.map((value) =>
+          getDocs(
+            query(
+              apartmentsRef,
+              ...buildBaseConstraints(filters),
+              where('searchKeywords', 'array-contains', value),
+              ...buildSortConstraints(filters),
+              limit(SEARCH_CANDIDATE_CAP),
+            ),
+          ),
+        ),
+      );
+
+      const byId = new Map<string, Apartment>();
+      for (const snapshot of snapshots) {
+        for (const docSnap of snapshot.docs) {
+          if (!byId.has(docSnap.id)) {
+            byId.set(docSnap.id, toApartment(docSnap));
+          }
+        }
+      }
+
+      let matched = applyClientFilters(
+        [...byId.values()],
+        filters,
+        searchPlan.tokens,
+      );
+
+      // Keep sort consistent after merge
+      const sortBy = filters.sortBy ?? 'newest';
+      matched = matched.sort((a, b) => {
+        if (sortBy === 'price-asc') return (a.price ?? 0) - (b.price ?? 0);
+        if (sortBy === 'price-desc') return (b.price ?? 0) - (a.price ?? 0);
+        return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
+      });
+
+      let start = 0;
+      if (cursor) {
+        const idx = matched.findIndex((apt) => apt.id === cursor.id);
+        start = idx >= 0 ? idx + 1 : 0;
+      }
+
+      const pageApartments = matched.slice(start, start + pageSize);
+      const lastApt = pageApartments[pageApartments.length - 1];
+      const lastDoc =
+        lastApt != null
+          ? ((snapshots
+              .flatMap((s) => s.docs)
+              .find((d) => d.id === lastApt.id) as
+              | QueryDocumentSnapshot<DocumentData>
+              | undefined) ?? null)
+          : null;
+
+      return {
+        apartments: pageApartments,
+        lastDoc,
+        hasMore: start + pageSize < matched.length,
+      };
+    }
+
+    const constraints: QueryConstraint[] = [
+      ...buildBaseConstraints(filters),
+    ];
+
+    if (searchPlan?.firestoreValue) {
+      constraints.push(
+        where('searchKeywords', 'array-contains', searchPlan.firestoreValue),
+      );
+    }
+
+    constraints.push(...buildSortConstraints(filters));
+
+    if (cursor) {
+      constraints.push(startAfter(cursor));
+    }
+
+    const fetchLimit = hasClientFilter ? pageSize * 3 : pageSize;
+    constraints.push(limit(fetchLimit));
+
+    const snapshot = await getDocs(query(apartmentsRef, ...constraints));
+    let apartments = applyClientFilters(
+      snapshot.docs.map(toApartment),
+      filters,
+      searchTokens,
+    );
+
+    const pageApartments = apartments.slice(0, pageSize);
+    const lastVisible = snapshot.docs[snapshot.docs.length - 1] ?? null;
+    const fetchedFullBatch = snapshot.size >= fetchLimit;
+
+    return {
+      apartments: pageApartments,
+      lastDoc: lastVisible,
+      hasMore: fetchedFullBatch,
+    };
+  } catch (error) {
+    console.error('fetchApartmentsPage error:', error);
+    throw error;
   }
-
-  // Trim to page size after client price filter
-  const pageApartments = apartments.slice(0, pageSize);
-  const lastVisible = snapshot.docs[snapshot.docs.length - 1] ?? null;
-
-  // If Firestore returned a full batch, there may be more pages
-  const expectedBatch =
-    filters.priceRange && filters.priceRange !== 'all'
-      ? pageSize * 2
-      : pageSize;
-  const fetchedFullBatch = snapshot.size >= expectedBatch;
-
-  return {
-    apartments: pageApartments,
-    lastDoc: lastVisible,
-    hasMore: fetchedFullBatch,
-  };
 }
 
 export async function getApartmentById(

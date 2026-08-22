@@ -7,6 +7,7 @@ import {
   getApartmentDisplayTitle,
 } from '@/lib/apartment-display';
 import type { UserRole } from '@/lib/rbac';
+import { getDisplaySourceCode } from '@/lib/source-code';
 
 export const SITE_ORIGIN = 'https://hanoiresidence.site';
 /** Fallback admin path for notification deep-links (Web uses env secret path). */
@@ -31,7 +32,9 @@ export function buildApartmentShareMessage(
   const lines = [
     title,
     `${apartment.district} · ${formatPrice(apartment.price)}`,
-    apartment.sourceCode ? `Mã căn: ${apartment.sourceCode}` : null,
+    apartment.sourceCode
+      ? `Mã căn: ${getDisplaySourceCode(apartment.sourceCode, role)}`
+      : null,
     '',
     `Xem chi tiết: ${url}`,
   ].filter((line): line is string => line !== null);

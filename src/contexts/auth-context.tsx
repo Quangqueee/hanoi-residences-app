@@ -56,6 +56,7 @@ type AuthContextValue = {
     fullName: string,
     phoneNumber?: string,
   ) => ReturnType<typeof authService.signup>;
+  loginWithGoogle: () => ReturnType<typeof authService.loginWithGoogle>;
   logout: () => ReturnType<typeof authService.logout>;
   resetPassword: (
     email: string,
@@ -158,6 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       login: authService.login,
       signup: authService.signup,
+      loginWithGoogle: authService.loginWithGoogle,
       logout: authService.logout,
       resetPassword: authService.resetPassword,
     };

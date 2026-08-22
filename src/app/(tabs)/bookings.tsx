@@ -4,6 +4,7 @@ import {
   Linking,
   Pressable,
   RefreshControl,
+  ScrollView,
   Text,
   TextInput,
   View,
@@ -16,12 +17,37 @@ import { ShimmerBlock } from '@/components/ui/shimmer-block';
 import { Hoteliq, HoteliqShadow } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import {
+  CTV_BOOKINGS_COLLECTION,
+  GUEST_CONSULTATIONS_COLLECTION,
+  USER_BOOKINGS_COLLECTION,
+  fetchAdminAllBookings,
   fetchMyBookings,
+  type BookingCollection,
   type BookingRecord,
+  type BookingStatus,
 } from '@/lib/bookings-service';
 import { SITE_ORIGIN } from '@/lib/share-apartment';
 
 const TAB_CLEARANCE = 110;
+
+type AdminScope = 'mine' | 'all';
+type CollectionFilter = 'all' | BookingCollection;
+type StatusFilter = 'all' | BookingStatus;
+
+const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
+  { key: 'all', label: 'Tất cả' },
+  { key: 'pending', label: 'Chờ duyệt' },
+  { key: 'approved', label: 'Đã duyệt' },
+  { key: 'contacted', label: 'Đã dẫn khách' },
+  { key: 'failed', label: 'Không thành công' },
+];
+
+const COLLECTION_FILTERS: { key: CollectionFilter; label: string }[] = [
+  { key: 'all', label: 'Mọi nguồn' },
+  { key: USER_BOOKINGS_COLLECTION, label: 'Khách' },
+  { key: CTV_BOOKINGS_COLLECTION, label: 'CTV' },
+  { key: GUEST_CONSULTATIONS_COLLECTION, label: 'Vãng lai' },
+];
 
 function BookingSkeleton() {
   return (
@@ -37,6 +63,35 @@ function BookingSkeleton() {
   );
 }
 
+function FilterChip({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={4}
+      className={`rounded-full border px-3 py-2 ${
+        active
+          ? 'border-hoteliq-ink bg-hoteliq-ink'
+          : 'border-hoteliq-line bg-white'
+      }`}
+      style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+      <Text
+        className={`text-[12px] font-semibold ${
+          active ? 'text-white' : 'text-hoteliq-gray'
+        }`}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 export default function BookingsScreen() {
   const insets = useSafeAreaInsets();
   const { user, role, isCollaborator, isAdmin, loading: authLoading } =
@@ -47,13 +102,19 @@ export default function BookingsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [adminScope, setAdminScope] = useState<AdminScope>('all');
+  const [collectionFilter, setCollectionFilter] =
+    useState<CollectionFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   const [editOpen, setEditOpen] = useState(false);
   const [selected, setSelected] = useState<BookingRecord | null>(null);
 
-  const title = isCollaborator || isAdmin
-    ? 'Quản lý lịch dẫn khách'
-    : 'Quản lý lịch xem phòng';
+  const title = isAdmin
+    ? 'Quản lý lịch hẹn'
+    : isCollaborator
+      ? 'Quản lý lịch dẫn khách'
+      : 'Quản lý lịch xem phòng';
 
   const load = useCallback(
     async (mode: 'initial' | 'refresh' = 'initial') => {
@@ -66,7 +127,10 @@ export default function BookingsScreen() {
       if (mode === 'refresh') setRefreshing(true);
       setError(null);
       try {
-        const data = await fetchMyBookings({ uid: user.uid, role });
+        const data =
+          isAdmin && adminScope === 'all'
+            ? await fetchAdminAllBookings()
+            : await fetchMyBookings({ uid: user.uid, role });
         setBookings(data);
       } catch (err) {
         console.error(err);
@@ -80,7 +144,7 @@ export default function BookingsScreen() {
         setRefreshing(false);
       }
     },
-    [user, role],
+    [user, role, isAdmin, adminScope],
   );
 
   useEffect(() => {
@@ -89,19 +153,39 @@ export default function BookingsScreen() {
   }, [authLoading, load]);
 
   const filtered = useMemo(() => {
-    if (!isCollaborator && !isAdmin) return bookings;
+    let list = bookings;
+
+    if (isAdmin) {
+      if (collectionFilter !== 'all') {
+        list = list.filter((b) => b._collection === collectionFilter);
+      }
+      if (statusFilter !== 'all') {
+        list = list.filter((b) => b.status === statusFilter);
+      }
+    }
+
+    if (!isCollaborator && !isAdmin) return list;
+
     const term = searchTerm.trim().toLowerCase();
-    if (!term) return bookings;
-    return bookings.filter((b) => {
+    if (!term) return list;
+    return list.filter((b) => {
       const matchName =
         b.name?.toLowerCase().includes(term) ||
         b.clientName?.toLowerCase().includes(term);
       const matchPhone =
         b.phone?.includes(term) || b.clientPhone?.includes(term);
       const matchCode = b.apartmentCode?.toLowerCase().includes(term);
-      return Boolean(matchName || matchPhone || matchCode);
+      const matchCtv = b.ctvName?.toLowerCase().includes(term);
+      return Boolean(matchName || matchPhone || matchCode || matchCtv);
     });
-  }, [bookings, searchTerm, isCollaborator, isAdmin]);
+  }, [
+    bookings,
+    searchTerm,
+    isCollaborator,
+    isAdmin,
+    collectionFilter,
+    statusFilter,
+  ]);
 
   const openEdit = (booking: BookingRecord) => {
     setSelected(booking);
@@ -111,7 +195,9 @@ export default function BookingsScreen() {
   const onSaved = (next: BookingRecord) => {
     setBookings((prev) =>
       prev
-        .map((b) => (b.id === next.id ? next : b))
+        .map((b) =>
+          b.id === next.id && b._collection === next._collection ? next : b,
+        )
         .sort((a, b) => {
           const ta =
             (a.updatedAt as { toMillis?: () => number })?.toMillis?.() ||
@@ -154,7 +240,11 @@ export default function BookingsScreen() {
         data={loading ? [] : filtered}
         keyExtractor={(item) => `${item._collection}-${item.id}`}
         renderItem={({ item }) => (
-          <BookingCard booking={item} onEdit={openEdit} />
+          <BookingCard
+            booking={item}
+            onEdit={openEdit}
+            showSource={isAdmin}
+          />
         )}
         contentContainerStyle={{
           paddingHorizontal: 24,
@@ -177,9 +267,26 @@ export default function BookingsScreen() {
                 {title}
               </Text>
               <Text className="text-[14px] leading-5 text-hoteliq-gray">
-                Theo dõi trạng thái, lịch trình và phản hồi từ ban quản trị.
+                {isAdmin
+                  ? 'Duyệt trạng thái, ghi chú BQT và theo dõi 3 nguồn đặt lịch.'
+                  : 'Theo dõi trạng thái, lịch trình và phản hồi từ ban quản trị.'}
               </Text>
             </View>
+
+            {isAdmin ? (
+              <View className="flex-row gap-2">
+                <FilterChip
+                  label="Toàn hệ thống"
+                  active={adminScope === 'all'}
+                  onPress={() => setAdminScope('all')}
+                />
+                <FilterChip
+                  label="Tôi tạo / gán"
+                  active={adminScope === 'mine'}
+                  onPress={() => setAdminScope('mine')}
+                />
+              </View>
+            ) : null}
 
             {isCollaborator || isAdmin ? (
               <View className="min-h-[48px] flex-row items-center gap-2.5 rounded-full border border-hoteliq-line bg-white px-4">
@@ -193,6 +300,37 @@ export default function BookingsScreen() {
                   autoCorrect={false}
                   clearButtonMode="while-editing"
                 />
+              </View>
+            ) : null}
+
+            {isAdmin ? (
+              <View className="gap-3">
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}>
+                  {COLLECTION_FILTERS.map((f) => (
+                    <FilterChip
+                      key={f.key}
+                      label={f.label}
+                      active={collectionFilter === f.key}
+                      onPress={() => setCollectionFilter(f.key)}
+                    />
+                  ))}
+                </ScrollView>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}>
+                  {STATUS_FILTERS.map((f) => (
+                    <FilterChip
+                      key={f.key}
+                      label={f.label}
+                      active={statusFilter === f.key}
+                      onPress={() => setStatusFilter(f.key)}
+                    />
+                  ))}
+                </ScrollView>
               </View>
             ) : null}
           </View>
@@ -228,7 +366,6 @@ export default function BookingsScreen() {
         }
       />
 
-      {/* CONTACT FAB — inspired by Web multi-contact */}
       <Pressable
         onPress={openContact}
         hitSlop={8}
@@ -241,9 +378,7 @@ export default function BookingsScreen() {
           ...(HoteliqShadow as object),
         })}>
         <Text className="text-base text-white">💬</Text>
-        <Text className="text-[13px] font-semibold text-white">
-          Contact
-        </Text>
+        <Text className="text-[13px] font-semibold text-white">Contact</Text>
       </Pressable>
 
       <BookingEditModal

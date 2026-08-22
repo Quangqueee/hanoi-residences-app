@@ -3,7 +3,6 @@ import { memo, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Platform,
   Pressable,
   Text,
   View,
@@ -20,6 +19,7 @@ import {
   resolveListingBadge,
 } from '@/lib/apartment-display';
 import { setApartmentFavorite } from '@/lib/favorites-service';
+import { getDisplaySourceCode } from '@/lib/source-code';
 import type { Apartment } from '@/lib/types';
 import { Image } from 'expo-image';
 
@@ -34,6 +34,11 @@ type Props = {
   variant?: 'feed' | 'rail' | 'compact';
   className?: string;
 };
+
+/** Web-safe shadow — RN Web deprecates shadow* props in favor of boxShadow. */
+const overlayFavoriteShadow = {
+  boxShadow: '0px 2px 6px rgba(0,0,0,0.1)',
+} as const;
 
 function FavoriteButton({
   isFavorite,
@@ -53,7 +58,11 @@ function FavoriteButton({
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={(e) => {
+        // Prevent parent card press handlers if event bubbling reaches them.
+        e?.stopPropagation?.();
+        onPress();
+      }}
       disabled={updating}
       hitSlop={8}
       accessibilityRole="button"
@@ -65,18 +74,7 @@ function FavoriteButton({
       } ${className ?? ''}`}
       style={({ pressed }) => ({
         opacity: pressed || updating ? 0.85 : 1,
-        ...(isOverlay
-          ? ((Platform.select({
-              ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 6,
-              },
-              android: { elevation: 2 },
-              default: {},
-            }) as object) ?? {})
-          : {}),
+        ...(isOverlay ? overlayFavoriteShadow : {}),
       })}>
       {updating ? (
         <ActivityIndicator size="small" color={Hoteliq.heart} />
@@ -242,7 +240,7 @@ function ApartmentCardComponent({
         {collaboratorView && commissionLabel ? (
           <View
             className="absolute left-3 top-3 z-[2] max-w-[52%] rounded-md bg-brand-commission px-2.5 py-1"
-            pointerEvents="none">
+            style={{ pointerEvents: 'none' }}>
             <Text className="text-[11px] font-bold text-white" numberOfLines={1}>
               HH: {commissionLabel}
             </Text>
@@ -253,8 +251,10 @@ function ApartmentCardComponent({
         {!collaboratorView && badge ? (
           <View
             className="absolute left-0 top-3 z-[2] py-1.5 pl-3 pr-4"
-            style={{ backgroundColor: badge.backgroundColor }}
-            pointerEvents="none">
+            style={{
+              backgroundColor: badge.backgroundColor,
+              pointerEvents: 'none',
+            }}>
             <Text className="text-[10px] font-bold uppercase tracking-wide text-white">
               {badge.label}
             </Text>
@@ -265,8 +265,10 @@ function ApartmentCardComponent({
         {collaboratorView && badge ? (
           <View
             className="absolute bottom-8 left-0 z-[2] rounded-r-md py-1.5 pl-3 pr-2.5"
-            style={{ backgroundColor: badge.backgroundColor }}
-            pointerEvents="none">
+            style={{
+              backgroundColor: badge.backgroundColor,
+              pointerEvents: 'none',
+            }}>
             <Text className="text-[10px] font-bold uppercase tracking-wider text-white">
               {badge.label}
             </Text>
@@ -277,14 +279,14 @@ function ApartmentCardComponent({
         {collaboratorView && apartment.sourceCode ? (
           <View
             className="absolute right-3 top-3 z-[2] max-w-[42%] rounded-md bg-black/60 px-2 py-1"
-            pointerEvents="none">
+            style={{ pointerEvents: 'none' }}>
             <Text className="text-[11px] font-bold text-white" numberOfLines={1}>
-              ID: {apartment.sourceCode}
+              ID: {getDisplaySourceCode(apartment.sourceCode, role)}
             </Text>
           </View>
         ) : null}
 
-        {/* Favorite on image — User/Landlord only */}
+        {/* Favorite on image — User/Landlord only (sibling of carousel, not nested) */}
         {!collaboratorView ? (
           <FavoriteButton
             isFavorite={isFavorite}
@@ -296,66 +298,78 @@ function ApartmentCardComponent({
         ) : null}
       </View>
 
-      {/* Content — hierarchy matches website */}
-      <Pressable
-        onPress={openDetail}
-        accessibilityRole="button"
-        accessibilityLabel={`Xem chi tiết ${title}`}
-        className={`${isRail ? 'gap-0.5 pt-2.5' : 'gap-0.5 pt-3'} active:opacity-90`}>
-        {/* 3. Tiêu đề */}
-        <Text
-          className={`font-semibold text-hoteliq-ink ${
-            isRail ? 'text-[14px] leading-[18px]' : 'text-[16px] leading-5'
-          }`}
-          numberOfLines={1}>
-          {title}
-        </Text>
-
-        {/* 4. Khu vực */}
-        <Text
-          className={`text-hoteliq-gray ${
-            isRail ? 'text-[12px] leading-4' : 'text-[13px] leading-[18px]'
-          }`}
-          numberOfLines={1}>
-          {districtLine}
-        </Text>
-
-        {/* 5. Loại phòng + diện tích */}
-        {roomMeta ? (
+      {/*
+        Content block: openDetail Pressable must NOT wrap FavoriteButton.
+        Nested <button> (RN Web) was the Home crash root cause for CTV/Admin.
+      */}
+      <View className={isRail ? 'pt-2.5' : 'pt-3'}>
+        <Pressable
+          onPress={openDetail}
+          accessibilityRole="button"
+          accessibilityLabel={`Xem chi tiết ${title}`}
+          className="gap-0.5 active:opacity-90">
+          {/* 3. Tiêu đề */}
           <Text
-            className={`font-medium text-hoteliq-gray ${
+            className={`font-semibold text-hoteliq-ink ${
+              isRail ? 'text-[14px] leading-[18px]' : 'text-[16px] leading-5'
+            }`}
+            numberOfLines={1}>
+            {title}
+          </Text>
+
+          {/* 4. Khu vực */}
+          <Text
+            className={`text-hoteliq-gray ${
               isRail ? 'text-[12px] leading-4' : 'text-[13px] leading-[18px]'
             }`}
             numberOfLines={1}>
-            {roomMeta}
+            {districtLine}
           </Text>
-        ) : null}
 
-        {/* 6. Giá */}
-        <View className={`${isRail ? 'mt-1' : 'mt-1.5'} flex-row items-baseline`}>
-          <Text
-            className={`font-bold text-hoteliq-ink ${
-              isRail ? 'text-[15px] leading-5' : 'text-[17px] leading-6'
-            }`}>
-            {formatPriceAmount(apartment.price)}
-          </Text>
-          <Text
-            className={`ml-1 font-medium text-hoteliq-gray ${
-              isRail ? 'text-[12px]' : 'text-[13px]'
-            }`}>
-            /tháng
-          </Text>
-        </View>
+          {/* 5. Loại phòng + diện tích */}
+          {roomMeta ? (
+            <Text
+              className={`font-medium text-hoteliq-gray ${
+                isRail ? 'text-[12px] leading-4' : 'text-[13px] leading-[18px]'
+              }`}
+              numberOfLines={1}>
+              {roomMeta}
+            </Text>
+          ) : null}
 
-        {/* 7. Ngày cập nhật + Favorite (CTV/Admin) */}
+          {/* 6. Giá */}
+          <View
+            className={`${isRail ? 'mt-1' : 'mt-1.5'} flex-row items-baseline`}>
+            <Text
+              className={`font-bold text-hoteliq-ink ${
+                isRail ? 'text-[15px] leading-5' : 'text-[17px] leading-6'
+              }`}>
+              {formatPriceAmount(apartment.price)}
+            </Text>
+            <Text
+              className={`ml-1 font-medium text-hoteliq-gray ${
+                isRail ? 'text-[12px]' : 'text-[13px]'
+              }`}>
+              /tháng
+            </Text>
+          </View>
+        </Pressable>
+
+        {/* 7. Ngày cập nhật + Favorite — Favorite is a SIBLING, never nested */}
         <View className="mt-1.5 flex-row items-center justify-between gap-2">
-          <Text
-            className={`flex-1 italic text-hoteliq-gray ${
-              isRail ? 'text-[11px] leading-4' : 'text-[12px] leading-4'
-            }`}
-            numberOfLines={1}>
-            Cập nhật: {updatedLabel}
-          </Text>
+          <Pressable
+            onPress={openDetail}
+            accessibilityRole="button"
+            accessibilityLabel={`Xem chi tiết ${title}`}
+            className="min-w-0 flex-1 active:opacity-90">
+            <Text
+              className={`italic text-hoteliq-gray ${
+                isRail ? 'text-[11px] leading-4' : 'text-[12px] leading-4'
+              }`}
+              numberOfLines={1}>
+              Cập nhật: {updatedLabel}
+            </Text>
+          </Pressable>
 
           {collaboratorView ? (
             <FavoriteButton
@@ -366,7 +380,7 @@ function ApartmentCardComponent({
             />
           ) : null}
         </View>
-      </Pressable>
+      </View>
     </View>
   );
 }

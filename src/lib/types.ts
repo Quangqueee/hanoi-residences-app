@@ -47,6 +47,10 @@ export interface Apartment {
   serviceFees?: string;
   contactPhone?: string;
 
+  /** Xin đẩy tin (Web requestPushApartmentAction) */
+  pushRequestedAt?: unknown;
+  isPushRequested?: boolean;
+
   aiContent?: AiContent | null;
 
   createdAt: {
@@ -78,6 +82,11 @@ export interface UserProfile {
   favorites?: string[];
 
   role?: UserRole | string;
+
+  /** Đăng ký CTV */
+  requestStatus?: 'pending' | string;
+  ctvIntroduction?: string;
+  requestSubmittedAt?: unknown;
 
   landlordApprovalStatus?: 'pending' | 'approved' | 'rejected';
   landlordRejectionReason?: string;

@@ -177,7 +177,7 @@ export default function SearchFilterCenterScreen() {
                 showClear={false}
               />
 
-              <SortPills value={sort} onChange={setSort} />
+              {/* <SortPills value={sort} onChange={setSort} /> */}
             </View>
           </ScrollView>
 

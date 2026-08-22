@@ -11,7 +11,7 @@
       "icon": "./assets/expo.icon",
       "infoPlist": {
         "NSPhotoLibraryAddUsageDescription": "Cho phép Hanoi Residences lưu ảnh căn hộ vào thư viện ảnh của bạn.",
-        "NSPhotoLibraryUsageDescription": "Cho phép Hanoi Residences lưu ảnh căn hộ vào thư viện ảnh của bạn.",
+        "NSPhotoLibraryUsageDescription": "Cho phép Hanoi Residences chọn ảnh căn hộ từ thư viện để đăng tin.",
         "UIBackgroundModes": [
           "remote-notification"
         ]
@@ -57,6 +57,12 @@
           "granularPermissions": [
             "photo"
           ]
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Cho phép Hanoi Residences chọn ảnh căn hộ từ thư viện để đăng tin."
         }
       ],
       [

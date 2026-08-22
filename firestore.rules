@@ -1,0 +1,171 @@
+rules_version = '2';
+
+/**
+ * Hanoi Residences — Firestore rules (Phase 0 draft for Hướng 1).
+ * Deploy from this repo (or copy into website) after Console review:
+ *   firebase deploy --only firestore:rules
+ *
+ * Compared to website repo rules: adds bookings + notifications,
+ * blocks client self-promotion to admin, blocks landlord self-publish.
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userRole() {
+      return signedIn() && userDoc().data.role;
+    }
+
+    function isAdmin() {
+      return signedIn() && userRole() == 'admin';
+    }
+
+    function isLandlord() {
+      return signedIn() && userRole() == 'landlord';
+    }
+
+    function isCollaborator() {
+      return signedIn() && userRole() == 'collaborator';
+    }
+
+    function roleUnchanged() {
+      return !('role' in request.resource.data)
+        || request.resource.data.role == resource.data.role;
+    }
+
+    function notSelfAdminEscalation() {
+      // Create/update must not invent role: admin from client (except existing admin).
+      return !('role' in request.resource.data)
+        || request.resource.data.role != 'admin'
+        || isAdmin();
+    }
+
+    // ——— apartments ———
+    match /apartments/{apartmentId} {
+      // Keep public read for now (field masking is client RBAC). Tighten later.
+      allow get, list: if true;
+
+      allow create: if isAdmin()
+        || (
+          isLandlord()
+          && request.resource.data.landlordId == request.auth.uid
+          && request.resource.data.submissionStatus == 'pending'
+        );
+
+      allow update: if isAdmin()
+        || (
+          isLandlord()
+          && resource.data.landlordId == request.auth.uid
+          && request.resource.data.landlordId == resource.data.landlordId
+          && (
+            !('submissionStatus' in request.resource.data)
+            || request.resource.data.submissionStatus == resource.data.submissionStatus
+            || request.resource.data.submissionStatus == 'pending'
+          )
+        );
+
+      allow delete: if isAdmin()
+        || (
+          isLandlord()
+          && resource.data.landlordId == request.auth.uid
+        );
+    }
+
+    // ——— users ———
+    match /users/{userId} {
+      allow create: if isOwner(userId)
+        && notSelfAdminEscalation()
+        && (
+          !('role' in request.resource.data)
+          || request.resource.data.role == 'user'
+        );
+
+      allow get: if isOwner(userId) || isAdmin();
+
+      // Admin list needed for notifyAdmins / dashboard (website already queries this).
+      allow list: if isAdmin();
+
+      allow update: if isAdmin()
+        || (
+          isOwner(userId)
+          && roleUnchanged()
+          && notSelfAdminEscalation()
+        );
+
+      allow delete: if isAdmin();
+
+      match /favorites/{apartmentId} {
+        allow get, list: if isOwner(userId) || isAdmin();
+        allow create, delete: if isOwner(userId);
+        allow update: if false;
+      }
+    }
+
+    // ——— notifications ———
+    match /notifications/{notificationId} {
+      allow read: if signedIn()
+        && (
+          resource.data.recipientId == request.auth.uid
+          || isAdmin()
+        );
+
+      allow create: if signedIn();
+
+      allow update: if signedIn()
+        && resource.data.recipientId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['isRead']);
+
+      allow delete: if isAdmin();
+    }
+
+    // ——— bookings ———
+    match /user_bookings/{bookingId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+
+      allow create: if signedIn()
+        && (
+          isAdmin()
+          || request.resource.data.userId == request.auth.uid
+        );
+
+      allow update, delete: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    match /ctv_bookings/{bookingId} {
+      allow read: if isAdmin()
+        || (isCollaborator() && resource.data.ctvId == request.auth.uid);
+
+      allow create: if isAdmin()
+        || (
+          isCollaborator()
+          && request.resource.data.ctvId == request.auth.uid
+        );
+
+      allow update, delete: if isAdmin()
+        || (
+          isCollaborator()
+          && resource.data.ctvId == request.auth.uid
+        );
+    }
+
+    match /guest_consultations/{bookingId} {
+      // Guests may create without auth; only admin reads/lists.
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

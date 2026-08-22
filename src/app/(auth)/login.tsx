@@ -1,4 +1,4 @@
-import { Link, Redirect } from 'expo-router';
+import { Link, Redirect, type Href } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -32,17 +32,24 @@ function getAuthErrorMessage(error: unknown): string {
       return 'Email hoặc mật khẩu không đúng.';
     case 'auth/too-many-requests':
       return 'Thử lại quá nhiều lần. Vui lòng đợi ít phút.';
+    case 'auth/popup-closed-by-user':
+      return 'Cửa sổ Google đã đóng trước khi hoàn tất.';
+    case 'auth/google-native-unavailable':
+      return 'Google Sign-In trên thiết bị chưa cấu hình. Dùng email hoặc bản Web.';
+    case 'auth/popup-blocked':
+      return 'Trình duyệt chặn popup Google. Cho phép popup rồi thử lại.';
     default:
       return 'Đăng nhập thất bại. Vui lòng thử lại.';
   }
 }
 
 export default function LoginScreen() {
-  const { user, loading, login } = useAuth();
+  const { user, loading, login, loginWithGoogle } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focusedField, setFocusedField] = useState<
     'email' | 'password' | null
@@ -68,6 +75,20 @@ export default function LoginScreen() {
       setSubmitting(false);
     }
   };
+
+  const onGoogle = async () => {
+    setError(null);
+    setGoogleSubmitting(true);
+    try {
+      await loginWithGoogle();
+    } catch (err) {
+      setError(getAuthErrorMessage(err));
+    } finally {
+      setGoogleSubmitting(false);
+    }
+  };
+
+  const busy = submitting || googleSubmitting;
 
   const inputClass = (field: 'email' | 'password') =>
     `h-[52px] rounded-[12px] border bg-white px-4 text-[16px] leading-[22px] text-hoteliq-ink ${
@@ -127,6 +148,19 @@ export default function LoginScreen() {
                 onBlur={() => setFocusedField(null)}
               />
 
+              <View className="items-end">
+                <Link href={'/(auth)/forgot-password' as Href} asChild>
+                  <Pressable
+                    hitSlop={8}
+                    className="min-h-[36px] justify-center"
+                    style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+                    <Text className="text-[13px] font-medium leading-[18px] text-hoteliq-gray underline">
+                      Quên mật khẩu?
+                    </Text>
+                  </Pressable>
+                </Link>
+              </View>
+
               {error ? (
                 <Text className="text-[13px] leading-[18px] text-[#C13515]">
                   {error}
@@ -134,21 +168,38 @@ export default function LoginScreen() {
               ) : null}
 
               <Pressable
-                onPress={onSubmit}
-                disabled={submitting}
+                onPress={() => void onSubmit()}
+                disabled={busy}
                 accessibilityRole="button"
                 className="mt-1 h-12 items-center justify-center rounded-full bg-hoteliq-primary"
                 style={({ pressed }) => ({
                   backgroundColor: pressed
                     ? Hoteliq.primaryDark
                     : Hoteliq.primary,
-                  opacity: submitting ? 0.7 : 1,
+                  opacity: busy ? 0.7 : 1,
                 })}>
                 {submitting ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <Text className="text-[16px] font-semibold text-white">
                     Đăng nhập
+                  </Text>
+                )}
+              </Pressable>
+
+              <Pressable
+                onPress={() => void onGoogle()}
+                disabled={busy}
+                accessibilityRole="button"
+                className="h-12 items-center justify-center rounded-full border border-hoteliq-line bg-white"
+                style={({ pressed }) => ({
+                  opacity: busy ? 0.7 : pressed ? 0.85 : 1,
+                })}>
+                {googleSubmitting ? (
+                  <ActivityIndicator color={Hoteliq.ink} />
+                ) : (
+                  <Text className="text-[16px] font-semibold text-hoteliq-ink">
+                    Tiếp tục với Google
                   </Text>
                 )}
               </Pressable>

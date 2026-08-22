@@ -32,6 +32,7 @@ import {
 import { getApartmentById } from '@/lib/apartments-service';
 import { setApartmentFavorite } from '@/lib/favorites-service';
 import { shareApartment } from '@/lib/share-apartment';
+import { getDisplaySourceCode } from '@/lib/source-code';
 import type { Apartment } from '@/lib/types';
 
 const UI = {
@@ -62,7 +63,7 @@ function getLandlordPhone(apartment: Apartment): string {
 function buildInternalCopyText(apartment: Apartment): string {
   const phone = getLandlordPhone(apartment);
   const lines = [
-    `ID: ${apartment.sourceCode || apartment.id}`,
+    `ID: ${getDisplaySourceCode(apartment.sourceCode, 'collaborator') || apartment.id}`,
     `Tiêu đề: ${apartment.title}`,
     `Giá: ${formatPriceAmount(apartment.price)}/tháng`,
     apartment.area ? `Diện tích: ${apartment.area} m²` : null,
@@ -425,6 +426,16 @@ export default function ApartmentDetailScreen() {
                   </Text>
                   <Text className="text-[14px] font-semibold text-[#2F7D4A]">
                     {commissionLabel ?? '—'}
+                  </Text>
+                </View>
+              ) : null}
+              {showOpsTools ? (
+                <View className="flex-row items-center justify-between gap-3">
+                  <Text className="text-[13px] leading-[18px] text-hoteliq-gray">
+                    Mã nguồn
+                  </Text>
+                  <Text className="text-[14px] font-semibold text-hoteliq-ink">
+                    {getDisplaySourceCode(apartment.sourceCode, role) || '—'}
                   </Text>
                 </View>
               ) : null}

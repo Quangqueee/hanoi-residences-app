@@ -17,11 +17,23 @@ import DateTimePicker, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Hoteliq } from '@/constants/theme';
+import { useAuth } from '@/contexts/auth-context';
 import {
   CTV_BOOKINGS_COLLECTION,
+  getStatusMeta,
   updateBooking,
+  updateBookingAdminNotes,
+  updateBookingStatus,
   type BookingRecord,
+  type BookingStatus,
 } from '@/lib/bookings-service';
+
+const ADMIN_STATUSES: BookingStatus[] = [
+  'pending',
+  'approved',
+  'contacted',
+  'failed',
+];
 
 type Props = {
   visible: boolean;
@@ -111,6 +123,7 @@ export function BookingEditModal({
   onSaved,
 }: Props) {
   const insets = useSafeAreaInsets();
+  const { isAdmin } = useAuth();
   const isCtv = booking?._collection === CTV_BOOKINGS_COLLECTION;
 
   const [saving, setSaving] = useState(false);
@@ -121,6 +134,8 @@ export function BookingEditModal({
   const [consultationPrice, setConsultationPrice] = useState('');
   const [budget, setBudget] = useState('');
   const [notes, setNotes] = useState('');
+  const [adminNotes, setAdminNotes] = useState('');
+  const [status, setStatus] = useState<BookingStatus>('pending');
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
 
@@ -139,6 +154,8 @@ export function BookingEditModal({
     setConsultationPrice(booking.consultationPrice || '');
     setBudget(booking.budget || '');
     setNotes(booking.notes || '');
+    setAdminNotes(booking.adminNotes || '');
+    setStatus(booking.status || 'pending');
     setPickerValue(parsed.date);
   }, [visible, booking]);
 
@@ -172,12 +189,38 @@ export function BookingEditModal({
         clientPhone,
       });
 
+      let nextStatus = booking.status;
+      let nextAdminNotes = booking.adminNotes || '';
+
+      if (isAdmin) {
+        if (status !== booking.status) {
+          await updateBookingStatus({
+            collectionName: booking._collection,
+            bookingId: booking.id,
+            status,
+            booking,
+          });
+          nextStatus = status;
+        }
+        if (adminNotes.trim() !== (booking.adminNotes || '').trim()) {
+          await updateBookingAdminNotes({
+            collectionName: booking._collection,
+            bookingId: booking.id,
+            adminNotes,
+            booking: { ...booking, status: nextStatus },
+          });
+          nextAdminNotes = adminNotes.trim();
+        }
+      }
+
       const next: BookingRecord = {
         ...booking,
         dateTime: bookingTime ? `${bookingDate}T${bookingTime}` : bookingDate,
         notes,
         budget,
         consultationPrice,
+        status: nextStatus,
+        adminNotes: nextAdminNotes,
         ...(isCtv
           ? { clientName, clientPhone }
           : { name, phone }),
@@ -312,7 +355,42 @@ export function BookingEditModal({
               placeholder="Ghi chú thêm…"
             />
 
-            {booking?.adminNotes?.trim() ? (
+            {isAdmin ? (
+              <View className="gap-2">
+                <Text className="text-[12px] font-semibold leading-4 text-hoteliq-gray">
+                  Trạng thái (Admin)
+                </Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {ADMIN_STATUSES.map((s) => {
+                    const meta = getStatusMeta(s);
+                    const active = status === s;
+                    return (
+                      <Pressable
+                        key={s}
+                        onPress={() => setStatus(s)}
+                        className="rounded-full border px-3 py-2"
+                        style={{
+                          backgroundColor: active ? meta.bg : '#FFFFFF',
+                          borderColor: active ? meta.border : Hoteliq.line,
+                        }}>
+                        <Text
+                          className="text-[12px] font-semibold"
+                          style={{ color: active ? meta.text : Hoteliq.muted }}>
+                          {meta.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                <Field
+                  label="Ghi chú Ban quản trị"
+                  value={adminNotes}
+                  onChangeText={setAdminNotes}
+                  multiline
+                  placeholder="Phản hồi gửi cho khách / CTV…"
+                />
+              </View>
+            ) : booking?.adminNotes?.trim() ? (
               <View className="rounded-[12px] bg-hoteliq-chip px-4 py-3">
                 <Text className="mb-1 text-[12px] font-semibold leading-4 text-hoteliq-gray">
                   Phản hồi BQT

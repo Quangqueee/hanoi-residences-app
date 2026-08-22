@@ -3,6 +3,7 @@ import { SymbolView } from 'expo-symbols';
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Linking,
   Pressable,
   ScrollView,
@@ -13,6 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Hoteliq } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
+import { requestAccountDeletion } from '@/lib/account-service';
+import { SITE_INFO } from '@/lib/legal-content';
 import { SITE_ORIGIN } from '@/lib/share-apartment';
 
 const TAB_CLEARANCE = 110;
@@ -228,6 +231,142 @@ export default function ProfileScreen() {
           ) : null}
         </View>
 
+        {/* Group: account */}
+        <View className="mt-8">
+          <SettingsRow
+            symbol={{
+              ios: 'person.crop.circle',
+              android: 'manage_accounts',
+              web: 'manage_accounts',
+            }}
+            label="Sửa hồ sơ"
+            hint="Họ tên, SĐT, địa chỉ, khu vực ưu tiên"
+            onPress={() => router.push('/profile/edit')}
+          />
+          <RowDivider />
+          <SettingsRow
+            symbol={{
+              ios: 'gearshape',
+              android: 'settings',
+              web: 'settings',
+            }}
+            label="Cài đặt"
+            hint="Ngày sinh, giới tính, sở thích, đổi mật khẩu"
+            onPress={() => router.push('/profile/settings')}
+          />
+        </View>
+
+        {/* Group: become partner */}
+        {!isAdmin && !isCollaborator && !isLandlord ? (
+          <View className="mt-8">
+            <SettingsRow
+              symbol={{
+                ios: 'person.2',
+                android: 'group',
+                web: 'group',
+              }}
+              label="Đăng ký Cộng tác viên"
+              hint={
+                userData?.requestStatus === 'pending'
+                  ? 'Hồ sơ đang chờ duyệt'
+                  : 'Gửi hồ sơ CTV'
+              }
+              onPress={() => router.push('/ctv-register')}
+            />
+            <RowDivider />
+            <SettingsRow
+              symbol={{
+                ios: 'building.2',
+                android: 'apartment',
+                web: 'apartment',
+              }}
+              label="Đăng ký Chủ nhà"
+              hint={
+                userData?.landlordApprovalStatus === 'pending'
+                  ? 'Yêu cầu đang xử lý'
+                  : userData?.landlordApprovalStatus === 'rejected'
+                    ? 'Bị từ chối — gửi lại'
+                    : 'Trở thành đối tác cho thuê'
+              }
+              onPress={() => router.push('/partner-register')}
+            />
+          </View>
+        ) : null}
+
+        {isLandlord ? (
+          <View className="mt-8">
+            <SettingsRow
+              symbol={{
+                ios: 'building.2',
+                android: 'apartment',
+                web: 'apartment',
+              }}
+              label="Tin đăng của tôi"
+              hint="Đăng / sửa tin, đổi trạng thái, xin đẩy"
+              onPress={() => router.push('/profile/apartments')}
+            />
+          </View>
+        ) : null}
+
+        {isAdmin ? (
+          <View className="mt-8">
+            <SettingsRow
+              symbol={{
+                ios: 'chart.bar',
+                android: 'dashboard',
+                web: 'dashboard',
+              }}
+              label="Admin · Tổng quan"
+              hint="Stats, căn hộ, duyệt tin, backfill"
+              onPress={() => router.push('/admin')}
+            />
+            <RowDivider />
+            <SettingsRow
+              symbol={{
+                ios: 'building.2',
+                android: 'apartment',
+                web: 'apartment',
+              }}
+              label="Admin · Căn hộ"
+              hint="CRUD / đẩy tin / xóa (quota)"
+              onPress={() => router.push('/admin/apartments')}
+            />
+            <RowDivider />
+            <SettingsRow
+              symbol={{
+                ios: 'checkmark.seal',
+                android: 'fact_check',
+                web: 'fact_check',
+              }}
+              label="Admin · Duyệt tin chủ nhà"
+              hint="Pending → published / rejected"
+              onPress={() => router.push('/admin/submissions')}
+            />
+            <RowDivider />
+            <SettingsRow
+              symbol={{
+                ios: 'person.3',
+                android: 'manage_accounts',
+                web: 'manage_accounts',
+              }}
+              label="Admin · Users / CTV"
+              hint="Duyệt CTV, đổi role user/CTV"
+              onPress={() => router.push('/admin/users')}
+            />
+            <RowDivider />
+            <SettingsRow
+              symbol={{
+                ios: 'building.2',
+                android: 'business',
+                web: 'business',
+              }}
+              label="Admin · Đối tác chủ nhà"
+              hint="Duyệt / từ chối / ngưng hợp tác"
+              onPress={() => router.push('/admin/partners')}
+            />
+          </View>
+        ) : null}
+
         {/* Group: in-app shortcuts */}
         <View className="mt-8">
           <SettingsRow
@@ -290,14 +429,35 @@ export default function ProfileScreen() {
           <RowDivider />
           <SettingsRow
             symbol={{
+              ios: 'questionmark.circle',
+              android: 'help_outline',
+              web: 'help_outline',
+            }}
+            label="Câu hỏi thường gặp"
+            hint="FAQ thuê nhà / hợp tác"
+            onPress={() => router.push('/legal/faq')}
+          />
+          <RowDivider />
+          <SettingsRow
+            symbol={{
+              ios: 'doc.text',
+              android: 'description',
+              web: 'description',
+            }}
+            label="Điều khoản dịch vụ"
+            hint="Quy định sử dụng app & website"
+            onPress={() => router.push('/legal/terms')}
+          />
+          <RowDivider />
+          <SettingsRow
+            symbol={{
               ios: 'lock.shield',
               android: 'privacy_tip',
               web: 'privacy_tip',
             }}
             label="Chính sách bảo mật"
-            hint="Sắp ra mắt — bắt buộc App Store / Play"
-            disabled
-            trailing="Soon"
+            hint="Dữ liệu cá nhân & thông báo đẩy"
+            onPress={() => router.push('/legal/privacy')}
           />
           <RowDivider />
           <SettingsRow
@@ -307,10 +467,45 @@ export default function ProfileScreen() {
               web: 'delete_outline',
             }}
             label="Xóa tài khoản"
-            hint="Sắp ra mắt — yêu cầu xác thực lại"
-            disabled
+            hint="Gửi yêu cầu tới Ban quản trị"
             destructive
-            trailing="Soon"
+            onPress={() => {
+              Alert.alert(
+                'Xóa tài khoản',
+                `Yêu cầu sẽ được gửi tới admin. Bạn cũng có thể email ${SITE_INFO.email}. Tiếp tục?`,
+                [
+                  { text: 'Hủy', style: 'cancel' },
+                  {
+                    text: 'Gửi yêu cầu',
+                    style: 'destructive',
+                    onPress: () => {
+                      void (async () => {
+                        if (!user) return;
+                        setBusy(true);
+                        setError(null);
+                        try {
+                          await requestAccountDeletion({
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: userData?.displayName,
+                          });
+                          Alert.alert(
+                            'Đã gửi yêu cầu',
+                            'Ban quản trị sẽ xử lý xóa tài khoản. Bạn có thể đăng xuất ngay.',
+                          );
+                        } catch {
+                          setError(
+                            'Không gửi được yêu cầu xóa. Thử lại hoặc email hỗ trợ.',
+                          );
+                        } finally {
+                          setBusy(false);
+                        }
+                      })();
+                    },
+                  },
+                ],
+              );
+            }}
           />
         </View>
 

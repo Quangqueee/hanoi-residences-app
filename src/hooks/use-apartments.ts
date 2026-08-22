@@ -25,6 +25,7 @@ function filtersKey(filters: ApartmentFilters): string {
     priceRange: filters.priceRange ?? '',
     roomType: filters.roomType ?? '',
     sortBy: filters.sortBy ?? 'newest',
+    searchQuery: filters.searchQuery ?? '',
   });
 }
 

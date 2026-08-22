@@ -1,16 +1,16 @@
 # Graph Report - hanoi-residences-app  (2026-08-11)
 
 ## Corpus Check
-- 81 files · ~81,698 words
+- 81 files · ~82,100 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 540 nodes · 1014 edges · 56 communities (23 shown, 33 thin omitted)
+- 541 nodes · 1015 edges · 56 communities (23 shown, 33 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 3 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8f812f78`
+- Built from commit: `1a4d45f8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -32,7 +32,7 @@
 - download-images.native.ts
 - metro.config.js
 - navigation/types.ts
-- quick-download-button.tsx
+- app.native.ts
 - Welcome to your Expo app 👋
 - expo-constants
 - expo-device
@@ -42,7 +42,7 @@
 - expo-font
 - expo-linking
 - expo-splash-screen
-- expo-clipboard
+- @react-native-async-storage/async-storage
 - expo-symbols
 - expo-system-ui
 - @expo/ui
@@ -77,7 +77,7 @@
 7. `AuthProvider()` - 11 edges
 8. `db` - 9 edges
 9. `useNotifications()` - 9 edges
-10. `getApartmentDisplayTitle()` - 9 edges
+10. `createBooking()` - 9 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `TabsLayout()` --calls--> `useAuth()`  [EXTRACTED]
@@ -101,20 +101,20 @@ Cohesion: 0.10
 Nodes (24): styles, styles, ExternalLink(), Props, HintRowProps, styles, styles, ThemedText() (+16 more)
 
 ### Community 1 - "apartments-service.ts"
-Cohesion: 0.05
-Nodes (66): SearchResultsScreen(), toServiceFilters(), FavoritesScreen(), CATEGORIES, CategoryKey, HomeScreen(), applyBtnShadow, searchBarShadow (+58 more)
+Cohesion: 0.06
+Nodes (60): SearchResultsScreen(), toServiceFilters(), CATEGORIES, CategoryKey, HomeScreen(), applyBtnShadow, searchBarShadow, SearchFilterCenterScreen() (+52 more)
 
 ### Community 2 - "[id].tsx"
-Cohesion: 0.11
-Nodes (34): ApartmentDetailScreen(), buildInternalCopyText(), getLandlordPhone(), overlayBtnShadow, UI, ApartmentCardComponent(), Props, ApartmentMarkdownDescription() (+26 more)
+Cohesion: 0.08
+Nodes (46): ApartmentDetailScreen(), buildInternalCopyText(), getLandlordPhone(), overlayBtnShadow, UI, FavoritesScreen(), ApartmentCard, ApartmentCardComponent() (+38 more)
 
 ### Community 3 - "expo"
 Cohesion: 0.05
 Nodes (38): backgroundColor, backgroundImage, foregroundImage, monochromeImage, adaptiveIcon, permissions, predictiveBackGestureEnabled, reactCompiler (+30 more)
 
 ### Community 4 - "auth-context.tsx"
-Cohesion: 0.06
-Nodes (40): AuthContext, AuthContextValue, AuthProvider(), auth, firebaseApp, auth, createAuth(), db (+32 more)
+Cohesion: 0.08
+Nodes (31): AuthContext, AuthContextValue, AuthProvider(), auth, firebaseApp, storage, ensureAndroidChannel(), presentLocalNotification() (+23 more)
 
 ### Community 5 - "useAuth"
 Cohesion: 0.08
@@ -125,8 +125,8 @@ Cohesion: 0.09
 Nodes (22): babel-preset-expo, devDependencies, babel-preset-expo, prettier-plugin-tailwindcss, tailwindcss, @types/react, typescript, main (+14 more)
 
 ### Community 8 - "bookings-service.ts"
-Cohesion: 0.08
-Nodes (41): isValidDate(), isValidTime(), NewBookingScreen(), BookingsScreen(), BookingCard(), Props, BookingEditModal(), pad() (+33 more)
+Cohesion: 0.07
+Nodes (42): isValidDate(), isValidTime(), NewBookingScreen(), BookingsScreen(), BookingCard(), Props, BookingEditModal(), pad() (+34 more)
 
 ### Community 9 - "include"
 Cohesion: 0.14
@@ -134,7 +134,7 @@ Nodes (13): ./assets/*, expo-env.d.ts, expo/tsconfig.base, .expo/types/**/*.ts, 
 
 ### Community 10 - "dependencies"
 Cohesion: 0.18
-Nodes (11): expo, expo-status-bar, dependencies, expo, expo-status-bar, @react-native-async-storage/async-storage, react-native-gesture-handler, @react-navigation/bottom-tabs (+3 more)
+Nodes (11): expo, expo-clipboard, expo-status-bar, dependencies, expo, expo-clipboard, expo-status-bar, react-native-gesture-handler (+3 more)
 
 ### Community 11 - "reset-project.js"
 Cohesion: 0.22
@@ -160,9 +160,9 @@ Nodes (3): config, { getDefaultConfig }, { withNativeWind }
 Cohesion: 0.50
 Nodes (3): AuthStackParamList, MainTabParamList, RootStackParamList
 
-### Community 17 - "quick-download-button.tsx"
-Cohesion: 0.38
-Nodes (5): Props, QuickDownloadButton(), styles, downloadApartmentImages(), DownloadImagesResult
+### Community 17 - "app.native.ts"
+Cohesion: 0.22
+Nodes (8): auth, createAuth(), db, firebaseApp, loadReactNativePersistence(), ReactNativePersistenceFactory, storage, firebaseConfig
 
 ### Community 18 - "Welcome to your Expo app 👋"
 Cohesion: 0.25
@@ -185,8 +185,8 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `theme.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.09639953542392567 - nodes in this community are weakly interconnected._
 - **Should `apartments-service.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.05185185185185185 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05517503805175038 - nodes in this community are weakly interconnected._
 - **Should `[id].tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.10520487264673312 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07597895967270601 - nodes in this community are weakly interconnected._
 - **Should `expo` be split into smaller, more focused modules?**
   _Cohesion score 0.05128205128205128 - nodes in this community are weakly interconnected._

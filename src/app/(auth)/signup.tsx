@@ -28,6 +28,12 @@ function getAuthErrorMessage(error: unknown): string {
       return 'Email không hợp lệ.';
     case 'auth/weak-password':
       return 'Mật khẩu cần ít nhất 6 ký tự.';
+    case 'auth/popup-closed-by-user':
+      return 'Cửa sổ Google đã đóng trước khi hoàn tất.';
+    case 'auth/google-native-unavailable':
+      return 'Google Sign-In trên thiết bị chưa cấu hình. Dùng email hoặc bản Web.';
+    case 'auth/popup-blocked':
+      return 'Trình duyệt chặn popup Google. Cho phép popup rồi thử lại.';
     default:
       return 'Đăng ký thất bại. Vui lòng thử lại.';
   }
@@ -36,13 +42,14 @@ function getAuthErrorMessage(error: unknown): string {
 type FieldKey = 'fullName' | 'email' | 'phoneNumber' | 'password';
 
 export default function SignupScreen() {
-  const { user, loading, signup } = useAuth();
+  const { user, loading, signup, loginWithGoogle } = useAuth();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focusedField, setFocusedField] = useState<FieldKey | null>(null);
 
@@ -66,6 +73,20 @@ export default function SignupScreen() {
       setSubmitting(false);
     }
   };
+
+  const onGoogle = async () => {
+    setError(null);
+    setGoogleSubmitting(true);
+    try {
+      await loginWithGoogle();
+    } catch (err) {
+      setError(getAuthErrorMessage(err));
+    } finally {
+      setGoogleSubmitting(false);
+    }
+  };
+
+  const busy = submitting || googleSubmitting;
 
   const inputClass = (field: FieldKey) =>
     `h-[52px] rounded-[12px] border bg-white px-4 text-[16px] leading-[22px] text-hoteliq-ink ${
@@ -151,21 +172,38 @@ export default function SignupScreen() {
               ) : null}
 
               <Pressable
-                onPress={onSubmit}
-                disabled={submitting}
+                onPress={() => void onSubmit()}
+                disabled={busy}
                 accessibilityRole="button"
                 className="mt-1 h-12 items-center justify-center rounded-full bg-hoteliq-primary"
                 style={({ pressed }) => ({
                   backgroundColor: pressed
                     ? Hoteliq.primaryDark
                     : Hoteliq.primary,
-                  opacity: submitting ? 0.7 : 1,
+                  opacity: busy ? 0.7 : 1,
                 })}>
                 {submitting ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <Text className="text-[16px] font-semibold text-white">
                     Đăng ký
+                  </Text>
+                )}
+              </Pressable>
+
+              <Pressable
+                onPress={() => void onGoogle()}
+                disabled={busy}
+                accessibilityRole="button"
+                className="h-12 items-center justify-center rounded-full border border-hoteliq-line bg-white"
+                style={({ pressed }) => ({
+                  opacity: busy ? 0.7 : pressed ? 0.85 : 1,
+                })}>
+                {googleSubmitting ? (
+                  <ActivityIndicator color={Hoteliq.ink} />
+                ) : (
+                  <Text className="text-[16px] font-semibold text-hoteliq-ink">
+                    Tiếp tục với Google
                   </Text>
                 )}
               </Pressable>

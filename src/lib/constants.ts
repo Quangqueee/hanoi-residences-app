@@ -38,3 +38,16 @@ export const SORT_OPTIONS = [
 ] as const;
 
 export const APARTMENTS_PAGE_SIZE = 12;
+
+/**
+ * Web admin path segment (notification `link` only).
+ * App gates admin by `users.role`, never by this secret URL.
+ */
+export const ADMIN_PATH = 'admin';
+
+/** Đồng bộ Web `MAX_APARTMENT_IMAGES`. */
+export const MAX_APARTMENT_IMAGES = 15;
+
+/** Quota xóa căn hộ — Web `apartment-delete-quota.ts`. */
+export const APARTMENT_DELETE_LIMIT_PER_HOUR = 10;
+export const APARTMENT_DELETE_WINDOW_MS = 60 * 60 * 1000;

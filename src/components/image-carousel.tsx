@@ -207,7 +207,7 @@ export function ImageCarousel({
       )}
 
       {showCounter && count > 0 ? (
-        <View style={styles.counter} pointerEvents="none">
+        <View style={[styles.counter, styles.pointerNone]}>
           <Text style={styles.counterText}>
             {index + 1}/{count}
           </Text>
@@ -215,7 +215,7 @@ export function ImageCarousel({
       ) : null}
 
       {showDots && count > 1 ? (
-        <View style={styles.dots} pointerEvents="none">
+        <View style={[styles.dots, styles.pointerNone]}>
           {images.map((_, i) => (
             <CarouselDot key={`dot-${i}`} index={i} progress={progress} />
           ))}
@@ -257,15 +257,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: DOT_GAP,
   },
+  pointerNone: {
+    pointerEvents: 'none',
+  },
   dot: {
     height: DOT_SIZE,
     borderRadius: DOT_SIZE / 2,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.25,
-    shadowRadius: 1.5,
-    elevation: 2,
+    // Cross-platform CSS shadow — avoids deprecated RN Web shadow* props.
+    boxShadow: '0px 1px 1.5px rgba(0,0,0,0.25)',
   },
   counter: {
     position: 'absolute',
