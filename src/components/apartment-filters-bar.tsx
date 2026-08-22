@@ -7,9 +7,8 @@ import {
   View,
 } from 'react-native';
 
-import { HANOI_DISTRICTS } from '@/lib/constants';
+import { HANOI_DISTRICTS, ROOM_TYPES } from '@/lib/constants';
 import type { FilterState } from '@/lib/search-params';
-import type { RoomType } from '@/lib/types';
 
 type Props = {
   value: FilterState;
@@ -28,13 +27,6 @@ const PRIORITY_DISTRICTS = [
   'Cầu Giấy',
   'Hai Bà Trưng',
 ] as const;
-
-const FILTER_ROOM_TYPES: { label: string; value: RoomType }[] = [
-  { label: 'Studio', value: 'studio' },
-  { label: '1N1K', value: '1n1k' },
-  { label: '2N1K', value: '2n1k' },
-  { label: 'Khác', value: 'other' },
-];
 
 type ChipProps = {
   label: string;
@@ -153,7 +145,7 @@ export function ApartmentFiltersBar({
           Loại phòng
         </Text>
         <View className="flex-row flex-wrap gap-2.5">
-          {FILTER_ROOM_TYPES.map((type) => (
+          {ROOM_TYPES.map((type) => (
             <FilterChip
               key={type.value}
               label={type.label}

@@ -1,8 +1,10 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
-import { useCallback, useMemo, useState } from 'react';
+import { AppSymbol as SymbolView } from '@/components/app-symbol';
+import { useCallback, useMemo, useState, type ComponentProps } from 'react';
 import {
   FlatList,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -22,43 +24,50 @@ import { useAuth } from '@/contexts/auth-context';
 import { useApartments } from '@/hooks/use-apartments';
 import { useNotifications } from '@/hooks/use-notifications';
 import type { ApartmentFilters } from '@/lib/apartments-service';
+import { ROOM_TYPES } from '@/lib/constants';
 import type { Apartment, RoomType } from '@/lib/types';
 
 const TAB_BAR_CLEARANCE = 108;
 const NEAR_COUNT = 6;
 
 type CategoryKey = 'all' | RoomType;
+type MciName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
-const CATEGORIES: {
+/** iOS = SF Symbols; Android/web = MaterialCommunityIcons (cột Material). */
+const ROOM_TYPE_ICONS: Record<RoomType, { ios: string; android: MciName }> = {
+  studio: { ios: 'bed.double', android: 'bed-outline' },
+  '1n1k': { ios: 'bed.double.fill', android: 'bed-king-outline' },
+  '2n1k': { ios: 'house', android: 'home-city-outline' },
+  '3n1k': { ios: 'house.fill', android: 'home-city' },
+  '4n1k': { ios: 'building.2', android: 'office-building-outline' },
+  duplex: { ios: 'stairs', android: 'stairs' },
+  penthouse: { ios: 'crown', android: 'crown-outline' },
+  other: { ios: 'ellipsis.circle', android: 'dots-horizontal-circle-outline' },
+};
+
+type CategoryItem = {
   key: CategoryKey;
   label: string;
   ios: string;
   android: string;
-}[] = [
+  androidIconSet: 'material' | 'material-community';
+};
+
+const CATEGORIES: CategoryItem[] = [
   {
     key: 'all',
-    label: 'Hotel',
+    label: 'Tất cả',
     ios: 'building.2.fill',
     android: 'apartment',
+    androidIconSet: 'material',
   },
-  {
-    key: 'studio',
-    label: 'Homestay',
-    ios: 'house.fill',
-    android: 'cottage',
-  },
-  {
-    key: '1n1k',
-    label: 'Apart',
-    ios: 'building.fill',
-    android: 'domain',
-  },
-  {
-    key: '2n1k',
-    label: '2PN',
-    ios: 'square.split.2x1.fill',
-    android: 'view_quilt',
-  },
+  ...ROOM_TYPES.map((rt) => ({
+    key: rt.value,
+    label: rt.label,
+    ios: ROOM_TYPE_ICONS[rt.value].ios,
+    android: ROOM_TYPE_ICONS[rt.value].android,
+    androidIconSet: 'material-community' as const,
+  })),
 ];
 
 export default function HomeScreen() {
@@ -183,16 +192,25 @@ export default function HomeScreen() {
                 active ? 'border-hoteliq-ink' : 'border-transparent'
               }`}
               style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-              <SymbolView
-                name={{
-                  ios: item.ios as 'building.2.fill',
-                  android: item.android as 'apartment',
-                  web: item.android as 'apartment',
-                }}
-                size={24}
-                tintColor={active ? Hoteliq.ink : Hoteliq.muted}
-                weight={active ? 'semibold' : 'regular'}
-              />
+              {item.androidIconSet === 'material-community' &&
+              Platform.OS !== 'ios' ? (
+                <MaterialCommunityIcons
+                  name={item.android as MciName}
+                  size={24}
+                  color={active ? Hoteliq.ink : Hoteliq.muted}
+                />
+              ) : (
+                <SymbolView
+                  name={{
+                    ios: item.ios as 'building.2.fill',
+                    android: item.android as 'apartment',
+                    web: item.android as 'apartment',
+                  }}
+                  size={24}
+                  tintColor={active ? Hoteliq.ink : Hoteliq.muted}
+                  weight={active ? 'semibold' : 'regular'}
+                />
+              )}
               <Text
                 className={`text-[12px] leading-4 ${
                   active

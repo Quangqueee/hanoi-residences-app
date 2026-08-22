@@ -1,7 +1,15 @@
 // Ported from Web: Apartment01/src/lib/types.ts — keep in sync.
 import type { UserRole } from './rbac';
 
-export type RoomType = 'studio' | '1n1k' | '2n1k' | 'other';
+export type RoomType =
+  | 'studio'
+  | '1n1k'
+  | '2n1k'
+  | '3n1k'
+  | '4n1k'
+  | 'duplex'
+  | 'penthouse'
+  | 'other';
 export type ApartmentStatus = 'available' | 'rented';
 export type FeatureTag = 'pet_friendly' | 'lake_view';
 export type SubmissionStatus = 'pending' | 'published' | 'rejected';

@@ -16,6 +16,7 @@ import {
   formatPriceAmount,
   formatRelativeTime,
   getListingTimestamp,
+  getRoomTypeLabel,
   resolveListingBadge,
 } from '@/lib/apartment-display';
 import { setApartmentFavorite } from '@/lib/favorites-service';
@@ -112,7 +113,7 @@ function ApartmentCardComponent({
   const cover = images[0];
   const districtLine = apartment.district?.trim() || 'Hà Nội';
   const roomMeta = [
-    apartment.roomType,
+    getRoomTypeLabel(apartment.roomType),
     apartment.area != null ? `${apartment.area} m²` : null,
   ]
     .filter(Boolean)

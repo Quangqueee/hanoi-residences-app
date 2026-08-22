@@ -1,5 +1,6 @@
 import type { ApartmentFilters } from '@/lib/apartments-service';
 import { getRoomTypeLabel } from '@/lib/apartment-display';
+import { ROOM_TYPES } from '@/lib/constants';
 import { buildPriceRangeValue } from '@/lib/format';
 import type { RoomType } from '@/lib/types';
 
@@ -37,11 +38,10 @@ const SORT_LABELS: Record<SortOption, string> = {
   'price-desc': 'Giá giảm dần',
 };
 
+const ROOM_TYPE_VALUES = new Set<string>(ROOM_TYPES.map((rt) => rt.value));
+
 const isRoomType = (value: string): value is RoomType =>
-  value === 'studio' ||
-  value === '1n1k' ||
-  value === '2n1k' ||
-  value === 'other';
+  ROOM_TYPE_VALUES.has(value);
 
 const isSortOption = (value: unknown): value is SortOption =>
   value === 'newest' || value === 'price-asc' || value === 'price-desc';

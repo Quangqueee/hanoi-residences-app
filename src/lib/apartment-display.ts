@@ -21,7 +21,7 @@ export function formatCommission(
   return String(commission);
 }
 
-export function getRoomTypeLabel(value: Apartment['roomType']): string {
+export function getRoomTypeLabel(value: string): string {
   return ROOM_TYPES.find((rt) => rt.value === value)?.label ?? value;
 }
 
