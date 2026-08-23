@@ -1,9 +1,9 @@
-import { Redirect, Tabs } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
+import { Tabs } from 'expo-router';
+import { AppSymbol as SymbolView } from '@/components/app-symbol';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Hoteliq } from '@/constants/theme';
+import { Hoteliq, TAB_BAR_BODY_HEIGHT } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 
 /** Airbnb-style tab bar: icon + label luôn hiện, active đỏ, inactive xám */
@@ -60,14 +60,10 @@ function HoteliqTabIcon({
 }
 
 export default function TabsLayout() {
-  const { user, loading } = useAuth();
+  const { isLandlord } = useAuth();
   const insets = useSafeAreaInsets();
 
-  if (!loading && !user) {
-    return <Redirect href="/(auth)/login" />;
-  }
-
-  const bottomGap = Math.max(insets.bottom, 10);
+  const bookingsLabel = isLandlord ? 'Tòa nhà' : 'Đặt lịch';
 
   return (
     <Tabs
@@ -78,33 +74,36 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: TabUI.inactive,
         tabBarStyle: {
           position: 'absolute',
-          left: 16,
-          right: 16,
-          bottom: bottomGap,
-          height: 68,
-          borderRadius: 28,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: TAB_BAR_BODY_HEIGHT + insets.bottom,
           backgroundColor: TabUI.surface,
-          borderTopWidth: 0,
-          borderWidth: StyleSheet.hairlineWidth,
-          borderColor: Hoteliq.line,
-          paddingTop: 10,
-          paddingBottom: 10,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: Hoteliq.line,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          borderLeftWidth: 0,
+          borderRightWidth: 0,
+          borderBottomWidth: 0,
+          paddingTop: 8,
+          paddingBottom: insets.bottom,
           paddingHorizontal: 6,
           ...Platform.select({
             ios: {
               shadowColor: TabUI.shadow,
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.12,
-              shadowRadius: 8,
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.08,
+              shadowRadius: 12,
             },
             android: {
-              elevation: 6,
+              elevation: 12,
             },
             default: {
               shadowColor: TabUI.shadow,
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.12,
-              shadowRadius: 8,
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.08,
+              shadowRadius: 12,
             },
           }),
         },
@@ -120,9 +119,9 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused }) => (
             <HoteliqTabIcon
               focused={focused}
-              label="Home"
+              label="Trang chủ"
               ios={focused ? 'house.fill' : 'house'}
-              android="home"
+              android="Trang chủ"
             />
           ),
         }}
@@ -131,13 +130,19 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="bookings"
         options={{
-          title: 'Schedule',
+          title: bookingsLabel,
           tabBarIcon: ({ focused }) => (
             <HoteliqTabIcon
               focused={focused}
-              label="Schedule"
-              ios="calendar"
-              android="calendar_month"
+              label={bookingsLabel}
+              ios={
+                isLandlord
+                  ? focused
+                    ? 'building.2.fill'
+                    : 'building.2'
+                  : 'calendar'
+              }
+              android={isLandlord ? 'apartment' : 'calendar_month'}
             />
           ),
         }}
@@ -150,21 +155,20 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused }) => (
             <View
               style={{
-                width: focused ? 52 : 48,
-                height: focused ? 52 : 48,
-                marginTop: -18,
-                borderRadius: 26,
+                width: focused ? 48 : 44,
+                height: focused ? 48 : 44,
+                borderRadius: 24,
                 backgroundColor: Hoteliq.primary,
                 alignItems: 'center',
                 justifyContent: 'center',
                 ...Platform.select({
                   ios: {
                     shadowColor: Hoteliq.primary,
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: 0.32,
-                    shadowRadius: 10,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.28,
+                    shadowRadius: 8,
                   },
-                  android: { elevation: 5 },
+                  android: { elevation: 4 },
                   default: {},
                 }),
               }}>
@@ -190,7 +194,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused }) => (
             <HoteliqTabIcon
               focused={focused}
-              label="Saved"
+              label="Yêu thích"
               ios={focused ? 'bookmark.fill' : 'bookmark'}
               android={focused ? 'bookmark' : 'bookmark_border'}
             />
@@ -205,7 +209,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused }) => (
             <HoteliqTabIcon
               focused={focused}
-              label="Profile"
+              label="Tài khoản"
               ios={focused ? 'person.fill' : 'person'}
               android={focused ? 'person' : 'person_outline'}
             />

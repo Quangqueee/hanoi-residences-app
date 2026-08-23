@@ -1,0 +1,771 @@
+{
+  "communities": {
+    "0": [
+      "src_app_auth_login",
+      "src_app_auth_login_getautherrormessage",
+      "src_app_auth_login_loginscreen",
+      "src_app_auth_login_styles",
+      "src_app_auth_signup",
+      "src_app_auth_signup_getautherrormessage",
+      "src_app_auth_signup_signupscreen",
+      "src_app_auth_signup_styles",
+      "src_app_booking_new",
+      "src_app_booking_new_field",
+      "src_app_booking_new_isvaliddate",
+      "src_app_booking_new_isvalidtime",
+      "src_app_booking_new_newbookingscreen",
+      "src_app_booking_new_styles",
+      "src_app_index",
+      "src_app_index_index",
+      "src_app_tabs_bookings",
+      "src_app_tabs_bookings_bookingsscreen",
+      "src_app_tabs_bookings_styles",
+      "src_app_tabs_explore",
+      "src_app_tabs_explore_explorescreen",
+      "src_app_tabs_explore_styles",
+      "src_app_tabs_layout",
+      "src_app_tabs_layout_tabslayout",
+      "src_app_tabs_layout_tabui",
+      "src_app_tabs_profile",
+      "src_app_tabs_profile_profilescreen",
+      "src_app_tabs_profile_styles",
+      "src_components_app_tabs",
+      "src_components_app_tabs_apptabs",
+      "src_components_app_tabs_web",
+      "src_components_app_tabs_web_apptabs",
+      "src_components_app_tabs_web_customtablist",
+      "src_components_app_tabs_web_styles",
+      "src_components_app_tabs_web_tabbutton",
+      "src_components_external_link",
+      "src_components_external_link_externallink",
+      "src_components_external_link_props",
+      "src_components_hint_row",
+      "src_components_hint_row_hintrow",
+      "src_components_hint_row_hintrowprops",
+      "src_components_hint_row_styles",
+      "src_components_themed_text",
+      "src_components_themed_text_styles",
+      "src_components_themed_text_themedtext",
+      "src_components_themed_text_themedtextprops",
+      "src_components_themed_view",
+      "src_components_themed_view_themedview",
+      "src_components_themed_view_themedviewprops",
+      "src_components_ui_collapsible",
+      "src_components_ui_collapsible_collapsible",
+      "src_components_ui_collapsible_styles",
+      "src_components_web_badge",
+      "src_components_web_badge_styles",
+      "src_components_web_badge_webbadge",
+      "src_constants_theme",
+      "src_constants_theme_bottomtabinset",
+      "src_constants_theme_colors",
+      "src_constants_theme_fonts",
+      "src_constants_theme_maxcontentwidth",
+      "src_constants_theme_spacing",
+      "src_constants_theme_themecolor",
+      "src_contexts_auth_context_useauth",
+      "src_hooks_use_color_scheme",
+      "src_hooks_use_theme",
+      "src_hooks_use_theme_usetheme"
+    ],
+    "1": [
+      "src_app_tabs_favorites",
+      "src_app_tabs_favorites_favoritesscreen",
+      "src_app_tabs_favorites_styles",
+      "src_app_tabs_favorites_ui",
+      "src_app_tabs_index",
+      "src_app_tabs_index_homescreen",
+      "src_app_tabs_index_styles",
+      "src_app_tabs_index_ui",
+      "src_app_tabs_search",
+      "src_app_tabs_search_applybtnshadow",
+      "src_app_tabs_search_brand",
+      "src_app_tabs_search_searchscreen",
+      "src_components_apartment_card_apartmentcard",
+      "src_components_apartment_filters_bar",
+      "src_components_apartment_filters_bar_apartmentfiltersbar",
+      "src_components_apartment_filters_bar_brand",
+      "src_components_apartment_filters_bar_chipprops",
+      "src_components_apartment_filters_bar_filter_room_types",
+      "src_components_apartment_filters_bar_filterchip",
+      "src_components_apartment_filters_bar_priority_districts",
+      "src_components_apartment_filters_bar_props",
+      "src_components_apartment_filters_bar_styles",
+      "src_hooks_use_apartments",
+      "src_hooks_use_apartments_dedupeapartments",
+      "src_hooks_use_apartments_filterskey",
+      "src_hooks_use_apartments_useapartments",
+      "src_hooks_use_apartments_useapartmentsstate",
+      "src_lib_apartments_service",
+      "src_lib_apartments_service_apartmentfilters",
+      "src_lib_apartments_service_apartmentspageresult",
+      "src_lib_apartments_service_buildconstraints",
+      "src_lib_apartments_service_fetchapartmentspage",
+      "src_lib_apartments_service_getapartmentbyid",
+      "src_lib_apartments_service_toapartment",
+      "src_lib_apartments_service_toplaintimestamp",
+      "src_lib_constants",
+      "src_lib_constants_apartments_page_size",
+      "src_lib_constants_hanoi_districts",
+      "src_lib_constants_price_ranges",
+      "src_lib_constants_sort_options",
+      "src_lib_favorites_service",
+      "src_lib_favorites_service_getfullfavoriteapartments",
+      "src_lib_favorites_service_getuserfavoriteids",
+      "src_lib_format",
+      "src_lib_format_buildpricerangevalue",
+      "src_lib_format_ispriceinrange",
+      "src_lib_format_normalizepricevalue",
+      "src_lib_format_parsepricerange",
+      "src_lib_format_price_filter_max",
+      "src_lib_format_price_filter_min",
+      "src_lib_format_pricerangeparts",
+      "src_lib_types_apartment",
+      "src_lib_types_roomtype"
+    ],
+    "2": [
+      "src_app_apartment_id",
+      "src_app_apartment_id_apartmentdetailscreen",
+      "src_app_apartment_id_backbtnshadow",
+      "src_app_apartment_id_bookbtnshadow",
+      "src_app_apartment_id_bottomdockshadow",
+      "src_app_apartment_id_buildinternalcopytext",
+      "src_app_apartment_id_facilitycard",
+      "src_app_apartment_id_getlandlordphone",
+      "src_app_apartment_id_sharebtnshadow",
+      "src_app_apartment_id_ui",
+      "src_components_apartment_card",
+      "src_components_apartment_card_apartmentcardcomponent",
+      "src_components_apartment_card_props",
+      "src_components_apartment_markdown_description",
+      "src_components_apartment_markdown_description_apartmentmarkdowndescription",
+      "src_components_apartment_markdown_description_markdownstyles",
+      "src_components_apartment_markdown_description_props",
+      "src_components_image_carousel",
+      "src_components_image_carousel_imagecarousel",
+      "src_components_image_carousel_props",
+      "src_components_image_carousel_styles",
+      "src_lib_apartment_display",
+      "src_lib_apartment_display_b2c_fake_tags",
+      "src_lib_apartment_display_firestoretimestamplike",
+      "src_lib_apartment_display_formatcommission",
+      "src_lib_apartment_display_formatprice",
+      "src_lib_apartment_display_formatpriceamount",
+      "src_lib_apartment_display_formatrelativetime",
+      "src_lib_apartment_display_getapartmentdisplaydescription",
+      "src_lib_apartment_display_getapartmentdisplaytitle",
+      "src_lib_apartment_display_getlistingtimestamp",
+      "src_lib_apartment_display_getroomtypelabel",
+      "src_lib_apartment_display_listingbadge",
+      "src_lib_apartment_display_resolvelistingbadge",
+      "src_lib_apartment_display_truncatetext",
+      "src_lib_apartment_display_usesaiseocontent",
+      "src_lib_constants_room_types",
+      "src_lib_favorites_service_setapartmentfavorite",
+      "src_lib_share_apartment",
+      "src_lib_share_apartment_buildapartmentsharemessage",
+      "src_lib_share_apartment_copylinkfallback",
+      "src_lib_share_apartment_getapartmentshareurl",
+      "src_lib_share_apartment_shareapartment",
+      "src_lib_share_apartment_shareonnative",
+      "src_lib_share_apartment_shareonweb",
+      "src_lib_share_apartment_site_origin",
+      "src_lib_share_apartment_webnavigator"
+    ],
+    "3": [
+      "app",
+      "app_adaptiveicon_backgroundcolor",
+      "app_adaptiveicon_backgroundimage",
+      "app_adaptiveicon_foregroundimage",
+      "app_adaptiveicon_monochromeimage",
+      "app_android_adaptiveicon",
+      "app_android_permissions",
+      "app_android_predictivebackgestureenabled",
+      "app_experiments_reactcompiler",
+      "app_experiments_typedroutes",
+      "app_expo",
+      "app_expo_android",
+      "app_expo_experiments",
+      "app_expo_icon",
+      "app_expo_ios",
+      "app_expo_name",
+      "app_expo_orientation",
+      "app_expo_plugins",
+      "app_expo_scheme",
+      "app_expo_slug",
+      "app_expo_userinterfacestyle",
+      "app_expo_version",
+      "app_expo_web",
+      "app_infoplist_nsphotolibraryaddusagedescription",
+      "app_infoplist_nsphotolibraryusagedescription",
+      "app_infoplist_uibackgroundmodes",
+      "app_ios_icon",
+      "app_ios_infoplist",
+      "app_web_bundler",
+      "app_web_favicon",
+      "app_web_output",
+      "ref_android_permission_post_notifications",
+      "ref_android_permission_read_external_storage",
+      "ref_android_permission_read_media_images",
+      "ref_android_permission_receive_boot_completed",
+      "ref_android_permission_vibrate",
+      "ref_remote_notification"
+    ],
+    "4": [
+      "src_components_quick_download_button",
+      "src_components_quick_download_button_props",
+      "src_components_quick_download_button_quickdownloadbutton",
+      "src_components_quick_download_button_styles",
+      "src_contexts_auth_context",
+      "src_contexts_auth_context_authcontext",
+      "src_contexts_auth_context_authcontextvalue",
+      "src_contexts_auth_context_authprovider",
+      "src_lib_download_images",
+      "src_lib_download_images_downloadapartmentimages",
+      "src_lib_download_images_downloadimagesresult",
+      "src_lib_rbac",
+      "src_lib_rbac_getrolelabel",
+      "src_lib_rbac_hasminimumrole",
+      "src_lib_rbac_haspermission",
+      "src_lib_rbac_hasrole",
+      "src_lib_rbac_isadmin",
+      "src_lib_rbac_iscollaborator",
+      "src_lib_rbac_islandlord",
+      "src_lib_rbac_isregularuser",
+      "src_lib_rbac_normalizeuserrole",
+      "src_lib_rbac_permission",
+      "src_lib_rbac_role_permissions",
+      "src_lib_rbac_userrole",
+      "src_lib_types",
+      "src_lib_types_aicontent",
+      "src_lib_types_apartments_collection",
+      "src_lib_types_apartmentstatus",
+      "src_lib_types_favorite",
+      "src_lib_types_featuretag",
+      "src_lib_types_landlordapartmentinput",
+      "src_lib_types_submissionstatus",
+      "src_lib_types_uploadedimage",
+      "src_lib_types_userdata",
+      "src_lib_types_userprofile"
+    ],
+    "5": [
+      "expo_router",
+      "src_app_auth_layout",
+      "src_app_auth_layout_authlayout",
+      "src_app_layout",
+      "src_app_layout_rootlayout",
+      "src_app_layout_rootnavigator",
+      "src_app_tabs_notifications",
+      "src_app_tabs_notifications_notificationsscreen",
+      "src_app_tabs_notifications_styles",
+      "src_firebase_app_db",
+      "src_hooks_use_notifications",
+      "src_hooks_use_notifications_usenotifications",
+      "src_hooks_use_push_notifications",
+      "src_hooks_use_push_notifications_usepushnotifications",
+      "src_lib_notification_display",
+      "src_lib_notification_display_formatnotificationtime",
+      "src_lib_notification_display_getnotificationtypelabel",
+      "src_lib_notification_display_getrolenotificationhint",
+      "src_lib_notification_display_mapnotificationlinktohref",
+      "src_lib_notifications",
+      "src_lib_notifications_appnotification",
+      "src_lib_notifications_createnotificationinput",
+      "src_lib_notifications_marknotificationasread",
+      "src_lib_notifications_marknotificationsasread",
+      "src_lib_notifications_notifications_collection",
+      "src_lib_notifications_notificationtype",
+      "src_lib_push_notifications",
+      "src_lib_push_notifications_ensureandroidchannel",
+      "src_lib_push_notifications_presentlocalnotification",
+      "src_lib_push_notifications_registerforpushnotificationsasync",
+      "src_lib_push_notifications_setappbadgecount"
+    ],
+    "6": [
+      "src_firebase_app",
+      "src_firebase_app_auth",
+      "src_firebase_app_firebaseapp",
+      "src_firebase_app_getsdks",
+      "src_firebase_app_native",
+      "src_firebase_app_native_auth",
+      "src_firebase_app_native_createauth",
+      "src_firebase_app_native_db",
+      "src_firebase_app_native_firebaseapp",
+      "src_firebase_app_native_getsdks",
+      "src_firebase_app_native_loadreactnativepersistence",
+      "src_firebase_app_native_reactnativepersistencefactory",
+      "src_firebase_app_native_storage",
+      "src_firebase_app_storage",
+      "src_firebase_config",
+      "src_firebase_config_firebaseconfig",
+      "src_lib_auth_service",
+      "src_lib_auth_service_changepassword",
+      "src_lib_auth_service_confirmresetpassword",
+      "src_lib_auth_service_getcurrentuserrole",
+      "src_lib_auth_service_login",
+      "src_lib_auth_service_logout",
+      "src_lib_auth_service_resetpassword",
+      "src_lib_auth_service_signup",
+      "src_lib_push_notifications_native",
+      "src_lib_push_notifications_native_ensureandroidchannel",
+      "src_lib_push_notifications_native_presentlocalnotification",
+      "src_lib_push_notifications_native_registerforpushnotificationsasync",
+      "src_lib_push_notifications_native_setappbadgecount",
+      "src_lib_types_users_collection"
+    ],
+    "7": [
+      "babel_preset_expo",
+      "package",
+      "package_devdependencies",
+      "package_devdependencies_babel_preset_expo",
+      "package_devdependencies_prettier_plugin_tailwindcss",
+      "package_devdependencies_tailwindcss",
+      "package_devdependencies_types_react",
+      "package_devdependencies_typescript",
+      "package_main",
+      "package_name",
+      "package_private",
+      "package_scripts",
+      "package_scripts_android",
+      "package_scripts_ios",
+      "package_scripts_lint",
+      "package_scripts_reset_project",
+      "package_scripts_start",
+      "package_scripts_web",
+      "package_version",
+      "prettier_plugin_tailwindcss",
+      "tailwindcss",
+      "types_react",
+      "typescript"
+    ],
+    "8": [
+      "src_components_booking_modal",
+      "src_components_booking_modal_bookingmodal",
+      "src_components_booking_modal_isvaliddate",
+      "src_components_booking_modal_isvalidtime",
+      "src_components_booking_modal_props",
+      "src_components_booking_modal_styles",
+      "src_components_booking_modal_ui",
+      "src_lib_bookings_service",
+      "src_lib_bookings_service_adminbookingmode",
+      "src_lib_bookings_service_collaboratoroption",
+      "src_lib_bookings_service_createbooking",
+      "src_lib_bookings_service_createbookinginput",
+      "src_lib_bookings_service_ctv_bookings_collection",
+      "src_lib_bookings_service_fetchcollaborators",
+      "src_lib_bookings_service_todatetime",
+      "src_lib_bookings_service_user_bookings_collection",
+      "src_lib_notifications_createnotification",
+      "src_lib_notifications_notifyadmins",
+      "src_lib_share_apartment_admin_bookings_link"
+    ],
+    "9": [
+      "ref_assets",
+      "ref_expo_env_d_ts",
+      "ref_expo_tsconfig_base",
+      "ref_expo_types_ts",
+      "ref_nativewind_env_d_ts",
+      "ref_ts",
+      "ref_tsx",
+      "tsconfig",
+      "tsconfig_compileroptions",
+      "tsconfig_compileroptions_paths",
+      "tsconfig_compileroptions_strict",
+      "tsconfig_extends",
+      "tsconfig_include",
+      "tsconfig_paths_assets"
+    ],
+    "10": [
+      "expo_file_system",
+      "expo_media_library",
+      "expo_notifications",
+      "package_dependencies",
+      "package_dependencies_expo_file_system",
+      "package_dependencies_expo_media_library",
+      "package_dependencies_expo_notifications",
+      "package_dependencies_expo_router",
+      "package_dependencies_react_native_web",
+      "react_native_web"
+    ],
+    "11": [
+      "scripts_reset_project",
+      "scripts_reset_project_exampledirpath",
+      "scripts_reset_project_fs",
+      "scripts_reset_project_movedirectories",
+      "scripts_reset_project_olddirs",
+      "scripts_reset_project_path",
+      "scripts_reset_project_readline",
+      "scripts_reset_project_rl",
+      "scripts_reset_project_root"
+    ],
+    "12": [
+      "src_components_animated_icon",
+      "src_components_animated_icon_animatedicon",
+      "src_components_animated_icon_animatedsplashoverlay",
+      "src_components_animated_icon_glowkeyframe",
+      "src_components_animated_icon_keyframe",
+      "src_components_animated_icon_logokeyframe",
+      "src_components_animated_icon_styles"
+    ],
+    "13": [
+      "src_components_animated_icon_web",
+      "src_components_animated_icon_web_animatedicon",
+      "src_components_animated_icon_web_animatedsplashoverlay",
+      "src_components_animated_icon_web_glowkeyframe",
+      "src_components_animated_icon_web_keyframe",
+      "src_components_animated_icon_web_logokeyframe",
+      "src_components_animated_icon_web_styles"
+    ],
+    "14": [
+      "src_lib_download_images_native",
+      "src_lib_download_images_native_downloadapartmentimages",
+      "src_lib_download_images_native_downloadimagesresult",
+      "src_lib_download_images_native_ensurewritepermission",
+      "src_lib_download_images_native_extensionfromurl"
+    ],
+    "15": [
+      "metro_config",
+      "metro_config_config",
+      "metro_config_getdefaultconfig",
+      "metro_config_withnativewind"
+    ],
+    "16": [
+      "src_navigation_types",
+      "src_navigation_types_authstackparamlist",
+      "src_navigation_types_maintabparamlist",
+      "src_navigation_types_rootstackparamlist"
+    ],
+    "17": [
+      "expo",
+      "package_dependencies_expo"
+    ],
+    "18": [
+      "expo_clipboard",
+      "package_dependencies_expo_clipboard"
+    ],
+    "19": [
+      "expo_constants",
+      "package_dependencies_expo_constants"
+    ],
+    "20": [
+      "expo_device",
+      "package_dependencies_expo_device"
+    ],
+    "21": [
+      "expo_font",
+      "package_dependencies_expo_font"
+    ],
+    "22": [
+      "expo_glass_effect",
+      "package_dependencies_expo_glass_effect"
+    ],
+    "23": [
+      "expo_image",
+      "package_dependencies_expo_image"
+    ],
+    "24": [
+      "expo_linear_gradient",
+      "package_dependencies_expo_linear_gradient"
+    ],
+    "25": [
+      "expo_linking",
+      "package_dependencies_expo_linking"
+    ],
+    "26": [
+      "expo_splash_screen",
+      "package_dependencies_expo_splash_screen"
+    ],
+    "27": [
+      "expo_status_bar",
+      "package_dependencies_expo_status_bar"
+    ],
+    "28": [
+      "expo_symbols",
+      "package_dependencies_expo_symbols"
+    ],
+    "29": [
+      "expo_system_ui",
+      "package_dependencies_expo_system_ui"
+    ],
+    "30": [
+      "expo_ui",
+      "package_dependencies_expo_ui"
+    ],
+    "31": [
+      "expo_web_browser",
+      "package_dependencies_expo_web_browser"
+    ],
+    "32": [
+      "firebase",
+      "package_dependencies_firebase"
+    ],
+    "33": [
+      "nativewind",
+      "package_dependencies_nativewind"
+    ],
+    "34": [
+      "package_dependencies_react",
+      "react"
+    ],
+    "35": [
+      "package_dependencies_react_dom",
+      "react_dom"
+    ],
+    "36": [
+      "package_dependencies_react_native",
+      "react_native"
+    ],
+    "37": [
+      "package_dependencies_react_native_async_storage_async_storage",
+      "react_native_async_storage_async_storage"
+    ],
+    "38": [
+      "package_dependencies_react_native_gesture_handler",
+      "react_native_gesture_handler"
+    ],
+    "39": [
+      "package_dependencies_react_native_markdown_display",
+      "react_native_markdown_display"
+    ],
+    "40": [
+      "package_dependencies_react_native_reanimated",
+      "react_native_reanimated"
+    ],
+    "41": [
+      "package_dependencies_react_native_safe_area_context",
+      "react_native_safe_area_context"
+    ],
+    "42": [
+      "package_dependencies_react_native_screens",
+      "react_native_screens"
+    ],
+    "43": [
+      "package_dependencies_react_native_worklets",
+      "react_native_worklets"
+    ],
+    "44": [
+      "package_dependencies_react_navigation_bottom_tabs",
+      "react_navigation_bottom_tabs"
+    ],
+    "45": [
+      "package_dependencies_react_navigation_native",
+      "react_navigation_native"
+    ],
+    "46": [
+      "package_dependencies_react_navigation_native_stack",
+      "react_navigation_native_stack"
+    ],
+    "47": [
+      "src_hooks_use_color_scheme_web",
+      "src_hooks_use_color_scheme_web_usecolorscheme"
+    ],
+    "48": [
+      "babel_config"
+    ],
+    "49": [
+      "nativewind_env_d"
+    ],
+    "50": [
+      "tailwind_config"
+    ]
+  },
+  "cohesion": {
+    "0": 0.07365967365967366,
+    "1": 0.07184325108853411,
+    "2": 0.09435707678075855,
+    "3": 0.05405405405405406,
+    "4": 0.10084033613445378,
+    "5": 0.14193548387096774,
+    "6": 0.08275862068965517,
+    "7": 0.08695652173913043,
+    "8": 0.17543859649122806,
+    "9": 0.14285714285714285,
+    "10": 0.2,
+    "11": 0.2222222222222222,
+    "12": 0.2857142857142857,
+    "13": 0.2857142857142857,
+    "14": 0.6,
+    "15": 0.5,
+    "16": 0.5,
+    "17": 1.0,
+    "18": 1.0,
+    "19": 1.0,
+    "20": 1.0,
+    "21": 1.0,
+    "22": 1.0,
+    "23": 1.0,
+    "24": 1.0,
+    "25": 1.0,
+    "26": 1.0,
+    "27": 1.0,
+    "28": 1.0,
+    "29": 1.0,
+    "30": 1.0,
+    "31": 1.0,
+    "32": 1.0,
+    "33": 1.0,
+    "34": 1.0,
+    "35": 1.0,
+    "36": 1.0,
+    "37": 1.0,
+    "38": 1.0,
+    "39": 1.0,
+    "40": 1.0,
+    "41": 1.0,
+    "42": 1.0,
+    "43": 1.0,
+    "44": 1.0,
+    "45": 1.0,
+    "46": 1.0,
+    "47": 1.0,
+    "48": 1.0,
+    "49": 1.0,
+    "50": 1.0
+  },
+  "gods": [
+    {
+      "id": "src_contexts_auth_context_useauth",
+      "label": "useAuth()",
+      "degree": 31
+    },
+    {
+      "id": "expo_router",
+      "label": "expo-router",
+      "degree": 16
+    },
+    {
+      "id": "src_components_themed_text_themedtext",
+      "label": "ThemedText()",
+      "degree": 14
+    },
+    {
+      "id": "src_components_themed_view_themedview",
+      "label": "ThemedView()",
+      "degree": 14
+    },
+    {
+      "id": "src_lib_types_apartment",
+      "label": "Apartment",
+      "degree": 14
+    },
+    {
+      "id": "app_expo",
+      "label": "expo",
+      "degree": 13
+    },
+    {
+      "id": "src_app_apartment_id_apartmentdetailscreen",
+      "label": "ApartmentDetailScreen()",
+      "degree": 13
+    },
+    {
+      "id": "src_constants_theme_colors",
+      "label": "Colors",
+      "degree": 12
+    },
+    {
+      "id": "src_constants_theme_spacing",
+      "label": "Spacing",
+      "degree": 12
+    },
+    {
+      "id": "src_contexts_auth_context_authprovider",
+      "label": "AuthProvider()",
+      "degree": 11
+    }
+  ],
+  "surprises": [
+    {
+      "source": "plugins",
+      "target": "expo-router",
+      "source_files": [
+        "app.json",
+        "package.json"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "extends",
+      "why": "connects across different repos/directories; bridges separate communities; peripheral node `plugins` unexpectedly reaches hub `expo-router`"
+    },
+    {
+      "source": "TabsLayout()",
+      "target": "useAuth()",
+      "source_files": [
+        "src/app/(tabs)/_layout.tsx",
+        "src/contexts/auth-context.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `TabsLayout()` unexpectedly reaches hub `useAuth()`"
+    },
+    {
+      "source": "BookingsScreen()",
+      "target": "useAuth()",
+      "source_files": [
+        "src/app/(tabs)/bookings.tsx",
+        "src/contexts/auth-context.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `BookingsScreen()` unexpectedly reaches hub `useAuth()`"
+    },
+    {
+      "source": "FavoritesScreen()",
+      "target": "useAuth()",
+      "source_files": [
+        "src/app/(tabs)/favorites.tsx",
+        "src/contexts/auth-context.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "HomeScreen()",
+      "target": "useAuth()",
+      "source_files": [
+        "src/app/(tabs)/index.tsx",
+        "src/contexts/auth-context.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `expo-router` connect `Community 5` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 10`?",
+      "why": "High betweenness centrality (0.385) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `dependencies` connect `Community 10` to `Community 7`, `Community 17`, `Community 18`, `Community 19`, `Community 20`, `Community 21`, `Community 22`, `Community 23`, `Community 24`, `Community 25`, `Community 26`, `Community 27`, `Community 28`, `Community 29`, `Community 30`, `Community 31`, `Community 32`, `Community 33`, `Community 34`, `Community 35`, `Community 36`, `Community 37`, `Community 38`, `Community 39`, `Community 40`, `Community 41`, `Community 42`, `Community 43`, `Community 44`, `Community 45`, `Community 46`?",
+      "why": "High betweenness centrality (0.304) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `expo-router` connect `Community 10` to `Community 5`?",
+      "why": "High betweenness centrality (0.271) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `name`, `slug`, `version` to the rest of the system?",
+      "why": "185 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.07365967365967366 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.07184325108853411 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 2` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.09435707678075855 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

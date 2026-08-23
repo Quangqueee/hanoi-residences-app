@@ -1,10 +1,8 @@
-import * as ImagePicker from 'expo-image-picker';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,6 +13,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  FormImagePicker,
+  type FormImageItem,
+} from '@/components/form-image-picker';
 import { Hoteliq } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import {
@@ -23,21 +25,14 @@ import {
   updateAdminApartment,
 } from '@/lib/admin-apartments-service';
 import { generateListingSummaryRemote, toAiContent } from '@/lib/ai-service';
-import {
-  HANOI_DISTRICTS,
-  MAX_APARTMENT_IMAGES,
-  ROOM_TYPES,
-} from '@/lib/constants';
+import { HANOI_DISTRICTS, ROOM_TYPES } from '@/lib/constants';
 import { uploadApartmentImages } from '@/lib/landlord-apartments-service';
 import type {
   AiContent,
   ApartmentStatus,
   FeatureTag,
   RoomType,
-  UploadedImage,
 } from '@/lib/types';
-
-type ImageItem = UploadedImage & { key: string };
 
 const TAGS: { value: FeatureTag; label: string }[] = [
   { value: 'pet_friendly', label: 'Pet friendly' },
@@ -64,7 +59,7 @@ export default function AdminApartmentFormScreen() {
   const [commission, setCommission] = useState('');
   const [status, setStatus] = useState<ApartmentStatus>('available');
   const [tags, setTags] = useState<FeatureTag[]>([]);
-  const [images, setImages] = useState<ImageItem[]>([]);
+  const [images, setImages] = useState<FormImageItem[]>([]);
   const [aiContent, setAiContent] = useState<AiContent | null>(null);
   const [showAllDistricts, setShowAllDistricts] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -135,37 +130,6 @@ export default function AdminApartmentFormScreen() {
 
   if (!authLoading && !user) return <Redirect href="/(auth)/login" />;
   if (!authLoading && !isAdmin) return <Redirect href="/(tabs)/profile" />;
-
-  const pickImages = async () => {
-    const remaining = MAX_APARTMENT_IMAGES - images.length;
-    if (remaining <= 0) {
-      Alert.alert('Đủ ảnh', `Tối đa ${MAX_APARTMENT_IMAGES} ảnh.`);
-      return;
-    }
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Cần quyền', 'Cho phép truy cập thư viện ảnh.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsMultipleSelection: true,
-      selectionLimit: remaining,
-      quality: 0.8,
-    });
-    if (result.canceled || !result.assets?.length) return;
-    setImages((prev) =>
-      [
-        ...prev,
-        ...result.assets.map((asset, i) => ({
-          key: `local-${Date.now()}-${i}`,
-          uri: asset.uri,
-          preview: asset.uri,
-          mimeType: asset.mimeType || 'image/jpeg',
-        })),
-      ].slice(0, MAX_APARTMENT_IMAGES),
-    );
-  };
 
   const onGenerateAi = async () => {
     setError(null);
@@ -391,35 +355,13 @@ export default function AdminApartmentFormScreen() {
             </View>
           </View>
 
-          <View className="gap-2">
-            <Text className="text-[12px] font-semibold text-hoteliq-gray">
-              Ảnh * ({images.length}/{MAX_APARTMENT_IMAGES})
-            </Text>
-            <View className="flex-row flex-wrap gap-2">
-              {images.map((img) => (
-                <View key={img.key} className="relative">
-                  <Image
-                    source={{ uri: img.preview || img.uri }}
-                    className="h-20 w-20 rounded-[10px] bg-hoteliq-chip"
-                  />
-                  <Pressable
-                    onPress={() =>
-                      setImages((prev) => prev.filter((x) => x.key !== img.key))
-                    }
-                    className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-hoteliq-ink">
-                    <Text className="font-bold text-white">×</Text>
-                  </Pressable>
-                </View>
-              ))}
-              {images.length < MAX_APARTMENT_IMAGES ? (
-                <Pressable
-                  onPress={() => void pickImages()}
-                  className="h-20 w-20 items-center justify-center rounded-[10px] border border-dashed border-hoteliq-line">
-                  <Text className="text-[22px] text-hoteliq-gray">+</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          </View>
+          <FormImagePicker
+            label="Ảnh *"
+            images={images}
+            onChange={setImages}
+            disabled={submitting}
+            uploading={submitting}
+          />
 
           <View className="rounded-[12px] border border-hoteliq-line p-3">
             <Text className="mb-2 text-[13px] font-semibold text-hoteliq-ink">
@@ -456,7 +398,12 @@ export default function AdminApartmentFormScreen() {
             className="mt-2 h-12 items-center justify-center rounded-full bg-hoteliq-ink"
             style={{ opacity: submitting ? 0.7 : 1 }}>
             {submitting ? (
-              <ActivityIndicator color="#FFF" />
+              <View className="flex-row items-center gap-2">
+                <ActivityIndicator color="#FFF" />
+                <Text className="text-[15px] font-semibold text-white">
+                  Đang tải ảnh…
+                </Text>
+              </View>
             ) : (
               <Text className="text-[15px] font-semibold text-white">
                 {isEdit ? 'Lưu thay đổi' : 'Tạo tin published'}

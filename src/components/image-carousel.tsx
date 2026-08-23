@@ -26,7 +26,8 @@ type Props = {
   /** Fixed height (detail). Prefer this OR aspectRatio. */
   height?: number;
   aspectRatio?: number;
-  onPress?: () => void;
+  /** Called with the visible/tapped slide index. */
+  onPress?: (index: number) => void;
   showDots?: boolean;
   /** e.g. "1/5" overlay */
   showCounter?: boolean;
@@ -70,7 +71,7 @@ function CarouselDot({
 }
 
 /**
- * Horizontal paging carousel — tap navigates; swipe does not.
+ * Horizontal paging carousel — tap opens the target; swipe changes photo.
  * Works on iOS / Android / Web (Expo).
  * Dots track scroll progress (Airbnb / Hanoi Residence style).
  */
@@ -136,9 +137,9 @@ export function ImageCarousel({
     clearDraggingSoon();
   };
 
-  const handleTap = () => {
+  const handleTap = (pressedIndex: number) => {
     if (draggingRef.current) return;
-    onPress?.();
+    onPress?.(pressedIndex);
   };
 
   const mediaStyle = useAnimatedStyle(() => ({
@@ -148,7 +149,7 @@ export function ImageCarousel({
   if (count === 0) {
     return (
       <Pressable
-        onPress={handleTap}
+        onPress={() => handleTap(0)}
         style={[
           styles.wrap,
           aspectRatio ? { aspectRatio } : { height },
@@ -188,9 +189,10 @@ export function ImageCarousel({
             {images.map((uri, i) => (
               <Pressable
                 key={`${recyclingKey ?? 'img'}-${i}-${uri}`}
-                onPress={handleTap}
+                onPress={() => handleTap(i)}
                 style={{ width, height: slideHeight }}
-                accessibilityRole={onPress ? 'button' : undefined}>
+                accessibilityRole={onPress ? 'button' : undefined}
+                accessibilityLabel={`Xem ảnh ${i + 1} trên ${count}`}>
                 <Image
                   source={{ uri }}
                   style={{ width, height: slideHeight }}

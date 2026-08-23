@@ -20,5 +20,6 @@ export type RootStackParamList = {
   '(tabs)': undefined;
   '(auth)': undefined;
   'apartment/[id]': { id: string };
+  'apartment/[id]/gallery': { id: string; index?: string };
   'booking/new': { apartmentId?: string } | undefined;
 };

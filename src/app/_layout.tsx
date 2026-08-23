@@ -5,10 +5,16 @@ import {
   Inter_700Bold,
   useFonts,
 } from '@expo-google-fonts/inter';
-import { DarkTheme, DefaultTheme, ThemeProvider, Stack } from 'expo-router';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from '@react-navigation/native';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { ActivityIndicator, useColorScheme, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import '@/global.css';
@@ -22,7 +28,7 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
   const colorScheme = useColorScheme();
   const { loading } = useAuth();
   usePushNotifications();
-  const scheme = colorScheme === 'unspecified' ? 'light' : colorScheme;
+  const scheme = colorScheme === 'dark' ? 'dark' : 'light';
   const colors = Colors[scheme ?? 'light'];
   const ready = fontsReady && !loading;
 
@@ -209,10 +215,12 @@ export default function RootLayout() {
   });
 
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <RootNavigator fontsReady={fontsLoaded || !!fontError} />
-      </AuthProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <RootNavigator fontsReady={fontsLoaded || !!fontError} />
+        </AuthProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

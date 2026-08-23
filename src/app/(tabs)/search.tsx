@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
+import { AppSymbol as SymbolView } from '@/components/app-symbol';
 import { useMemo, useState } from 'react';
 import {
   Keyboard,
@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApartmentFiltersBar } from '@/components/apartment-filters-bar';
 import { SortPills } from '@/components/sort-pills';
-import { Hoteliq } from '@/constants/theme';
+import { Hoteliq, TAB_BAR_BODY_HEIGHT } from '@/constants/theme';
 import {
   DEFAULT_FILTER_STATE,
   filterStateToApartmentFilters,
@@ -25,7 +25,6 @@ import {
   type SortOption,
 } from '@/lib/search-params';
 
-const TAB_BAR_CLEARANCE = 64;
 const APPLY_BAR_HEIGHT = 76;
 
 const searchBarShadow = Platform.select({
@@ -128,7 +127,8 @@ export default function SearchFilterCenterScreen() {
             className="flex-1"
             contentContainerStyle={{
               paddingHorizontal: 24,
-              paddingBottom: APPLY_BAR_HEIGHT + TAB_BAR_CLEARANCE + 48,
+              paddingBottom:
+                APPLY_BAR_HEIGHT + TAB_BAR_BODY_HEIGHT + insets.bottom + 24,
               gap: 28,
             }}
             keyboardShouldPersistTaps="handled"
@@ -183,7 +183,9 @@ export default function SearchFilterCenterScreen() {
 
           <View
             className="absolute left-0 right-0 bg-transparent px-6 pb-2 pt-2.5"
-            style={{ bottom: Math.max(insets.bottom, 10) + TAB_BAR_CLEARANCE }}>
+            style={{
+              bottom: TAB_BAR_BODY_HEIGHT + insets.bottom + 8,
+            }}>
             <Pressable
               onPress={handleApply}
               hitSlop={6}

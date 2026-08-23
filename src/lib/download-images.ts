@@ -5,6 +5,18 @@ export type DownloadImagesResult = {
   failed: number;
 };
 
+export type DownloadProgress = {
+  completed: number;
+  total: number;
+  percent: number;
+};
+
+export type DownloadImagesOptions = {
+  albumName?: string;
+  sourceCode?: string;
+  onProgress?: (progress: DownloadProgress) => void;
+};
+
 /**
  * Default / web-safe stub.
  * Native override: `download-images.native.ts`
@@ -14,7 +26,7 @@ export type DownloadImagesResult = {
  */
 export async function downloadApartmentImages(
   imageUrls: string[],
-  _options?: { albumName?: string; sourceCode?: string },
+  _options?: DownloadImagesOptions,
 ): Promise<DownloadImagesResult> {
   const failed = imageUrls.filter(Boolean).length;
 

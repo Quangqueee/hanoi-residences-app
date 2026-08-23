@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import { ImageCarousel } from '@/components/image-carousel';
+import { AppSymbol } from '@/components/app-symbol';
 import { Hoteliq } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import {
@@ -36,31 +37,20 @@ type Props = {
   className?: string;
 };
 
-/** Web-safe shadow — RN Web deprecates shadow* props in favor of boxShadow. */
-const overlayFavoriteShadow = {
-  boxShadow: '0px 2px 6px rgba(0,0,0,0.1)',
-} as const;
-
 function FavoriteButton({
   isFavorite,
   updating,
   onPress,
   className,
-  /** Overlay on image (User) vs inline in content (CTV/Admin) */
-  tone = 'overlay',
 }: {
   isFavorite: boolean;
   updating: boolean;
   onPress: () => void;
   className?: string;
-  tone?: 'overlay' | 'inline';
 }) {
-  const isOverlay = tone === 'overlay';
-
   return (
     <Pressable
       onPress={(e) => {
-        // Prevent parent card press handlers if event bubbling reaches them.
         e?.stopPropagation?.();
         onPress();
       }}
@@ -68,24 +58,24 @@ function FavoriteButton({
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
-      className={`${
-        isOverlay
-          ? 'z-[4] h-9 w-9 items-center justify-center rounded-full bg-white'
-          : 'z-[4] h-8 w-8 items-center justify-center'
-      } ${className ?? ''}`}
+      className={`z-[4] h-9 w-9 items-center justify-center overflow-visible ${className ?? ''}`}
       style={({ pressed }) => ({
         opacity: pressed || updating ? 0.85 : 1,
-        ...(isOverlay ? overlayFavoriteShadow : {}),
+        overflow: 'visible',
       })}>
       {updating ? (
         <ActivityIndicator size="small" color={Hoteliq.heart} />
       ) : (
-        <Text
-          className={`font-bold leading-5 ${
-            isOverlay ? 'text-[18px]' : 'text-[20px]'
-          } ${isFavorite ? 'text-hoteliq-heart' : 'text-[#C8C8C8]'}`}>
-          {isFavorite ? '♥' : '♡'}
-        </Text>
+        <AppSymbol
+          name={{
+            ios: isFavorite ? 'heart.fill' : 'heart',
+            android: isFavorite ? 'favorite' : 'favorite_border',
+            web: isFavorite ? 'favorite' : 'favorite_border',
+          }}
+          size={20}
+          tintColor={isFavorite ? Hoteliq.heart : '#C8C8C8'}
+          weight={isFavorite ? 'semibold' : 'regular'}
+        />
       )}
     </Pressable>
   );
@@ -169,13 +159,13 @@ function ApartmentCardComponent({
 
   if (isCompact) {
     return (
-      <Pressable
-        onPress={openDetail}
-        accessibilityRole="button"
-        accessibilityLabel={`Xem chi tiết ${title}`}
-        className={`mb-3 flex-row items-center gap-3.5 rounded-[12px] border border-hoteliq-line bg-white p-3 ${className ?? ''}`}
-        style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}>
-        <View className="h-[72px] w-[72px] overflow-hidden rounded-[10px] bg-hoteliq-chip">
+      <View
+        className={`mb-3 flex-row items-center gap-3.5 rounded-[12px] border border-hoteliq-line bg-white p-3 ${className ?? ''}`}>
+        <Pressable
+          onPress={openDetail}
+          accessibilityRole="button"
+          accessibilityLabel={`Xem chi tiết ${title}`}
+          className="h-[72px] w-[72px] overflow-hidden rounded-[10px] bg-hoteliq-chip">
           {cover ? (
             <Image
               source={{ uri: cover }}
@@ -188,34 +178,63 @@ function ApartmentCardComponent({
               <Text className="text-[11px] text-hoteliq-gray">No photo</Text>
             </View>
           )}
-        </View>
+        </Pressable>
 
-        <View className="min-w-0 flex-1 gap-0.5">
-          <Text
-            className="text-[15px] font-semibold leading-5 text-hoteliq-ink"
-            numberOfLines={1}>
-            {title}
-          </Text>
-          <Text
-            className="text-[12px] font-medium leading-4 text-hoteliq-gray"
-            numberOfLines={1}>
-            {districtLine}
-          </Text>
-          {roomMeta ? (
-            <Text
-              className="text-[12px] leading-4 text-hoteliq-gray"
-              numberOfLines={1}>
-              {roomMeta}
-            </Text>
-          ) : null}
-          <View className="mt-0.5 flex-row items-baseline gap-1">
-            <Text className="text-[15px] font-semibold leading-5 text-hoteliq-ink">
-              {formatPriceAmount(apartment.price)}
-            </Text>
-            <Text className="text-[12px] text-hoteliq-gray">/tháng</Text>
+        <View className="min-w-0 flex-1">
+          <View className="flex-row items-center gap-1.5">
+            <Pressable
+              onPress={openDetail}
+              accessibilityRole="button"
+              accessibilityLabel={`Xem chi tiết ${title}`}
+              className="min-w-0 flex-1">
+              <Text
+                className="text-[15px] font-semibold leading-5 text-hoteliq-ink"
+                numberOfLines={1}>
+                {title}
+              </Text>
+            </Pressable>
+            <FavoriteButton
+              isFavorite={isFavorite}
+              updating={isFavoriteUpdating}
+              onPress={() => void toggleFavorite()}
+            />
           </View>
+
+          <Pressable
+            onPress={openDetail}
+            accessibilityRole="button"
+            accessibilityLabel={`Xem chi tiết ${title}`}
+            className="mt-0.5">
+            <View className="flex-row items-center gap-2">
+              <View className="min-w-0 flex-1 gap-0.5">
+                <Text
+                  className="text-[12px] font-medium leading-4 text-hoteliq-gray"
+                  numberOfLines={1}>
+                  {districtLine}
+                </Text>
+                {roomMeta ? (
+                  <Text
+                    className="text-[12px] leading-4 text-hoteliq-gray"
+                    numberOfLines={1}>
+                    {roomMeta}
+                  </Text>
+                ) : null}
+              </View>
+              <Text
+                className="shrink-0 text-[11px] italic leading-4 text-hoteliq-gray"
+                numberOfLines={1}>
+                Cập nhật: {updatedLabel}
+              </Text>
+            </View>
+            <View className="mt-0.5 flex-row items-baseline gap-1">
+              <Text className="text-[15px] font-semibold leading-5 text-hoteliq-ink">
+                {formatPriceAmount(apartment.price)}
+              </Text>
+              <Text className="text-[12px] text-hoteliq-gray">/tháng</Text>
+            </View>
+          </Pressable>
         </View>
-      </Pressable>
+      </View>
     );
   }
 
@@ -286,59 +305,69 @@ function ApartmentCardComponent({
             </Text>
           </View>
         ) : null}
+      </View>
 
-        {/* Favorite on image — User/Landlord only (sibling of carousel, not nested) */}
-        {!collaboratorView ? (
+      {/*
+        FavoriteButton stays a SIBLING of the title Pressable.
+        Nested <button> (RN Web) was the Home crash root cause for CTV/Admin.
+      */}
+      <View className={isRail ? 'pt-2.5' : 'pt-3'}>
+        <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={openDetail}
+            accessibilityRole="button"
+            accessibilityLabel={`Xem chi tiết ${title}`}
+            className="min-w-0 flex-1 active:opacity-90">
+            <Text
+              className={`font-semibold text-hoteliq-ink ${
+                isRail ? 'text-[14px] leading-[18px]' : 'text-[16px] leading-5'
+              }`}
+              numberOfLines={1}>
+              {title}
+            </Text>
+          </Pressable>
           <FavoriteButton
             isFavorite={isFavorite}
             updating={isFavoriteUpdating}
             onPress={() => void toggleFavorite()}
-            tone="overlay"
-            className="absolute right-3 top-3"
           />
-        ) : null}
-      </View>
+        </View>
 
-      {/*
-        Content block: openDetail Pressable must NOT wrap FavoriteButton.
-        Nested <button> (RN Web) was the Home crash root cause for CTV/Admin.
-      */}
-      <View className={isRail ? 'pt-2.5' : 'pt-3'}>
         <Pressable
           onPress={openDetail}
           accessibilityRole="button"
           accessibilityLabel={`Xem chi tiết ${title}`}
-          className="gap-0.5 active:opacity-90">
-          {/* 3. Tiêu đề */}
-          <Text
-            className={`font-semibold text-hoteliq-ink ${
-              isRail ? 'text-[14px] leading-[18px]' : 'text-[16px] leading-5'
-            }`}
-            numberOfLines={1}>
-            {title}
-          </Text>
-
-          {/* 4. Khu vực */}
-          <Text
-            className={`text-hoteliq-gray ${
-              isRail ? 'text-[12px] leading-4' : 'text-[13px] leading-[18px]'
-            }`}
-            numberOfLines={1}>
-            {districtLine}
-          </Text>
-
-          {/* 5. Loại phòng + diện tích */}
-          {roomMeta ? (
+          className="mt-0.5 active:opacity-90">
+          <View className="flex-row items-center gap-2">
+            <View className="min-w-0 flex-1">
+              <Text
+                className={`text-hoteliq-gray ${
+                  isRail ? 'text-[12px] leading-4' : 'text-[13px] leading-[18px]'
+                }`}
+                numberOfLines={1}>
+                {districtLine}
+              </Text>
+              {roomMeta ? (
+                <Text
+                  className={`font-medium text-hoteliq-gray ${
+                    isRail
+                      ? 'text-[12px] leading-4'
+                      : 'text-[13px] leading-[18px]'
+                  }`}
+                  numberOfLines={1}>
+                  {roomMeta}
+                </Text>
+              ) : null}
+            </View>
             <Text
-              className={`font-medium text-hoteliq-gray ${
-                isRail ? 'text-[12px] leading-4' : 'text-[13px] leading-[18px]'
+              className={`shrink-0 italic text-hoteliq-gray ${
+                isRail ? 'text-[11px] leading-4' : 'text-[12px] leading-4'
               }`}
               numberOfLines={1}>
-              {roomMeta}
+              Cập nhật: {updatedLabel}
             </Text>
-          ) : null}
+          </View>
 
-          {/* 6. Giá */}
           <View
             className={`${isRail ? 'mt-1' : 'mt-1.5'} flex-row items-baseline`}>
             <Text
@@ -355,32 +384,6 @@ function ApartmentCardComponent({
             </Text>
           </View>
         </Pressable>
-
-        {/* 7. Ngày cập nhật + Favorite — Favorite is a SIBLING, never nested */}
-        <View className="mt-1.5 flex-row items-center justify-between gap-2">
-          <Pressable
-            onPress={openDetail}
-            accessibilityRole="button"
-            accessibilityLabel={`Xem chi tiết ${title}`}
-            className="min-w-0 flex-1 active:opacity-90">
-            <Text
-              className={`italic text-hoteliq-gray ${
-                isRail ? 'text-[11px] leading-4' : 'text-[12px] leading-4'
-              }`}
-              numberOfLines={1}>
-              Cập nhật: {updatedLabel}
-            </Text>
-          </Pressable>
-
-          {collaboratorView ? (
-            <FavoriteButton
-              isFavorite={isFavorite}
-              updating={isFavoriteUpdating}
-              onPress={() => void toggleFavorite()}
-              tone="inline"
-            />
-          ) : null}
-        </View>
       </View>
     </View>
   );

@@ -10,6 +10,7 @@
     "ios": {
       "icon": "./assets/expo.icon",
       "infoPlist": {
+        "NSCameraUsageDescription": "Cho phép Hanoi Residences chụp ảnh căn hộ để đăng tin.",
         "NSPhotoLibraryAddUsageDescription": "Cho phép Hanoi Residences lưu ảnh căn hộ vào thư viện ảnh của bạn.",
         "NSPhotoLibraryUsageDescription": "Cho phép Hanoi Residences chọn ảnh căn hộ từ thư viện để đăng tin.",
         "UIBackgroundModes": [
@@ -26,6 +27,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
+        "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
@@ -62,7 +64,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Cho phép Hanoi Residences chọn ảnh căn hộ từ thư viện để đăng tin."
+          "photosPermission": "Cho phép Hanoi Residences chọn ảnh căn hộ từ thư viện để đăng tin.",
+          "cameraPermission": "Cho phép Hanoi Residences chụp ảnh căn hộ để đăng tin.",
+          "microphonePermission": false
         }
       ],
       [

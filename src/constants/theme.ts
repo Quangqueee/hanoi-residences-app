@@ -122,7 +122,9 @@ export const Radius = {
   full: 9999,
 } as const;
 
-/** Tab bar clearance */
+/** Chiều cao icon + label của tab bar (chưa gồm home indicator). */
+export const TAB_BAR_BODY_HEIGHT = 64;
+/** Tab bar clearance — giữ export cũ; màn tab nên dùng TAB_BAR_BODY_HEIGHT + insets.bottom. */
 export const BottomTabInset = Platform.select({ ios: 96, android: 104 }) ?? 96;
 export const MaxContentWidth = 800;
 

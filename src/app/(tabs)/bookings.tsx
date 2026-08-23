@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
@@ -13,8 +14,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BookingCard } from '@/components/booking-card';
 import { BookingEditModal } from '@/components/booking-edit-modal';
+import { LandlordApartmentsPanel } from '@/components/landlord-apartments-panel';
 import { ShimmerBlock } from '@/components/ui/shimmer-block';
-import { Hoteliq, HoteliqShadow } from '@/constants/theme';
+import { Hoteliq, HoteliqShadow, TAB_BAR_BODY_HEIGHT } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import {
   CTV_BOOKINGS_COLLECTION,
@@ -27,8 +29,6 @@ import {
   type BookingStatus,
 } from '@/lib/bookings-service';
 import { SITE_ORIGIN } from '@/lib/share-apartment';
-
-const TAB_CLEARANCE = 110;
 
 type AdminScope = 'mine' | 'all';
 type CollectionFilter = 'all' | BookingCollection;
@@ -93,6 +93,51 @@ function FilterChip({
 }
 
 export default function BookingsScreen() {
+  const { user, isLandlord, isAdmin, loading: authLoading } = useAuth();
+  const insets = useSafeAreaInsets();
+
+  if (authLoading) {
+    return <View className="flex-1 bg-white" />;
+  }
+
+  if (!user) {
+    return (
+      <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+        <View
+          className="flex-1 justify-center px-6"
+          style={{ paddingBottom: TAB_BAR_BODY_HEIGHT + insets.bottom + 16 }}>
+          <View className="items-center gap-3 rounded-[12px] bg-hoteliq-chip px-7 py-10">
+            <Text className="text-center text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
+              Đăng nhập để xem lịch hẹn
+            </Text>
+            <Text className="text-center text-[14px] leading-5 text-hoteliq-gray">
+              Khách chưa có tài khoản vẫn đặt tư vấn từ trang chi tiết căn hộ.
+              Lịch đã gửi chỉ hiện sau khi đăng nhập.
+            </Text>
+            <Link href="/(auth)/login" asChild>
+              <Pressable
+                accessibilityRole="button"
+                className="mt-1 h-12 min-h-11 items-center justify-center rounded-full bg-hoteliq-ink px-7"
+                style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+                <Text className="text-sm font-semibold text-white">
+                  Đăng nhập
+                </Text>
+              </Pressable>
+            </Link>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  if (isLandlord && !isAdmin) {
+    return <LandlordApartmentsPanel variant="tab" />;
+  }
+
+  return <BookingsList />;
+}
+
+function BookingsList() {
   const insets = useSafeAreaInsets();
   const { user, role, isCollaborator, isAdmin, loading: authLoading } =
     useAuth();
@@ -248,7 +293,8 @@ export default function BookingsScreen() {
         )}
         contentContainerStyle={{
           paddingHorizontal: 24,
-          paddingBottom: TAB_CLEARANCE + Math.max(insets.bottom, 12),
+          paddingBottom:
+            TAB_BAR_BODY_HEIGHT + insets.bottom + 16,
           flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
@@ -374,7 +420,7 @@ export default function BookingsScreen() {
         className="absolute right-6 h-14 flex-row items-center justify-center gap-2 rounded-full bg-hoteliq-ink px-5"
         style={({ pressed }) => ({
           opacity: pressed ? 0.9 : 1,
-          bottom: Math.max(insets.bottom, 10) + 72,
+          bottom: TAB_BAR_BODY_HEIGHT + insets.bottom + 16,
           ...(HoteliqShadow as object),
         })}>
         <Text className="text-base text-white">💬</Text>

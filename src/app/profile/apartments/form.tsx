@@ -1,10 +1,8 @@
-import * as ImagePicker from 'expo-image-picker';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,9 +13,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  FormImagePicker,
+  type FormImageItem,
+} from '@/components/form-image-picker';
 import { Hoteliq } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
-import { HANOI_DISTRICTS, MAX_APARTMENT_IMAGES, ROOM_TYPES } from '@/lib/constants';
+import { HANOI_DISTRICTS, ROOM_TYPES } from '@/lib/constants';
 import {
   createLandlordApartment,
   getLandlordApartmentById,
@@ -25,13 +27,7 @@ import {
   uploadApartmentImages,
 } from '@/lib/landlord-apartments-service';
 import { checkPhoneNumber } from '@/lib/password-utils';
-import type {
-  ApartmentStatus,
-  RoomType,
-  UploadedImage,
-} from '@/lib/types';
-
-type ImageItem = UploadedImage & { key: string };
+import type { ApartmentStatus, RoomType } from '@/lib/types';
 
 export default function LandlordApartmentFormScreen() {
   const router = useRouter();
@@ -54,7 +50,7 @@ export default function LandlordApartmentFormScreen() {
     () => userData?.phoneNumber?.trim() || '',
   );
   const [status, setStatus] = useState<ApartmentStatus>('available');
-  const [images, setImages] = useState<ImageItem[]>([]);
+  const [images, setImages] = useState<FormImageItem[]>([]);
   const [showAllDistricts, setShowAllDistricts] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -123,43 +119,6 @@ export default function LandlordApartmentFormScreen() {
     return <Redirect href="/partner-register" />;
   }
 
-  const pickImages = async () => {
-    const remaining = MAX_APARTMENT_IMAGES - images.length;
-    if (remaining <= 0) {
-      Alert.alert('Đủ ảnh', `Tối đa ${MAX_APARTMENT_IMAGES} ảnh.`);
-      return;
-    }
-
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Cần quyền', 'Cho phép truy cập thư viện ảnh để tải lên.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsMultipleSelection: true,
-      selectionLimit: remaining,
-      quality: 0.8,
-    });
-
-    if (result.canceled || !result.assets?.length) return;
-
-    const next: ImageItem[] = result.assets.map((asset, i) => ({
-      key: `local-${Date.now()}-${i}`,
-      uri: asset.uri,
-      preview: asset.uri,
-      mimeType: asset.mimeType || 'image/jpeg',
-      fileName: asset.fileName || undefined,
-    }));
-
-    setImages((prev) => [...prev, ...next].slice(0, MAX_APARTMENT_IMAGES));
-  };
-
-  const removeImage = (key: string) => {
-    setImages((prev) => prev.filter((img) => img.key !== key));
-  };
-
   const onSubmit = async () => {
     setError(null);
     if (!user || submitting) return;
@@ -223,7 +182,7 @@ export default function LandlordApartmentFormScreen() {
         Alert.alert(
           'Đã gửi tin',
           'Tin đăng đang chờ admin duyệt (pending).',
-          [{ text: 'OK', onPress: () => router.replace('/profile/apartments') }],
+          [{ text: 'OK', onPress: () => router.replace('/(tabs)/bookings') }],
         );
       }
     } catch (err) {
@@ -404,33 +363,12 @@ export default function LandlordApartmentFormScreen() {
             </View>
           </View>
 
-          <View className="gap-2">
-            <Text className="text-[12px] font-semibold text-hoteliq-gray">
-              Hình ảnh * ({images.length}/{MAX_APARTMENT_IMAGES})
-            </Text>
-            <View className="flex-row flex-wrap gap-2">
-              {images.map((img) => (
-                <View key={img.key} className="relative">
-                  <Image
-                    source={{ uri: img.preview || img.uri }}
-                    className="h-20 w-20 rounded-[10px] bg-hoteliq-chip"
-                  />
-                  <Pressable
-                    onPress={() => removeImage(img.key)}
-                    className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-hoteliq-ink">
-                    <Text className="text-[12px] font-bold text-white">×</Text>
-                  </Pressable>
-                </View>
-              ))}
-              {images.length < MAX_APARTMENT_IMAGES ? (
-                <Pressable
-                  onPress={() => void pickImages()}
-                  className="h-20 w-20 items-center justify-center rounded-[10px] border border-dashed border-hoteliq-line bg-hoteliq-chip">
-                  <Text className="text-[22px] text-hoteliq-gray">+</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          </View>
+          <FormImagePicker
+            images={images}
+            onChange={setImages}
+            disabled={submitting}
+            uploading={submitting}
+          />
 
           {error ? (
             <Text className="text-[14px] text-red-600">{error}</Text>
@@ -444,7 +382,12 @@ export default function LandlordApartmentFormScreen() {
               opacity: submitting ? 0.7 : pressed ? 0.9 : 1,
             })}>
             {submitting ? (
-              <ActivityIndicator color="#FFF" />
+              <View className="flex-row items-center gap-2">
+                <ActivityIndicator color="#FFF" />
+                <Text className="text-[15px] font-semibold text-white">
+                  Đang tải ảnh…
+                </Text>
+              </View>
             ) : (
               <Text className="text-[15px] font-semibold text-white">
                 {isEdit ? 'Lưu thay đổi' : 'Gửi tin chờ duyệt'}

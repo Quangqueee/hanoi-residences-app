@@ -13,12 +13,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApartmentCard } from '@/components/apartment-card';
 import { ApartmentCardSkeleton } from '@/components/ui/shimmer-block';
-import { Hoteliq } from '@/constants/theme';
+import { Hoteliq, TAB_BAR_BODY_HEIGHT } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import { getFullFavoriteApartments } from '@/lib/favorites-service';
 import type { Apartment } from '@/lib/types';
-
-const TAB_BAR_CLEARANCE = 108;
 
 export default function FavoritesScreen() {
   const insets = useSafeAreaInsets();
@@ -104,7 +102,7 @@ export default function FavoritesScreen() {
       <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
         <View
           className="flex-1 justify-center px-6"
-          style={{ paddingBottom: TAB_BAR_CLEARANCE }}>
+          style={{ paddingBottom: TAB_BAR_BODY_HEIGHT + insets.bottom + 16 }}>
           <View className="items-center gap-3 rounded-[12px] bg-hoteliq-chip px-7 py-10">
             <Text className="text-center text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
               Đăng nhập để xem danh sách Yêu thích
@@ -160,7 +158,7 @@ export default function FavoritesScreen() {
           contentContainerStyle={{
             paddingHorizontal: 24,
             paddingTop: 4,
-            paddingBottom: TAB_BAR_CLEARANCE,
+            paddingBottom: TAB_BAR_BODY_HEIGHT + insets.bottom + 16,
             flexGrow: 1,
           }}
           showsVerticalScrollIndicator={false}

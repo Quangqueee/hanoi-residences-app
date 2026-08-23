@@ -7,30 +7,43 @@ import {
   getCountFromServer,
   getDoc,
   getDocs,
+  limit,
   orderBy,
   query,
+  startAfter,
   updateDoc,
   where,
   writeBatch,
+  type DocumentData,
+  type QueryConstraint,
+  type QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { deleteObject, ref as storageRef } from 'firebase/storage';
 
 import { db, storage } from '@/firebase/app';
 import { consumeApartmentDeleteQuota } from '@/lib/apartment-delete-quota';
-import { MAX_APARTMENT_IMAGES } from '@/lib/constants';
+import {
+  ADMIN_APARTMENTS_PAGE_SIZE,
+  MAX_APARTMENT_IMAGES,
+} from '@/lib/constants';
 import {
   CTV_BOOKINGS_COLLECTION,
   GUEST_CONSULTATIONS_COLLECTION,
   USER_BOOKINGS_COLLECTION,
 } from '@/lib/bookings-service';
 import { createNotification } from '@/lib/notifications';
-import { generateSearchKeywords } from '@/lib/search-keywords';
+import {
+  generateSearchKeywords,
+  matchesAllSearchTokens,
+  planApartmentTextSearch,
+} from '@/lib/search-keywords';
 import type {
   AiContent,
   Apartment,
   ApartmentStatus,
   FeatureTag,
   RoomType,
+  SubmissionStatus,
 } from '@/lib/types';
 import { APARTMENTS_COLLECTION, USERS_COLLECTION } from '@/lib/types';
 
@@ -154,6 +167,101 @@ export async function fetchAllApartmentsForAdmin(): Promise<Apartment[]> {
     );
   } catch (error) {
     console.error('fetchAllApartmentsForAdmin error:', error);
+    throw error;
+  }
+}
+
+export type AdminApartmentStatusFilter = 'all' | SubmissionStatus;
+
+export type AdminApartmentListQuery = {
+  status: AdminApartmentStatusFilter;
+  searchQuery?: string;
+};
+
+export type AdminApartmentsPageResult = {
+  apartments: Apartment[];
+  lastDoc: QueryDocumentSnapshot<DocumentData> | null;
+  hasMore: boolean;
+};
+
+function buildAdminListWhere(
+  filters: AdminApartmentListQuery,
+): { constraints: QueryConstraint[]; searchTokens: string[] } {
+  const searchPlan = filters.searchQuery?.trim()
+    ? planApartmentTextSearch(filters.searchQuery)
+    : null;
+
+  const constraints: QueryConstraint[] = [];
+  if (filters.status !== 'all') {
+    constraints.push(where('submissionStatus', '==', filters.status));
+  }
+  if (searchPlan?.firestoreValue) {
+    constraints.push(
+      where('searchKeywords', 'array-contains', searchPlan.firestoreValue),
+    );
+  }
+  return { constraints, searchTokens: searchPlan?.tokens ?? [] };
+}
+
+export async function countAdminApartments(
+  filters: AdminApartmentListQuery,
+): Promise<number> {
+  try {
+    const { constraints } = buildAdminListWhere(filters);
+    const snap = await getCountFromServer(
+      query(
+        collection(db, APARTMENTS_COLLECTION),
+        ...constraints,
+        orderBy('createdAt', 'desc'),
+      ),
+    );
+    return snap.data().count;
+  } catch (error) {
+    console.error('countAdminApartments error:', error);
+    throw error;
+  }
+}
+
+export async function fetchAdminApartmentsPage(
+  filters: AdminApartmentListQuery,
+  cursor?: QueryDocumentSnapshot<DocumentData> | null,
+  pageSize: number = ADMIN_APARTMENTS_PAGE_SIZE,
+): Promise<AdminApartmentsPageResult> {
+  try {
+    const { constraints, searchTokens } = buildAdminListWhere(filters);
+    const hasSearch = searchTokens.length > 0;
+    const fetchLimit = hasSearch ? pageSize * 3 : pageSize;
+
+    const pageConstraints: QueryConstraint[] = [
+      ...constraints,
+      orderBy('createdAt', 'desc'),
+    ];
+    if (cursor) pageConstraints.push(startAfter(cursor));
+    pageConstraints.push(limit(fetchLimit));
+
+    const snapshot = await getDocs(
+      query(collection(db, APARTMENTS_COLLECTION), ...pageConstraints),
+    );
+
+    let apartments = snapshot.docs.map((d) =>
+      mapApartment(d.id, d.data() as Record<string, unknown>),
+    );
+    if (hasSearch) {
+      apartments = apartments.filter((apt) =>
+        matchesAllSearchTokens(apt, searchTokens),
+      );
+    }
+
+    const pageApartments = apartments.slice(0, pageSize);
+    const lastVisible = snapshot.docs[snapshot.docs.length - 1] ?? null;
+
+    return {
+      apartments: pageApartments,
+      lastDoc: lastVisible,
+      hasMore: snapshot.size >= fetchLimit,
+    };
+  } catch (error) {
+    console.error('fetchAdminApartmentsPage error:', error);
     throw error;
   }
 }

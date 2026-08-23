@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
-import { SymbolView } from 'expo-symbols';
+import { AppSymbol as SymbolView } from '@/components/app-symbol';
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -96,10 +96,13 @@ function HeaderIconButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       hitSlop={8}
-      className="h-11 w-11 items-center justify-center rounded-full bg-white"
+      className="h-11 w-11 items-center justify-center overflow-visible rounded-full bg-white"
       style={({ pressed }) => [
         overlayBtnShadow as object,
-        { opacity: disabled || pressed ? 0.7 : 1 },
+        {
+          opacity: disabled || pressed ? 0.7 : 1,
+          overflow: 'visible',
+        },
       ]}>
       {children}
     </Pressable>
@@ -238,6 +241,16 @@ export default function ApartmentDetailScreen() {
     : `${apartment.district}, Hà Nội`;
 
   const previewUrls = (apartment.imageUrls ?? []).slice(0, 3);
+  const galleryCount = (apartment.imageUrls ?? []).filter(Boolean).length;
+
+  const openGallery = (index: number) => {
+    if (!galleryCount) return;
+    const clamped = Math.max(0, Math.min(index, galleryCount - 1));
+    router.push({
+      pathname: '/apartment/[id]/gallery',
+      params: { id: apartment.id, index: String(clamped) },
+    });
+  };
 
   const bookLabel = 'Booking Now';
 
@@ -304,6 +317,8 @@ export default function ApartmentDetailScreen() {
             urls={apartment.imageUrls ?? []}
             height={UI.heroHeight}
             showDots
+            showCounter
+            onPress={openGallery}
             recyclingKey={apartment.id}
             style={{
               width: '100%',
@@ -312,6 +327,7 @@ export default function ApartmentDetailScreen() {
           />
 
           <View
+            pointerEvents="box-none"
             className="absolute left-5 right-5 z-[4] flex-row items-center justify-between"
             style={{ top: insets.top + 8 }}>
             <HeaderIconButton
@@ -370,12 +386,16 @@ export default function ApartmentDetailScreen() {
                 {favoriteUpdating ? (
                   <ActivityIndicator size="small" color={Hoteliq.heart} />
                 ) : (
-                  <Text
-                    className={`text-[18px] font-bold ${
-                      isFavorite ? 'text-hoteliq-heart' : 'text-hoteliq-ink'
-                    }`}>
-                    {isFavorite ? '♥' : '♡'}
-                  </Text>
+                  <SymbolView
+                    name={{
+                      ios: isFavorite ? 'heart.fill' : 'heart',
+                      android: isFavorite ? 'favorite' : 'favorite_border',
+                      web: isFavorite ? 'favorite' : 'favorite_border',
+                    }}
+                    size={20}
+                    weight={isFavorite ? 'semibold' : 'regular'}
+                    tintColor={isFavorite ? Hoteliq.heart : Hoteliq.ink}
+                  />
                 )}
               </HeaderIconButton>
             </View>
@@ -383,18 +403,23 @@ export default function ApartmentDetailScreen() {
         </View>
 
         <View className="gap-5 px-6 pt-5">
-          {/* Title + location */}
-          <View className="gap-1.5">
-            <Text
-              className="text-[22px] font-semibold leading-7 text-hoteliq-ink"
-              numberOfLines={3}>
-              {title}
-            </Text>
-            <Text
-              className="text-[14px] leading-[18px] text-hoteliq-gray"
-              numberOfLines={2}>
-              {locationLine}
-            </Text>
+          {/* Title + location — download sits beside title for Admin/CTV */}
+          <View className="flex-row items-start gap-3">
+            <View className="min-w-0 flex-1 gap-1.5">
+              <Text
+                className="text-[22px] font-semibold leading-7 text-hoteliq-ink"
+                numberOfLines={3}>
+                {title}
+              </Text>
+              <Text
+                className="text-[14px] leading-[18px] text-hoteliq-gray"
+                numberOfLines={2}>
+                {locationLine}
+              </Text>
+            </View>
+            {showOpsTools ? (
+              <QuickDownloadButton apartment={apartment} />
+            ) : null}
           </View>
 
           {/* Amenity chips */}
@@ -455,7 +480,7 @@ export default function ApartmentDetailScreen() {
           {/* Description */}
           <View className="gap-2.5">
             <Text className="text-[22px] font-semibold leading-7 text-hoteliq-ink">
-              Description
+              Thông tin chi tiết
             </Text>
             {showAiMarkdown ? (
               <View>
@@ -512,25 +537,47 @@ export default function ApartmentDetailScreen() {
                 Preview
               </Text>
               <View className="flex-row gap-3">
-                {previewUrls.map((uri, index) => (
-                  <View
-                    key={`${uri}-${index}`}
-                    className="h-[104px] flex-1 overflow-hidden rounded-[10px] bg-hoteliq-chip">
-                    <Image
-                      source={{ uri }}
-                      style={{ width: '100%', height: '100%' }}
-                      contentFit="cover"
-                      recyclingKey={`${apartment.id}-preview-${index}`}
-                    />
-                  </View>
-                ))}
+                {previewUrls.map((uri, index) => {
+                  const showSeeAll =
+                    index === previewUrls.length - 1 &&
+                    galleryCount > previewUrls.length;
+                  return (
+                    <Pressable
+                      key={`${uri}-${index}`}
+                      onPress={() => openGallery(index)}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        showSeeAll
+                          ? `Xem tất cả ${galleryCount} ảnh`
+                          : `Xem ảnh ${index + 1}`
+                      }
+                      className="h-[104px] flex-1 overflow-hidden rounded-[10px] bg-hoteliq-chip"
+                      style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}>
+                      <Image
+                        source={{ uri }}
+                        style={{ width: '100%', height: '100%' }}
+                        contentFit="cover"
+                        recyclingKey={`${apartment.id}-preview-${index}`}
+                      />
+                      {showSeeAll ? (
+                        <View className="absolute inset-0 items-center justify-center bg-black/50">
+                          <Text className="text-[13px] font-semibold text-white">
+                            Xem tất cả
+                          </Text>
+                          <Text className="mt-0.5 text-[11px] font-medium text-white/85">
+                            +{galleryCount - previewUrls.length}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </Pressable>
+                  );
+                })}
               </View>
             </View>
           ) : null}
 
           {showOpsTools ? (
             <View className="mb-2 gap-2.5">
-              <QuickDownloadButton apartment={apartment} />
               <Pressable
                 onPress={() => void onCopyApartmentInfo()}
                 accessibilityRole="button"

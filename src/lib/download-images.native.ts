@@ -1,15 +1,22 @@
 import { Directory, File, Paths } from 'expo-file-system';
-import {
-  Album,
-  Asset,
-  getPermissionsAsync,
-  requestPermissionsAsync,
-} from 'expo-media-library';
+import * as MediaLibrary from 'expo-media-library';
 import { Alert, Linking } from 'react-native';
 
 export type DownloadImagesResult = {
   saved: number;
   failed: number;
+};
+
+export type DownloadProgress = {
+  completed: number;
+  total: number;
+  percent: number;
+};
+
+export type DownloadImagesOptions = {
+  albumName?: string;
+  sourceCode?: string;
+  onProgress?: (progress: DownloadProgress) => void;
 };
 
 function extensionFromUrl(url: string): string {
@@ -23,11 +30,24 @@ function extensionFromUrl(url: string): string {
   return '.jpg';
 }
 
+function reportProgress(
+  onProgress: DownloadImagesOptions['onProgress'],
+  completed: number,
+  total: number,
+) {
+  if (!onProgress || total <= 0) return;
+  onProgress({
+    completed,
+    total,
+    percent: Math.min(100, Math.round((completed / total) * 100)),
+  });
+}
+
 async function ensureWritePermission(): Promise<boolean> {
-  const current = await getPermissionsAsync(true);
+  const current = await MediaLibrary.getPermissionsAsync(true);
   if (current.granted) return true;
 
-  const requested = await requestPermissionsAsync(true);
+  const requested = await MediaLibrary.requestPermissionsAsync(true);
   if (requested.granted) return true;
 
   Alert.alert(
@@ -52,7 +72,7 @@ async function ensureWritePermission(): Promise<boolean> {
  */
 export async function downloadApartmentImages(
   imageUrls: string[],
-  options?: { albumName?: string; sourceCode?: string },
+  options?: DownloadImagesOptions,
 ): Promise<DownloadImagesResult> {
   const urls = imageUrls.filter(Boolean);
   if (urls.length === 0) {
@@ -64,6 +84,8 @@ export async function downloadApartmentImages(
     return { saved: 0, failed: urls.length };
   }
 
+  reportProgress(options?.onProgress, 0, urls.length);
+
   const albumName = options?.albumName ?? 'Hanoi Residences';
   const cacheDir = new Directory(Paths.cache, 'apartment-downloads');
   if (!cacheDir.exists) {
@@ -72,7 +94,13 @@ export async function downloadApartmentImages(
 
   let saved = 0;
   let failed = 0;
-  const createdAssets: Asset[] = [];
+  let album: MediaLibrary.Album | null = null;
+
+  try {
+    album = await MediaLibrary.getAlbumAsync(albumName);
+  } catch (error) {
+    console.warn('Album lookup failed:', error);
+  }
 
   for (let i = 0; i < urls.length; i += 1) {
     const url = urls[i];
@@ -89,26 +117,19 @@ export async function downloadApartmentImages(
         idempotent: true,
       });
 
-      const asset = await Asset.create(file.uri);
-      createdAssets.push(asset);
+      if (album) {
+        await MediaLibrary.createAssetAsync(file.uri, album);
+      } else {
+        const asset = await MediaLibrary.createAssetAsync(file.uri);
+        album = await MediaLibrary.createAlbumAsync(albumName, asset, false);
+      }
       saved += 1;
     } catch (error) {
       console.error('Download image failed:', url, error);
       failed += 1;
     }
-  }
 
-  if (createdAssets.length > 0) {
-    try {
-      const existing = await Album.get(albumName);
-      if (existing) {
-        await existing.add(createdAssets);
-      } else {
-        await Album.create(albumName, createdAssets, false);
-      }
-    } catch (error) {
-      console.warn('Album grouping failed:', error);
-    }
+    reportProgress(options?.onProgress, i + 1, urls.length);
   }
 
   return { saved, failed };

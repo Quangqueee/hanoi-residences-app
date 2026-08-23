@@ -43,7 +43,10 @@ export default function NewBookingScreen() {
     isAdmin,
     isCollaborator,
     roleLabel,
+    loading: authLoading,
   } = useAuth();
+
+  const isGuest = !user;
 
   const [apartment, setApartment] = useState<Apartment | null>(null);
   const [loadingApt, setLoadingApt] = useState(!!apartmentId);
@@ -128,18 +131,20 @@ export default function NewBookingScreen() {
     );
   }, [ctvList, ctvSearch]);
 
-  const screenTitle = isAdmin
-    ? 'Thêm lịch cho căn này'
-    : isCollaborator
-      ? 'Đặt lịch dẫn khách'
-      : 'Đặt lịch xem phòng';
+  const screenTitle = isGuest
+    ? 'Đặt lịch tư vấn'
+    : isAdmin
+      ? 'Thêm lịch cho căn này'
+      : isCollaborator
+        ? 'Đặt lịch dẫn khách'
+        : 'Đặt lịch xem phòng';
 
   const onSubmit = async () => {
     if (!apartmentId) {
       Alert.alert('Thiếu căn hộ', 'Vui lòng mở đặt lịch từ trang chi tiết căn hộ.');
       return;
     }
-    if (!role || role === 'landlord') {
+    if (!isGuest && (!role || role === 'landlord')) {
       Alert.alert(
         'Không hỗ trợ',
         'Tài khoản hiện tại không thể tạo lịch hẹn từ app. Vui lòng dùng tài khoản User/CTV/Admin.',
@@ -192,7 +197,8 @@ export default function NewBookingScreen() {
     setSubmitting(true);
     try {
       await createBooking({
-        role,
+        role: isGuest ? null : role,
+        isGuest,
         apartmentId,
         apartmentCode: apartment?.sourceCode,
         apartmentTitle: apartment?.title,
@@ -242,7 +248,7 @@ export default function NewBookingScreen() {
     }
   };
 
-  if (loadingApt) {
+  if (authLoading || loadingApt) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator size="large" color={Hoteliq.ink} />
@@ -269,7 +275,9 @@ export default function NewBookingScreen() {
                 {screenTitle}
               </Text>
               <Text className="text-[14px] leading-[18px] text-hoteliq-gray">
-                Vai trò: {roleLabel ?? '—'}
+                {isGuest
+                  ? 'Khách vãng lai · không cần tài khoản'
+                  : `Vai trò: ${roleLabel ?? '—'}`}
                 {apartment?.sourceCode ? ` · Mã căn ${apartment.sourceCode}` : ''}
               </Text>
             </View>

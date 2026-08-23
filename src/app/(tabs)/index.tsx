@@ -1,7 +1,7 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useRouter } from 'expo-router';
-import { AppSymbol as SymbolView } from '@/components/app-symbol';
-import { useCallback, useMemo, useState, type ComponentProps } from 'react';
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useRouter } from "expo-router";
+import { AppSymbol as SymbolView } from "@/components/app-symbol";
+import { useCallback, useMemo, useState, type ComponentProps } from "react";
 import {
   FlatList,
   Platform,
@@ -10,39 +10,38 @@ import {
   ScrollView,
   Text,
   View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ApartmentCard } from '@/components/apartment-card';
-import { ListPaginationFooter } from '@/components/list-pagination-footer';
+import { ApartmentCard } from "@/components/apartment-card";
+import { ListPaginationFooter } from "@/components/list-pagination-footer";
 import {
   ApartmentCardSkeleton,
   ApartmentListSkeleton,
-} from '@/components/ui/shimmer-block';
-import { Hoteliq } from '@/constants/theme';
-import { useAuth } from '@/contexts/auth-context';
-import { useApartments } from '@/hooks/use-apartments';
-import { useNotifications } from '@/hooks/use-notifications';
-import type { ApartmentFilters } from '@/lib/apartments-service';
-import { ROOM_TYPES } from '@/lib/constants';
-import type { Apartment, RoomType } from '@/lib/types';
+} from "@/components/ui/shimmer-block";
+import { Hoteliq, TAB_BAR_BODY_HEIGHT } from "@/constants/theme";
+import { useAuth } from "@/contexts/auth-context";
+import { useApartments } from "@/hooks/use-apartments";
+import { useNotifications } from "@/hooks/use-notifications";
+import type { ApartmentFilters } from "@/lib/apartments-service";
+import { ROOM_TYPES } from "@/lib/constants";
+import type { Apartment, RoomType } from "@/lib/types";
 
-const TAB_BAR_CLEARANCE = 108;
 const NEAR_COUNT = 6;
 
-type CategoryKey = 'all' | RoomType;
-type MciName = ComponentProps<typeof MaterialCommunityIcons>['name'];
+type CategoryKey = "all" | RoomType;
+type MciName = ComponentProps<typeof MaterialCommunityIcons>["name"];
 
 /** iOS = SF Symbols; Android/web = MaterialCommunityIcons (cột Material). */
 const ROOM_TYPE_ICONS: Record<RoomType, { ios: string; android: MciName }> = {
-  studio: { ios: 'bed.double', android: 'bed-outline' },
-  '1n1k': { ios: 'bed.double.fill', android: 'bed-king-outline' },
-  '2n1k': { ios: 'house', android: 'home-city-outline' },
-  '3n1k': { ios: 'house.fill', android: 'home-city' },
-  '4n1k': { ios: 'building.2', android: 'office-building-outline' },
-  duplex: { ios: 'stairs', android: 'stairs' },
-  penthouse: { ios: 'crown', android: 'crown-outline' },
-  other: { ios: 'ellipsis.circle', android: 'dots-horizontal-circle-outline' },
+  studio: { ios: "bed.double", android: "bed-outline" },
+  "1n1k": { ios: "bed.double.fill", android: "bed-king-outline" },
+  "2n1k": { ios: "house", android: "home-city-outline" },
+  "3n1k": { ios: "house.fill", android: "home-city" },
+  "4n1k": { ios: "building.2", android: "office-building-outline" },
+  duplex: { ios: "stairs", android: "stairs" },
+  penthouse: { ios: "crown", android: "crown-outline" },
+  other: { ios: "ellipsis.circle", android: "dots-horizontal-circle-outline" },
 };
 
 type CategoryItem = {
@@ -50,23 +49,23 @@ type CategoryItem = {
   label: string;
   ios: string;
   android: string;
-  androidIconSet: 'material' | 'material-community';
+  androidIconSet: "material" | "material-community";
 };
 
 const CATEGORIES: CategoryItem[] = [
   {
-    key: 'all',
-    label: 'Tất cả',
-    ios: 'building.2.fill',
-    android: 'apartment',
-    androidIconSet: 'material',
+    key: "all",
+    label: "Tất cả",
+    ios: "building.2.fill",
+    android: "apartment",
+    androidIconSet: "material",
   },
   ...ROOM_TYPES.map((rt) => ({
     key: rt.value,
     label: rt.label,
     ios: ROOM_TYPE_ICONS[rt.value].ios,
     android: ROOM_TYPE_ICONS[rt.value].android,
-    androidIconSet: 'material-community' as const,
+    androidIconSet: "material-community" as const,
   })),
 ];
 
@@ -75,11 +74,11 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { user, userData } = useAuth();
   const { unreadCount } = useNotifications(user?.uid);
-  const [category, setCategory] = useState<CategoryKey>('all');
+  const [category, setCategory] = useState<CategoryKey>("all");
 
   const filters = useMemo<ApartmentFilters>(() => {
-    const next: ApartmentFilters = { sortBy: 'newest' };
-    if (category !== 'all') next.roomType = category;
+    const next: ApartmentFilters = { sortBy: "newest" };
+    if (category !== "all") next.roomType = category;
     return next;
   }, [category]);
 
@@ -96,20 +95,14 @@ export default function HomeScreen() {
   } = useApartments(filters);
 
   const preferredDistrict =
-    userData?.preferredDistrict?.trim() || 'Hà Nội, Việt Nam';
+    userData?.preferredDistrict?.trim() || "Hà Nội, Việt Nam";
 
-  const nearList = useMemo(
-    () => apartments.slice(0, NEAR_COUNT),
-    [apartments],
-  );
+  const nearList = useMemo(() => apartments.slice(0, NEAR_COUNT), [apartments]);
 
-  const popularList = useMemo(
-    () => apartments.slice(NEAR_COUNT),
-    [apartments],
-  );
+  const popularList = useMemo(() => apartments.slice(NEAR_COUNT), [apartments]);
 
   const goToSearch = () => {
-    router.navigate('/search');
+    router.navigate("/search");
   };
 
   const renderItem = useCallback(
@@ -129,16 +122,17 @@ export default function HomeScreen() {
           onPress={goToSearch}
           accessibilityRole="button"
           accessibilityLabel="Chọn khu vực"
-          className="min-w-0 flex-1 gap-1">
+          className="min-w-0 flex-1 gap-1"
+        >
           <Text className="text-[12px] font-medium leading-4 text-hoteliq-gray">
             Current location
           </Text>
           <View className="flex-row items-center gap-1.5">
             <SymbolView
               name={{
-                ios: 'mappin.and.ellipse',
-                android: 'location_on',
-                web: 'location_on',
+                ios: "mappin.and.ellipse",
+                android: "location_on",
+                web: "location_on",
               }}
               size={16}
               tintColor={Hoteliq.ink}
@@ -146,24 +140,26 @@ export default function HomeScreen() {
             />
             <Text
               className="flex-1 text-[16px] font-semibold leading-[22px] text-hoteliq-ink"
-              numberOfLines={1}>
+              numberOfLines={1}
+            >
               {preferredDistrict}
             </Text>
           </View>
         </Pressable>
 
         <Pressable
-          onPress={() => router.push('/notifications')}
+          onPress={() => router.push("/notifications")}
           accessibilityRole="button"
           accessibilityLabel="Thông báo"
           hitSlop={8}
           className="h-11 w-11 items-center justify-center rounded-full border border-hoteliq-line bg-white"
-          style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}>
+          style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+        >
           <SymbolView
             name={{
-              ios: unreadCount > 0 ? 'bell.badge.fill' : 'bell',
-              android: 'notifications_none',
-              web: 'notifications_none',
+              ios: unreadCount > 0 ? "bell.badge.fill" : "bell",
+              android: "notifications_none",
+              web: "notifications_none",
             }}
             size={20}
             tintColor={Hoteliq.ink}
@@ -179,7 +175,8 @@ export default function HomeScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 18, paddingRight: 8 }}>
+        contentContainerStyle={{ gap: 18, paddingRight: 8 }}
+      >
         {CATEGORIES.map((item) => {
           const active = category === item.key;
           return (
@@ -189,11 +186,12 @@ export default function HomeScreen() {
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
               className={`min-h-[56px] min-w-[56px] items-center justify-center gap-1 border-b-2 px-2 pb-2.5 pt-1 ${
-                active ? 'border-hoteliq-ink' : 'border-transparent'
+                active ? "border-hoteliq-ink" : "border-transparent"
               }`}
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-              {item.androidIconSet === 'material-community' &&
-              Platform.OS !== 'ios' ? (
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              {item.androidIconSet === "material-community" &&
+              Platform.OS !== "ios" ? (
                 <MaterialCommunityIcons
                   name={item.android as MciName}
                   size={24}
@@ -202,21 +200,22 @@ export default function HomeScreen() {
               ) : (
                 <SymbolView
                   name={{
-                    ios: item.ios as 'building.2.fill',
-                    android: item.android as 'apartment',
-                    web: item.android as 'apartment',
+                    ios: item.ios as "building.2.fill",
+                    android: item.android as "apartment",
+                    web: item.android as "apartment",
                   }}
                   size={24}
                   tintColor={active ? Hoteliq.ink : Hoteliq.muted}
-                  weight={active ? 'semibold' : 'regular'}
+                  weight={active ? "semibold" : "regular"}
                 />
               )}
               <Text
                 className={`text-[12px] leading-4 ${
                   active
-                    ? 'font-semibold text-hoteliq-ink'
-                    : 'font-medium text-hoteliq-gray'
-                }`}>
+                    ? "font-semibold text-hoteliq-ink"
+                    : "font-medium text-hoteliq-gray"
+                }`}
+              >
                 {item.label}
               </Text>
             </Pressable>
@@ -228,11 +227,15 @@ export default function HomeScreen() {
       <View className="gap-3.5">
         <View className="flex-row items-center justify-between">
           <Text className="text-[22px] font-semibold leading-7 text-hoteliq-ink">
-            Near Location
+            Căn hộ gần đây
           </Text>
-          <Pressable onPress={goToSearch} hitSlop={8} className="min-h-[44px] justify-center">
+          <Pressable
+            onPress={goToSearch}
+            hitSlop={8}
+            className="min-h-[44px] justify-center"
+          >
             <Text className="text-[14px] font-semibold text-hoteliq-ink underline">
-              See all
+              Xem tất cả
             </Text>
           </Pressable>
         </View>
@@ -244,7 +247,8 @@ export default function HomeScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             decelerationRate="fast"
-            contentContainerStyle={{ paddingRight: 8, gap: 14 }}>
+            contentContainerStyle={{ paddingRight: 8, gap: 14 }}
+          >
             {nearList.map((item) => (
               <ApartmentCard
                 key={`near-${item.id}`}
@@ -260,11 +264,15 @@ export default function HomeScreen() {
       {!loading && apartments.length > 0 ? (
         <View className="mt-1 flex-row items-center justify-between">
           <Text className="text-[22px] font-semibold leading-7 text-hoteliq-ink">
-            Popular Hotel
+            Căn hộ nổi bật
           </Text>
-          <Pressable onPress={goToSearch} hitSlop={8} className="min-h-[44px] justify-center">
+          <Pressable
+            onPress={goToSearch}
+            hitSlop={8}
+            className="min-h-[44px] justify-center"
+          >
             <Text className="text-[14px] font-semibold text-hoteliq-ink underline">
-              See all
+              Xem tất cả
             </Text>
           </Pressable>
         </View>
@@ -288,7 +296,7 @@ export default function HomeScreen() {
         ListHeaderComponent={listHeader}
         contentContainerStyle={{
           paddingHorizontal: 24,
-          paddingBottom: TAB_BAR_CLEARANCE,
+          paddingBottom: TAB_BAR_BODY_HEIGHT + insets.bottom + 16,
           flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
@@ -320,18 +328,19 @@ export default function HomeScreen() {
           ) : (
             <View className="items-center gap-3 rounded-[12px] bg-hoteliq-chip px-7 py-10">
               <Text className="text-center text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
-                {error ? 'Không tải được danh sách' : 'Chưa có căn phù hợp'}
+                {error ? "Không tải được danh sách" : "Chưa có căn phù hợp"}
               </Text>
               <Text className="text-center text-[14px] leading-5 text-hoteliq-gray">
                 {error
                   ? error
-                  : 'Mở tab Tìm kiếm để lọc theo quận, giá hoặc loại phòng.'}
+                  : "Mở tab Tìm kiếm để lọc theo quận, giá hoặc loại phòng."}
               </Text>
               {error ? (
                 <Pressable
                   onPress={() => void reload()}
                   className="mt-1 min-h-11 items-center justify-center rounded-full bg-hoteliq-ink px-6"
-                  style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+                  style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+                >
                   <Text className="text-sm font-semibold text-white">
                     Thử lại
                   </Text>
@@ -340,7 +349,8 @@ export default function HomeScreen() {
                 <Pressable
                   onPress={goToSearch}
                   className="mt-1 min-h-11 items-center justify-center rounded-full bg-hoteliq-ink px-6"
-                  style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+                  style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+                >
                   <Text className="text-sm font-semibold text-white">
                     Tìm kiếm
                   </Text>

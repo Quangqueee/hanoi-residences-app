@@ -6,9 +6,9 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function Index() {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
   const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
   if (loading) {
     return (
@@ -24,9 +24,5 @@ export default function Index() {
     );
   }
 
-  if (user) {
-    return <Redirect href="/(tabs)" />;
-  }
-
-  return <Redirect href="/(auth)/login" />;
+  return <Redirect href="/(tabs)" />;
 }

@@ -20,5 +20,7 @@
   "editor.cursorSmoothCaretAnimation": "on",
   "files.trimTrailingWhitespace": true,
   "workbench.iconTheme": "material-icon-theme",
-  "commentTranslate.targetLanguage": "vi"
+  "commentTranslate.targetLanguage": "vi",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }

@@ -1,4 +1,4 @@
-import { createAsyncStorage } from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
 import {
   Auth,
@@ -15,8 +15,14 @@ import { firebaseConfig } from './config';
 export const firebaseApp: FirebaseApp =
   getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
+type ReactNativeAsyncStorage = {
+  getItem: (key: string) => Promise<string | null>;
+  setItem: (key: string, value: string) => Promise<void>;
+  removeItem: (key: string) => Promise<void>;
+};
+
 type ReactNativePersistenceFactory = (
-  storage: ReturnType<typeof createAsyncStorage>,
+  storage: ReactNativeAsyncStorage,
 ) => Persistence;
 
 /**
@@ -42,9 +48,8 @@ function createAuth(app: FirebaseApp): Auth {
   }
 
   try {
-    const storage = createAsyncStorage('firebase-auth');
     return initializeAuth(app, {
-      persistence: getPersistence(storage),
+      persistence: getPersistence(AsyncStorage),
     });
   } catch {
     // Hot reload / second init — Auth already registered

@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
+import { AppSymbol as SymbolView } from '@/components/app-symbol';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,

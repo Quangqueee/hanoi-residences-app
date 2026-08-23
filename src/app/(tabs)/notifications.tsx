@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
+import { Link, useRouter } from 'expo-router';
+import { AppSymbol as SymbolView } from '@/components/app-symbol';
 import { useCallback } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import {
@@ -8,7 +8,7 @@ import {
 } from 'react-native-safe-area-context';
 
 import { ShimmerBlock } from '@/components/ui/shimmer-block';
-import { Hoteliq } from '@/constants/theme';
+import { Hoteliq, TAB_BAR_BODY_HEIGHT } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import { useNotifications } from '@/hooks/use-notifications';
 import {
@@ -18,8 +18,6 @@ import {
   mapNotificationLinkToHref,
 } from '@/lib/notification-display';
 import type { AppNotification, NotificationType } from '@/lib/notifications';
-
-const TAB_BAR_CLEARANCE = 108;
 
 /** Icon per notification type — rendered in a chip-bg circle (Airbnb rows). */
 const NOTIFICATION_ICONS: Record<
@@ -131,6 +129,36 @@ export default function NotificationsScreen() {
     [onPressItem],
   );
 
+  if (!user) {
+    return (
+      <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+        <View
+          className="flex-1 justify-center px-6"
+          style={{ paddingBottom: TAB_BAR_BODY_HEIGHT + insets.bottom + 16 }}>
+          <View className="items-center gap-3 rounded-[12px] bg-hoteliq-chip px-7 py-10">
+            <Text className="text-center text-[16px] font-semibold leading-[22px] text-hoteliq-ink">
+              Đăng nhập để xem thông báo
+            </Text>
+            <Text className="text-center text-[14px] leading-5 text-hoteliq-gray">
+              Chuông realtime theo tài khoản. Bạn vẫn xem tin và gửi tư vấn khi
+              chưa đăng nhập.
+            </Text>
+            <Link href="/(auth)/login" asChild>
+              <Pressable
+                accessibilityRole="button"
+                className="mt-1 h-12 min-h-11 items-center justify-center rounded-full bg-hoteliq-ink px-7"
+                style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+                <Text className="text-sm font-semibold text-white">
+                  Đăng nhập
+                </Text>
+              </Pressable>
+            </Link>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
       <SafeAreaView edges={['bottom']} className="flex-1">
@@ -179,7 +207,7 @@ export default function NotificationsScreen() {
             contentContainerStyle={{
               paddingHorizontal: 24,
               paddingTop: 4,
-              paddingBottom: TAB_BAR_CLEARANCE,
+              paddingBottom: TAB_BAR_BODY_HEIGHT + insets.bottom + 16,
               flexGrow: 1,
             }}
             showsVerticalScrollIndicator={false}

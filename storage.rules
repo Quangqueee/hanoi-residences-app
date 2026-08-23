@@ -1,21 +1,55 @@
 rules_version = '2';
 
 /**
- * Hanoi Residences — Storage rules (Phase 8).
- * Deploy: firebase deploy --only storage
+ * Hanoi Residences — Storage rules (P0 draft, CHƯA deploy).
  *
- * Public read ảnh listing; create/update chỉ user đã đăng nhập + ảnh < 15MB;
- * delete cần auth. Path khác: deny.
+ * Path mới: apartments/{uid}/{fileName} — uid = Auth UID người upload
+ * (landlord hoặc admin). Delete chỉ owner của segment đó hoặc admin.
+ *
+ * Path cũ (flat): apartments/{fileName} — ảnh đang live. Public read.
+ * Mutate chỉ admin, để landlord không xóa/ghi đè ảnh tin người khác.
+ *
+ * DEPLOY BLOCKER: `uploadApartmentImages` vẫn ghi `apartments/{ts}-{id}.jpg`.
+ * Deploy rules này TRƯỚC khi đổi path → landlord/admin upload thường sẽ fail.
+ * Đổi upload sang `apartments/{auth.uid}/{ts}-{id}.jpg` rồi mới deploy.
+ *
+ * isAdmin() dùng firestore.get (cần Blaze). Không có custom claim role.
  */
 
 service firebase.storage {
   match /b/{bucket}/o {
-    match /apartments/{allPaths=**} {
-      allow read: if true;
-      allow create, update: if request.auth != null
-        && request.resource.size < 15 * 1024 * 1024
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role
+          == 'admin';
+    }
+
+    function isImageUnder15mb() {
+      return request.resource.size < 15 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
-      allow delete: if request.auth != null;
+    }
+
+    // Ảnh listing mới — owner nằm trong path.
+    match /apartments/{ownerUid}/{fileName} {
+      allow read: if true;
+
+      allow create, update: if signedIn()
+        && isImageUnder15mb()
+        && (request.auth.uid == ownerUid || isAdmin());
+
+      allow delete: if signedIn()
+        && (request.auth.uid == ownerUid || isAdmin());
+    }
+
+    // Legacy flat path (tin đã đăng). Chỉ admin được ghi/xóa.
+    match /apartments/{fileName} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isImageUnder15mb();
+      allow delete: if isAdmin();
     }
 
     match /{allPaths=**} {

@@ -87,6 +87,7 @@ export default function SignupScreen() {
   };
 
   const busy = submitting || googleSubmitting;
+  const showGoogle = Platform.OS === 'web';
 
   const inputClass = (field: FieldKey) =>
     `h-[52px] rounded-[12px] border bg-white px-4 text-[16px] leading-[22px] text-hoteliq-ink ${
@@ -191,22 +192,24 @@ export default function SignupScreen() {
                 )}
               </Pressable>
 
-              <Pressable
-                onPress={() => void onGoogle()}
-                disabled={busy}
-                accessibilityRole="button"
-                className="h-12 items-center justify-center rounded-full border border-hoteliq-line bg-white"
-                style={({ pressed }) => ({
-                  opacity: busy ? 0.7 : pressed ? 0.85 : 1,
-                })}>
-                {googleSubmitting ? (
-                  <ActivityIndicator color={Hoteliq.ink} />
-                ) : (
-                  <Text className="text-[16px] font-semibold text-hoteliq-ink">
-                    Tiếp tục với Google
-                  </Text>
-                )}
-              </Pressable>
+              {showGoogle ? (
+                <Pressable
+                  onPress={() => void onGoogle()}
+                  disabled={busy}
+                  accessibilityRole="button"
+                  className="h-12 items-center justify-center rounded-full border border-hoteliq-line bg-white"
+                  style={({ pressed }) => ({
+                    opacity: busy ? 0.7 : pressed ? 0.85 : 1,
+                  })}>
+                  {googleSubmitting ? (
+                    <ActivityIndicator color={Hoteliq.ink} />
+                  ) : (
+                    <Text className="text-[16px] font-semibold text-hoteliq-ink">
+                      Tiếp tục với Google
+                    </Text>
+                  )}
+                </Pressable>
+              ) : null}
             </View>
 
             {/* Footer */}

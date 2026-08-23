@@ -43,6 +43,9 @@ export const SORT_OPTIONS = [
 
 export const APARTMENTS_PAGE_SIZE = 12;
 
+/** Admin apartment list — cursor pages (`fetchAdminApartmentsPage`). */
+export const ADMIN_APARTMENTS_PAGE_SIZE = 20;
+
 /**
  * Web admin path segment (notification `link` only).
  * App gates admin by `users.role`, never by this secret URL.
